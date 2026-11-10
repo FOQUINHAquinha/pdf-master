@@ -6,4 +6,7 @@
     <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
     <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" />
+  </ItemGroup>
 </Project>

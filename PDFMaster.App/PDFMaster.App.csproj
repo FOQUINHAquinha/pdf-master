@@ -12,6 +12,8 @@
     <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
     <ProjectReference Include="..\PDFMaster.Storage\PDFMaster.Storage.csproj" />
     <ProjectReference Include="..\PDFMaster.Infrastructure\PDFMaster.Infrastructure.csproj" />
+    <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
+    <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />

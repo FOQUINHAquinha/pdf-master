@@ -132,3 +132,40 @@ public sealed class AppSettings
 
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }
+
+// ---------- Documentos PDF ----------
+
+/// <summary>Tamanho da página em pontos (1/72 pol.), como gravado no arquivo, e rotação em graus.</summary>
+public sealed record PdfPageInfo(double WidthPt, double HeightPt, int Rotation);
+
+/// <param name="PageIndex">Página de destino, começando em 0.</param>
+/// <param name="Level">Nível na árvore de marcadores; 0 = raiz.</param>
+public sealed record PdfBookmark(string Title, int PageIndex, int Level);
+
+public sealed record PdfDocumentInfo(
+    string Path,
+    long SizeBytes,
+    IReadOnlyList<PdfPageInfo> Pages,
+    IReadOnlyList<PdfBookmark> Bookmarks,
+    string? Title)
+{
+    public int PageCount => Pages.Count;
+}
+
+/// <summary>
+/// Uma página do documento de saída: cópia de uma página de origem (com rotação adicional
+/// opcional) ou uma página em branco.
+/// </summary>
+public sealed record PageInstruction(string? SourcePath, int PageIndex, int Rotation, double BlankWidthPt, double BlankHeightPt)
+{
+    public bool IsBlank => SourcePath is null;
+
+    public static PageInstruction From(string sourcePath, int pageIndex, int rotation = 0) =>
+        new(sourcePath, pageIndex, rotation, 0, 0);
+
+    /// <summary>Página em branco; o padrão é A4 (595 × 842 pt).</summary>
+    public static PageInstruction Blank(double widthPt = 595, double heightPt = 842) =>
+        new(null, -1, 0, widthPt, heightPt);
+}
+
+public sealed record OutputBookmark(string Title, int PageIndex);
