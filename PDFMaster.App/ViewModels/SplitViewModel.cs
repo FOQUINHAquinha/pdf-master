@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PDFMaster.App.Services;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Pdf;
 using PDFMaster.Domain;
