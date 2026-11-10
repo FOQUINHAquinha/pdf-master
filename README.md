@@ -3,10 +3,21 @@
 Suíte de ferramentas PDF para Windows 10 e 11, gratuita, sem conta, sem anúncios e com
 processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-**Estado atual: Fases 1 e 2 concluídas.** Já funcionam o visualizador e as ferramentas de
-organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas.
-Conversão, compressão, OCR, editor e segurança aparecem no programa como "Prevista" e chegam nas
-próximas fases.
+**Estado atual: Fases 1 a 3 concluídas.** Já funcionam:
+
+- visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
+- conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
+  LibreOffice instalado, Word/Excel/PowerPoint/HTML → PDF;
+- compressão de PDF com perfis e comparação antes/depois.
+
+OCR, editor, segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
+
+### LibreOffice (opcional)
+
+As conversões de documentos do Office e de HTML para PDF, e a opção "manter a aparência" de PDF
+para Word, usam o [LibreOffice](https://www.libreoffice.org) instalado no computador. O PDF Master
+não o inclui, não o baixa e funciona sem ele — só essas conversões ficam indisponíveis, e a tela
+avisa. Para apontar uma instalação fora do local padrão, defina a variável `PDFMASTER_SOFFICE`.
 
 ## Baixar o executável
 
@@ -38,7 +49,7 @@ PDFMaster.exe [--theme light|dark] [--page <seção>] [--tool <ferramenta>] [--o
 |---|---|
 | `--theme light` / `--theme dark` | Define e salva o tema. |
 | `--page <seção>` | Abre direto numa seção: `home`, `organize`, `edit`, `convert`, `compress`, `security`, `ocr`, `compare`, `batch`, `history`, `settings`. |
-| `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados: `view`, `merge`, `interleave`, `split`, `reorder`, `rotate`, `delete-pages`, `insert-pages`, `extract-pages`. |
+| `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados: `view`, `merge`, `interleave`, `split`, `reorder`, `rotate`, `delete-pages`, `insert-pages`, `extract-pages`, `pdf-to-image`, `image-to-pdf`, `office-to-pdf`, `text-html-to-pdf`, `pdf-to-word`, `pdf-to-text`, `compress`. |
 | `--output <pasta>` | Define a pasta de destino da ferramenta aberta com `--tool`. |
 | `--run` | Executa a ação principal da ferramenta com as opções padrão (a janela continua aberta para mostrar o resultado). |
 | arquivos e pastas | Sem `--tool`, vão para a lista de arquivos abertos (pastas são lidas com as subpastas). |
@@ -49,6 +60,8 @@ Exemplos:
 PDFMaster.exe --tool merge --output C:\Saida --run a.pdf b.pdf
 PDFMaster.exe --tool split documento.pdf
 PDFMaster.exe --tool view documento.pdf
+PDFMaster.exe --tool compress --output C:\Saida --run digitalizado.pdf
+PDFMaster.exe --tool pdf-to-image --output C:\Saida --run documento.pdf
 ```
 
 A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.
@@ -60,7 +73,8 @@ A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo ter
 - Variável de ambiente `PDFMASTER_DATA_DIR`: usa a pasta indicada.
 
 O banco guarda configurações, histórico e arquivos recentes — nunca o conteúdo dos documentos.
-O programa não usa a rede.
+O programa não usa a rede. (O LibreOffice, quando usado para converter HTML, pode buscar imagens
+que a própria página referencia na internet.)
 
 ## Documentação
 

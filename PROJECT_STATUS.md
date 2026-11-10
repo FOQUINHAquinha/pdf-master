@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 10/11/2026 · Versão 0.2.0
+Atualizado em 10/11/2026 · Versão 0.3.0
 
 ## Fases
 
@@ -8,8 +8,8 @@ Atualizado em 10/11/2026 · Versão 0.2.0
 |---|---|---|
 | 1 — Fundação | Solução, arquitetura, interface, temas, menu, pesquisa, SQLite, gerenciamento de arquivos | **Concluída** |
 | 2 — Visualizador e organização | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | **Concluída** |
-| 3 — Conversão e compressão | PDF ↔ imagens, Office → PDF, PDF → Word, compressão | Próxima |
-| 4 — OCR e digitalização | | Pendente |
+| 3 — Conversão e compressão | PDF ↔ imagens, Office → PDF, PDF → Word, compressão | **Concluída** |
+| 4 — OCR e digitalização | OCR, PDF pesquisável, digitalização, OCR em lote | Próxima |
 | 5 — Editor | | Pendente |
 | 6 — Segurança e ferramentas avançadas | | Pendente |
 | 7 — Automação | | Pendente |
@@ -25,6 +25,50 @@ Atualizado em 10/11/2026 · Versão 0.2.0
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Fase 3 — Conversão e compressão
+
+| Funcionalidade | Estado | Testes |
+|---|---|---|
+| **PDF para imagem**: PNG, JPG, BMP, TIFF; DPI, qualidade, escala de cinza, seleção de páginas | Concluído | Automático (pixels, tamanho e DPI conferidos) + execução pela interface |
+| PDF para TIFF de várias páginas em um único arquivo | Concluído | Automático |
+| **Imagem para PDF**: JPG, PNG, BMP, TIFF de várias páginas, GIF | Concluído | Automático + execução pela interface (GIF: manual pendente) |
+| Imagem para PDF: tamanho da página (imagem, A4, Carta), orientação, margem | Concluído | Automático |
+| Imagem para PDF: JPG incorporado sem recompressão; orientação EXIF respeitada | Concluído | Automático |
+| **Texto para PDF** (interno): quebra de linhas, várias páginas, UTF-8/UTF-16/Latin-1 | Concluído | Automático + execução pela interface |
+| **Word e Excel para PDF** via LibreOffice | Concluído | Automático (DOCX e XLSX reais, texto conferido no PDF) + execução pela interface (DOCX) |
+| **PowerPoint, ODF e RTF para PDF** via LibreOffice | Concluído | Manual pendente (mesmo caminho do Word/Excel, sem arquivo de teste próprio) |
+| **HTML para PDF** via LibreOffice | Concluído | Automático |
+| **PDF para Word** — texto corrido (interno) | Concluído | Automático + execução pela interface |
+| PDF para Word — manter a aparência (LibreOffice) | Concluído | Automático |
+| **PDF para TXT e HTML** | Concluído | Automático + execução pela interface (TXT) |
+| Aviso quando o PDF não tem texto (digitalizado) em vez de gerar arquivo vazio | Concluído | Automático |
+| Aviso de dependência ausente quando o LibreOffice não está instalado | Concluído | Manual pendente (o CI tem o LibreOffice) |
+| **Comprimir PDF**: perfis leve, equilibrada, forte, máxima | Concluído | Automático (redução, legibilidade e original intacto conferidos) + execução pela interface |
+| Comprimir: perfil sem perda (não toca nas imagens) e personalizado (qualidade, DPI, cinza) | Concluído | Automático |
+| Comprimir: remoção de metadados | Concluído | Automático |
+| Comprimir: tamanhos, economia, percentual e comparação visual antes/depois | Concluído | Captura de tela |
+| Comprimir: nada é gravado quando não há redução; original nunca substituído | Concluído | Automático |
+| Conversão em lote com falha isolada por arquivo | Concluído | Manual pendente (lógica simples na tela; os conversores são testados um a um) |
+| Cancelamento sem deixar arquivo parcial | Concluído | Automático |
+| Renderização com PDFium atual, lendo o arquivo sob demanda | Concluído | Automático |
+
+### Limitações conhecidas da Fase 3
+
+| Item | Situação |
+|---|---|
+| PDF para Word | Não existe conversão fiel. O modo texto corrido leva só o texto (sem imagens, tabelas, colunas ou fontes); o modo com aparência usa caixas de texto posicionadas. A tela diz isso antes de converter. |
+| PDF para Excel e PowerPoint | Não implementado. Replanejado para a Fase 6, com a extração de tabelas. |
+| PDF para SVG e PDF/A | Não implementados (PDF/A está na Fase 6). |
+| Office para PDF | Depende do LibreOffice instalado; a fidelidade é a dele. Fontes ausentes e recursos exclusivos do Microsoft Office podem mudar a formatação. |
+| HTML para PDF | Feito pelo LibreOffice, com suporte limitado a CSS moderno. Páginas que referenciam conteúdo da internet podem acessá-la durante a conversão. |
+| Texto para PDF | Página A4 e duas fontes (largura fixa ou Segoe UI); tamanho de página, margens e fonte ainda não são configuráveis na tela. |
+| Compressão | Só regrava imagens RGB e em tons de cinza de 8 bits. CMYK, indexadas, 1 bit, JBIG2, JPEG 2000 e imagens com máscara por cor ficam como estão. Sem Ghostscript, os perfis fortes podem render menos que os do PDF24 em alguns documentos. |
+| Compressão e resolução | A resolução de cada imagem é estimada pelo tamanho da página, não pelo tamanho em que a imagem é desenhada; por isso a redução nunca passa do pedido, mas imagens pequenas na página podem ser reduzidas menos do que poderiam. |
+| Compressão de PDFs assinados | A cópia comprimida não mantém a validade da assinatura digital; o programa avisa no resultado. |
+| Otimização de fontes | Não implementada (subconjuntos de fontes não são recalculados). |
+| Configurações padrão de conversão e compressão na tela de Configurações | Ainda não existem; cada tela abre com valores padrão fixos. |
+| Pré-visualização antes de comprimir | A comparação aparece depois da compressão, não antes. |
 
 ### Fase 2 — Visualizador e organização
 
@@ -90,12 +134,13 @@ Atualizado em 10/11/2026 · Versão 0.2.0
 | Item | Motivo |
 |---|---|
 | "Repetir operação" no histórico | Depende do sistema de tarefas (Fase 7). |
-| Configurações de conversão, OCR, compressão e desempenho | Entram com as respectivas ferramentas. |
+| Padrões de conversão e compressão na tela de Configurações | Adiados para a Fase 7, junto com as configurações de desempenho; hoje cada tela usa padrões fixos. |
+| Configurações de OCR e desempenho | Entram com as respectivas ferramentas. |
 | Idioma da interface | Somente português por enquanto. |
 | Ícone próprio do aplicativo e logotipo definitivo | O ícone do `.exe` ainda é o padrão. |
 | Cache de miniaturas em disco | O cache atual é em memória; em disco será avaliado na Fase 8 (otimização). |
 
-### Fases 3 a 8
+### Fases 4 a 8
 
 As demais ferramentas estão **pendentes** e aparecem na interface como "Prevista para a Fase N",
 desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
@@ -112,9 +157,16 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | Infrastructure — inspeção, varredura e cópia de arquivos | 17 | Aprovado |
 | PdfEngine — motor (leitura, montagem, rotação, marcadores, erros, cancelamento) | 11 | Aprovado |
 | PdfEngine — organizador (mesclar, intercalar, dividir, salvar arranjo) | 10 | Aprovado |
-| Rendering — renderização de páginas | 6 | Aprovado |
-| App — execução das ferramentas pela interface (`--run`) | 4 | Aprovado |
+| Rendering — renderização de páginas (PDFium atual) | 6 | Aprovado |
+| Conversion — PDF para imagem | 6 | Aprovado |
+| Conversion — imagem para PDF | 6 | Aprovado |
+| Conversion — texto para PDF e PDF para TXT/HTML/DOCX | 7 | Aprovado |
+| Conversion — LibreOffice (Word, Excel, HTML → PDF; PDF → DOCX com layout) | 2 | Aprovado |
+| Compression — compressão de PDF | 6 | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 11 | Aprovado |
 | App — abertura das telas nos dois temas | 11 | Aprovado |
+
+Total de testes automatizados: 175.
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
@@ -127,8 +179,10 @@ Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke
 
 | Pacote | Versão | Licença |
 |---|---|---|
-| PDFsharp | 6.2.0 | MIT |
-| Docnet.Core (inclui o binário do PDFium) | 2.6.0 | MIT (PDFium: BSD-3-Clause / Apache-2.0) |
+| PDFsharp | 6.2.4 | MIT |
+| bblanchon.PDFium.Win32 (binário do PDFium) | 152.0.7961 | BSD-3-Clause / Apache-2.0 |
+| PdfPig | 0.1.14 | Apache-2.0 |
+| LibreOffice (opcional, instalado pelo usuário; não distribuído) | — | MPL-2.0 |
 | CommunityToolkit.Mvvm | 8.4.0 | MIT |
 | Microsoft.Data.Sqlite | 10.0.0 | MIT |
 | SQLitePCLRaw.lib.e_sqlite3 (SQLite nativo) | 3.50.3 | Apache-2.0 / domínio público |
@@ -150,4 +204,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.2.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.3.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

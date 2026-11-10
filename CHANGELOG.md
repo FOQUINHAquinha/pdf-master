@@ -1,5 +1,32 @@
 # Histórico de alterações
 
+## 0.3.0 — 10/11/2026 — Fase 3: Conversão e compressão
+
+### Adicionado
+- **PDF para imagem**: PNG, JPG, TIFF (inclusive um único arquivo de várias páginas) e BMP;
+  resolução de 36 a 600 DPI, qualidade JPG, escala de cinza e seleção de páginas.
+- **Imagem para PDF**: JPG, PNG, BMP, TIFF de várias páginas e GIF; página do tamanho da imagem,
+  A4 ou Carta; orientação, margem, um PDF por imagem ou todas em um; JPG incorporado sem
+  recompressão; orientação EXIF das fotos respeitada.
+- **Texto para PDF** feito pelo próprio programa (A4, quebra automática de linhas, texto pesquisável).
+- **Office para PDF** (Word, Excel, PowerPoint, ODF, RTF) e **HTML para PDF**, usando o LibreOffice
+  instalado no computador; a tela informa quando ele não está presente.
+- **PDF para Word**: modo texto corrido (interno) e modo "manter a aparência" (LibreOffice).
+- **PDF para TXT e HTML**.
+- **Comprimir PDF**: perfis sem perda, leve, equilibrada, forte, máxima e personalizada; regravação
+  e redução de imagens, compactação de streams, remoção de metadados; tamanhos, economia e
+  comparação da primeira página antes/depois. Se o resultado não fica menor, nada é gravado.
+- Conversão em lote em todas as telas: um arquivo com problema não interrompe os demais.
+- 28 testes novos (175 no total); o CI instala o LibreOffice e executa todas as ferramentas novas
+  pelo executável publicado.
+
+### Alterado
+- A renderização passou a chamar diretamente uma compilação atual do PDFium
+  (bblanchon.PDFium 152), no lugar do Docnet.Core 2.6. O arquivo deixou de ser carregado inteiro
+  na memória para renderizar.
+- PDFsharp atualizado de 6.2.0 para 6.2.4.
+- "PDF para Excel e PowerPoint" foi replanejada para a Fase 6, junto com a extração de tabelas.
+
 ## 0.2.0 — 10/11/2026 — Fase 2: Visualizador e organização
 
 ### Adicionado

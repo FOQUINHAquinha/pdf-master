@@ -85,19 +85,29 @@ exata, no momento em que a dependência for adicionada (regra 12).
 | Biblioteca | Uso | Licença |
 |---|---|---|
 | PDFsharp 6.2 | Ler e montar documentos (mesclar, dividir, girar, marcadores) | MIT |
-| Docnet.Core 2.6 | Binding .NET do PDFium para renderizar páginas e miniaturas | MIT |
-| PDFium (binário nativo, distribuído pelo Docnet.Core) | Motor de renderização | BSD-3-Clause / Apache-2.0 |
+| PDFium (pacote bblanchon.PDFium.Win32, binário nativo) | Motor de renderização, chamado diretamente por P/Invoke. Substituiu o Docnet.Core na Fase 3 para usar uma compilação atual do PDFium. | BSD-3-Clause / Apache-2.0 |
 | System.Security.Cryptography.Pkcs | Dependência do PDFsharp, fixada em versão corrigida | MIT |
+
+### Em uso desde a Fase 3
+
+| Biblioteca | Uso | Licença |
+|---|---|---|
+| PdfPig 0.1.14 | Extração de texto (PDF → TXT, HTML, DOCX) | Apache-2.0 |
+| Codecs de imagem do Windows (WIC, via WPF) | Ler e gravar JPG, PNG, BMP, TIFF e GIF; recompressão de imagens na compressão | Parte do Windows |
+| LibreOffice (instalado pelo usuário, não distribuído) | Office/ODF/RTF/HTML → PDF e PDF → DOCX com layout | MPL-2.0 |
+
+Decisões da Fase 3: as imagens usam os codecs do próprio Windows, então **não foi preciso**
+Magick.NET nem SkiaSharp; o DOCX de texto corrido é gravado pelo próprio programa (um ZIP com
+XML), então **não foi preciso** o Open XML SDK; a compressão é feita sobre o PDFsharp, sem
+Ghostscript nem qpdf.
 
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
 |---|---|---|---|
 | Senhas, permissões e metadados | PDFsharp 6 (já em uso) | MIT | Fase 6. |
-| Extração de texto e análise | PdfPig | Apache-2.0 | Também para comparação de documentos. |
-| Imagens | Magick.NET (ImageMagick) ou SkiaSharp | Apache-2.0 / MIT | Decidir na Fase 3 pelo tamanho e formatos. |
-| Office → PDF | LibreOffice em modo headless, instalado pelo usuário | MPL-2.0 | Dependência externa opcional, sinalizada na interface. Não será embutida. |
-| DOCX/XLSX/PPTX | Open XML SDK | MIT | Geração de DOCX/XLSX na conversão a partir de PDF. |
+| Comparação de documentos | PdfPig (já em uso) | Apache-2.0 | Fase 6. |
+| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 6, junto com a extração de tabelas. |
 | OCR | Tesseract (binding .NET) + modelos `tessdata` | Apache-2.0 | Modelos por idioma instalados localmente. |
 | Otimização estrutural, reparo | qpdf | Apache-2.0 | Alternativa permissiva ao Ghostscript. |
 | Assinaturas digitais | BouncyCastle | MIT | Validação criptográfica real (CMS/PAdES). |
@@ -122,8 +132,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 |---|---|---|
 | 1 | Fundação: solução, arquitetura, interface, temas, menu, pesquisa, SQLite, gerenciamento de arquivos | Entregue |
 | 2 | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | Entregue |
-| 3 | Conversões e compressão | Próxima |
-| 4 | OCR e digitalização | |
+| 3 | Conversões e compressão | Entregue |
+| 4 | OCR e digitalização | Próxima |
 | 5 | Editor | |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | |
 | 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando | |
