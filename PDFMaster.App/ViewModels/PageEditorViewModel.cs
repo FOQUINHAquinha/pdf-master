@@ -104,6 +104,8 @@ public sealed partial class PageEditorViewModel : ToolViewModelBase
 
     partial void OnFileNameChanged(string value) => OnStateChanged();
 
+    public override Task<bool> RunPrimaryAsync() => ExecuteIfPossibleAsync(SaveCommand);
+
     protected override void OnStateChanged()
     {
         PickFileCommand.NotifyCanExecuteChanged();

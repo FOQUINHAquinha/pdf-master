@@ -44,10 +44,17 @@ Regras de dependência: `Domain` não depende de nada; `Core` depende só de `Do
 dependem de `Core`/`Domain`; apenas `App` conhece todos. A interface nunca executa trabalho pesado
 na thread principal: view models chamam serviços assíncronos com `CancellationToken` e `IProgress`.
 
-**Camada de abstração de PDF (Fase 2).** `PDFMaster.PdfEngine` vai expor contratos por capacidade
-(`IPdfReader`, `IPdfPageOperations`, `IPdfRenderer`, `IPdfSecurity`…). Cada biblioteca entra como
-adaptador desses contratos, de modo que trocar PDFsharp por outra biblioteca não toca na interface
-nem nos demais módulos.
+**Camada de abstração de PDF.** A interface e os demais módulos só conhecem dois contratos:
+`IPdfEngine` (ler informações e montar documentos; hoje implementado por `PdfSharpEngine`) e
+`IPdfRenderer` (transformar páginas em imagem; hoje `PdfiumRenderer`). Trocar de biblioteca é
+escrever outra implementação desses contratos, sem tocar na interface.
+
+Todas as ferramentas de organização são expressas como uma lista de `PageInstruction` — "copie a
+página N do arquivo X, com tal rotação" ou "página em branco" — entregue a `IPdfEngine.ComposeAsync`.
+Mesclar, dividir, extrair, girar, reordenar, excluir, intercalar e inserir são apenas formas
+diferentes de montar essa lista (`PdfOrganizer` e os planejadores em `PDFMaster.Core/Pdf`), o que
+mantém uma única rotina de gravação, bem testada. A gravação é sempre em arquivo temporário seguido
+de renomeação, e o motor se recusa a gravar por cima de um arquivo de origem.
 
 **Catálogo de ferramentas.** Todas as ferramentas da especificação estão em `ToolCatalog` com a fase
 prevista. `IsAvailable` só vira `true` quando a ferramenta passa nos critérios da seção 21.4. Enquanto
@@ -73,12 +80,20 @@ exata, no momento em que a dependência for adicionada (regra 12).
 | Serilog, Serilog.Sinks.File, Serilog.Extensions.Logging | Log em arquivo | Apache-2.0 |
 | xUnit, Microsoft.NET.Test.Sdk | Testes (não distribuídos) | Apache-2.0 / MIT |
 
+### Em uso desde a Fase 2
+
+| Biblioteca | Uso | Licença |
+|---|---|---|
+| PDFsharp 6.2 | Ler e montar documentos (mesclar, dividir, girar, marcadores) | MIT |
+| Docnet.Core 2.6 | Binding .NET do PDFium para renderizar páginas e miniaturas | MIT |
+| PDFium (binário nativo, distribuído pelo Docnet.Core) | Motor de renderização | BSD-3-Clause / Apache-2.0 |
+| System.Security.Cryptography.Pkcs | Dependência do PDFsharp, fixada em versão corrigida | MIT |
+
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
 |---|---|---|---|
-| Manipulação (mesclar, dividir, girar, senhas, metadados) | PDFsharp 6 | MIT | Base da Fase 2. |
-| Renderização e miniaturas | PDFium (via binding .NET) | BSD-3 / Apache-2.0 | Binário nativo distribuído junto. |
+| Senhas, permissões e metadados | PDFsharp 6 (já em uso) | MIT | Fase 6. |
 | Extração de texto e análise | PdfPig | Apache-2.0 | Também para comparação de documentos. |
 | Imagens | Magick.NET (ImageMagick) ou SkiaSharp | Apache-2.0 / MIT | Decidir na Fase 3 pelo tamanho e formatos. |
 | Office → PDF | LibreOffice em modo headless, instalado pelo usuário | MPL-2.0 | Dependência externa opcional, sinalizada na interface. Não será embutida. |
@@ -106,8 +121,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | Fase | Entrega | Situação |
 |---|---|---|
 | 1 | Fundação: solução, arquitetura, interface, temas, menu, pesquisa, SQLite, gerenciamento de arquivos | Entregue |
-| 2 | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | Próxima |
-| 3 | Conversões e compressão | |
+| 2 | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | Entregue |
+| 3 | Conversões e compressão | Próxima |
 | 4 | OCR e digitalização | |
 | 5 | Editor | |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | |

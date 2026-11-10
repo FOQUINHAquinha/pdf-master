@@ -91,6 +91,19 @@ public abstract partial class ToolViewModelBase : ObservableObject
     /// <summary>Verdadeiro quando a tela ainda não tem nenhum documento carregado.</summary>
     public abstract bool IsEmpty { get; }
 
+    /// <summary>
+    /// Executa a ação principal da tela (o botão de destaque), se ela estiver habilitada.
+    /// Usado pela linha de comando (--run). Devolve false quando não havia o que executar.
+    /// </summary>
+    public virtual Task<bool> RunPrimaryAsync() => Task.FromResult(false);
+
+    protected static async Task<bool> ExecuteIfPossibleAsync(IAsyncRelayCommand command)
+    {
+        if (!command.CanExecute(null)) return false;
+        await command.ExecuteAsync(null);
+        return true;
+    }
+
     [RelayCommand]
     private void Close() => CloseRequested?.Invoke();
 

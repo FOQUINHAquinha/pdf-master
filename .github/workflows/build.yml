@@ -88,7 +88,12 @@ jobs:
           $b = Join-Path $env:RUNNER_TEMP 'pdfm-smoke-pdfs\Anexos.pdf'
           "amostras: $(Test-Path $a) $(Test-Path $b)" | Out-File ci-out/smoke.log -Append
 
+          $out = Join-Path $env:RUNNER_TEMP 'pdfm-smoke-out'
           $runs = @(
+            @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
+            @{ name = 'run-interleave'; args = @('--theme','light','--tool','interleave','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
+            @{ name = 'run-split';      args = @('--theme','light','--tool','split','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-pages';      args = @('--theme','light','--tool','reorder','--output',"`"$out`"",'--run',"`"$a`"") },
             @{ name = 'tool-viewer';    args = @('--theme','light','--tool','view',"`"$a`"") },
             @{ name = 'tool-pages';     args = @('--theme','light','--tool','reorder',"`"$a`"") },
             @{ name = 'tool-merge';     args = @('--theme','dark','--tool','merge',"`"$a`"","`"$b`"") },
@@ -113,6 +118,22 @@ jobs:
               Stop-Process -Id $p.Id -Force
               Start-Sleep -Seconds 1
             }
+          }
+
+          # Resultado das execuções feitas pela interface (--run).
+          $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
+          foreach ($name in $expected) {
+            $file = Join-Path $out $name
+            if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {
+              "saida ok: $name ($((Get-Item $file).Length) bytes)" | Out-File ci-out/smoke.log -Append
+            } else {
+              "saida AUSENTE: $name" | Out-File ci-out/smoke.log -Append
+              $failed = $true
+            }
+          }
+          if (Get-ChildItem $out -Filter '*.pdfmaster-tmp' -Force -ErrorAction SilentlyContinue) {
+            "temporarios deixados na pasta de saida" | Out-File ci-out/smoke.log -Append
+            $failed = $true
           }
 
           if (Test-Path (Join-Path $env:PDFMASTER_DATA_DIR 'Logs')) {

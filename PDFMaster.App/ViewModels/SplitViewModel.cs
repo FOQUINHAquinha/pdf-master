@@ -85,6 +85,8 @@ public sealed partial class SplitViewModel : ToolViewModelBase
     partial void OnSizeMbTextChanged(string value) => Refresh();
     partial void OnNamePatternChanged(string value) => Refresh();
 
+    public override Task<bool> RunPrimaryAsync() => ExecuteIfPossibleAsync(StartCommand);
+
     protected override void OnStateChanged()
     {
         StartCommand.NotifyCanExecuteChanged();

@@ -128,7 +128,16 @@ public partial class App : Application
             if (options.Tool is not null)
             {
                 // "--tool merge a.pdf b.pdf": abre a ferramenta já com os arquivos.
-                main.OpenTool(options.Tool, options.Files);
+                var toolPage = await main.OpenToolAsync(options.Tool, options.Files);
+                if (toolPage is not null)
+                {
+                    if (options.Output is not null) toolPage.OutputFolder = System.IO.Path.GetFullPath(options.Output);
+                    if (options.Run && !await toolPage.RunPrimaryAsync())
+                    {
+                        _services.GetRequiredService<NotificationCenter>().Show(NotificationKind.Warning,
+                            "Nada foi executado", "A ferramenta foi aberta, mas faltam dados para executar (--run).");
+                    }
+                }
             }
             else if (options.Files.Count > 0)
             {
@@ -172,16 +181,19 @@ public partial class App : Application
 /// Linha de comando da interface:
 /// <c>PDFMaster.exe [--theme light|dark] [--page seção] [--tool ferramenta] [arquivos e pastas…]</c>.
 /// --theme define (e salva) o tema; --page abre direto numa seção; --tool abre uma ferramenta
-/// (view, merge, split, reorder, interleave…) com os arquivos informados; sem --tool, os arquivos
-/// e pastas vão para a lista de arquivos abertos.
+/// (view, merge, split, reorder, interleave…) com os arquivos informados; --output define a pasta
+/// de destino da ferramenta e --run executa a ação principal com as opções padrão. Sem --tool, os
+/// arquivos e pastas vão para a lista de arquivos abertos.
 /// </summary>
-public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool, IReadOnlyList<string> Files)
+public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool, string? Output, bool Run, IReadOnlyList<string> Files)
 {
     public static StartupOptions Parse(IReadOnlyList<string> args)
     {
         AppTheme? theme = null;
         string? page = null;
         string? tool = null;
+        string? output = null;
+        var run = false;
         var files = new List<string>();
         for (var i = 0; i < args.Count; i++)
         {
@@ -200,12 +212,20 @@ public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool,
             {
                 tool = args[++i].ToLowerInvariant();
             }
+            else if (arg.Equals("--output", StringComparison.OrdinalIgnoreCase) && hasValue)
+            {
+                output = args[++i];
+            }
+            else if (arg.Equals("--run", StringComparison.OrdinalIgnoreCase))
+            {
+                run = true;
+            }
             else if (!arg.StartsWith("--", StringComparison.Ordinal) && arg.Length > 0)
             {
                 files.Add(arg);
             }
         }
 
-        return new StartupOptions(theme, page, tool, files);
+        return new StartupOptions(theme, page, tool, output, run, files);
     }
 }

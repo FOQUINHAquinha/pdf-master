@@ -3,9 +3,10 @@
 Suíte de ferramentas PDF para Windows 10 e 11, gratuita, sem conta, sem anúncios e com
 processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-**Estado atual: Fase 1 (fundação) concluída.** A interface, a pesquisa, o banco local e o
-gerenciamento de arquivos funcionam. As ferramentas de PDF (mesclar, dividir, converter etc.)
-começam na Fase 2 e aparecem no programa como "Prevista".
+**Estado atual: Fases 1 e 2 concluídas.** Já funcionam o visualizador e as ferramentas de
+organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas.
+Conversão, compressão, OCR, editor e segurança aparecem no programa como "Prevista" e chegam nas
+próximas fases.
 
 ## Baixar o executável
 
@@ -30,16 +31,27 @@ dotnet publish PDFMaster.App/PDFMaster.App.csproj -c Release -r win-x64 --self-c
 ## Linha de comando
 
 ```
-PDFMaster.exe [--theme light|dark] [--page <seção>] [arquivos e pastas…]
+PDFMaster.exe [--theme light|dark] [--page <seção>] [--tool <ferramenta>] [--output <pasta>] [--run] [arquivos e pastas…]
 ```
 
 | Parâmetro | Efeito |
 |---|---|
 | `--theme light` / `--theme dark` | Define e salva o tema. |
 | `--page <seção>` | Abre direto numa seção: `home`, `organize`, `edit`, `convert`, `compress`, `security`, `ocr`, `compare`, `batch`, `history`, `settings`. |
-| arquivos e pastas | São adicionados à lista de arquivos abertos (pastas são lidas com as subpastas). |
+| `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados: `view`, `merge`, `interleave`, `split`, `reorder`, `rotate`, `delete-pages`, `insert-pages`, `extract-pages`. |
+| `--output <pasta>` | Define a pasta de destino da ferramenta aberta com `--tool`. |
+| `--run` | Executa a ação principal da ferramenta com as opções padrão (a janela continua aberta para mostrar o resultado). |
+| arquivos e pastas | Sem `--tool`, vão para a lista de arquivos abertos (pastas são lidas com as subpastas). |
 
-Os comandos de processamento (`--merge`, `--compress`, `--ocr`, `--split`) entram na Fase 7.
+Exemplos:
+
+```
+PDFMaster.exe --tool merge --output C:\Saida --run a.pdf b.pdf
+PDFMaster.exe --tool split documento.pdf
+PDFMaster.exe --tool view documento.pdf
+```
+
+A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.
 
 ## Onde ficam os dados
 

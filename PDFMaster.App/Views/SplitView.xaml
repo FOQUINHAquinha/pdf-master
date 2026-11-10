@@ -35,11 +35,11 @@
                 <StackPanel>
                     <TextBlock Text="Como dividir" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
 
-                    <RadioButton GroupName="SplitMode" Content="Uma página por arquivo"
+                    <RadioButton GroupName="SplitMode" MinWidth="0" Content="Uma página por arquivo"
                                  IsChecked="{Binding IsEveryPage, Mode=TwoWay}" />
 
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <RadioButton GroupName="SplitMode" Content="A cada" VerticalAlignment="Center"
+                        <RadioButton GroupName="SplitMode" MinWidth="0" Content="A cada" VerticalAlignment="Center"
                                      IsChecked="{Binding IsEveryN, Mode=TwoWay}" />
                         <TextBox Width="64" Margin="8,0,8,0"
                                  Text="{Binding PagesPerFileText, UpdateSourceTrigger=PropertyChanged}"
@@ -48,7 +48,7 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <RadioButton GroupName="SplitMode" Content="Por intervalos — um arquivo para cada:"
+                        <RadioButton GroupName="SplitMode" MinWidth="0" Content="Por intervalos — um arquivo para cada:"
                                      VerticalAlignment="Center" IsChecked="{Binding IsRanges, Mode=TwoWay}" />
                         <TextBox Width="260" Margin="8,0,0,0"
                                  Text="{Binding RangesText, UpdateSourceTrigger=PropertyChanged}"
@@ -56,7 +56,7 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <RadioButton GroupName="SplitMode" Content="Começar um novo arquivo nas páginas:"
+                        <RadioButton GroupName="SplitMode" MinWidth="0" Content="Começar um novo arquivo nas páginas:"
                                      VerticalAlignment="Center" IsChecked="{Binding IsCutPoints, Mode=TwoWay}" />
                         <TextBox Width="260" Margin="8,0,0,0"
                                  Text="{Binding CutPointsText, UpdateSourceTrigger=PropertyChanged}"
@@ -65,7 +65,7 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <RadioButton GroupName="SplitMode" Content="Por tamanho — no máximo" VerticalAlignment="Center"
+                        <RadioButton GroupName="SplitMode" MinWidth="0" Content="Por tamanho — no máximo" VerticalAlignment="Center"
                                      IsChecked="{Binding IsSize, Mode=TwoWay}" />
                         <TextBox Width="72" Margin="8,0,8,0"
                                  Text="{Binding SizeMbText, UpdateSourceTrigger=PropertyChanged}"
@@ -73,7 +73,7 @@
                         <TextBlock Text="MB por arquivo" Style="{StaticResource Body}" VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <RadioButton GroupName="SplitMode" Margin="0,6,0,0"
+                    <RadioButton GroupName="SplitMode" MinWidth="0" Margin="0,6,0,0"
                                  Content="Por marcadores — um arquivo para cada marcador de primeiro nível"
                                  IsChecked="{Binding IsBookmarks, Mode=TwoWay}" IsEnabled="{Binding HasBookmarks}" />
                 </StackPanel>

@@ -147,6 +147,8 @@ public sealed partial class CombineViewModel : ToolViewModelBase
     partial void OnStopAtShortestChanged(bool value) => Refresh();
     partial void OnFileNameChanged(string value) => Refresh();
 
+    public override Task<bool> RunPrimaryAsync() => ExecuteIfPossibleAsync(StartCommand);
+
     protected override void OnStateChanged()
     {
         StartCommand.NotifyCanExecuteChanged();

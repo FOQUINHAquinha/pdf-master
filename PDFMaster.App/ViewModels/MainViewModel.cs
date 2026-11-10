@@ -176,7 +176,10 @@ public sealed partial class MainViewModel : ObservableObject
     /// Abre uma ferramenta implementada. Sem arquivos informados, a ferramenta recebe os PDFs
     /// que estão na lista de arquivos abertos da página inicial (se ela ainda estiver vazia).
     /// </summary>
-    public async void OpenTool(string toolId, IReadOnlyList<string>? files)
+    public async void OpenTool(string toolId, IReadOnlyList<string>? files) => await OpenToolAsync(toolId, files);
+
+    /// <summary>Como <see cref="OpenTool(string, IReadOnlyList{string})"/>, devolvendo a tela aberta (ou null).</summary>
+    public async Task<ToolViewModelBase?> OpenToolAsync(string toolId, IReadOnlyList<string>? files)
     {
         try
         {
@@ -185,7 +188,7 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 Notifications.Show(NotificationKind.Warning, "Ferramenta indisponível",
                     tool is null ? $"\"{toolId}\" não existe." : $"{tool.Name} está prevista para a Fase {tool.PlannedPhase}.");
-                return;
+                return null;
             }
 
             var viewModel = GetToolViewModel(toolId);
@@ -210,11 +213,13 @@ public sealed partial class MainViewModel : ObservableObject
 
             IReadOnlyList<string> input = files is { Count: > 0 } ? files : viewModel.IsEmpty ? _home.OpenPdfPaths : [];
             if (input.Count > 0) await viewModel.AddFilesAsync(input);
+            return viewModel;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falha ao abrir a ferramenta {Tool}", toolId);
             Notifications.Show(NotificationKind.Error, "Não foi possível abrir a ferramenta", ex.Message);
+            return null;
         }
     }
 
