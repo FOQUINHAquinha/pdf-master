@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PDFMaster.App.Services;
 using PDFMaster.App.ViewModels;
+using PDFMaster.Compression;
+using PDFMaster.Conversion;
 using PDFMaster.Core;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Settings;
@@ -80,7 +82,18 @@ public partial class App : Application
                 provider.GetRequiredService<IDialogService>(),
                 provider.GetRequiredService<ShellLauncher>(),
                 provider.GetRequiredService<NotificationCenter>(),
-                provider.GetRequiredService<ILoggerFactory>()));
+                provider.GetRequiredService<ILoggerFactory>(),
+                provider.GetRequiredService<ConversionToolkit>()));
+
+            services.AddSingleton<OutputPlanner>();
+            services.AddSingleton<LibreOffice>();
+            services.AddSingleton<PdfToImageConverter>();
+            services.AddSingleton<ImagesToPdfConverter>();
+            services.AddSingleton<OfficeToPdfConverter>();
+            services.AddSingleton<TextToPdfConverter>();
+            services.AddSingleton<PdfTextExporter>();
+            services.AddSingleton<PdfCompressor>();
+            services.AddSingleton<ConversionToolkit>();
 
             services.AddSingleton<NotificationCenter>();
             services.AddSingleton<ThemeService>();

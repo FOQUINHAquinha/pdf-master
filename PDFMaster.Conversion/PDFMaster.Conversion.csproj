@@ -1,9 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Os codificadores e decodificadores de imagem do Windows (WIC) são usados pelo WPF. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
     <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
+    <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
+    <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" />
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- O SDK do WPF retira System.IO dos usings implícitos. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

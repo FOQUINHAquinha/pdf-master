@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -11,6 +12,8 @@
     <ProjectReference Include="..\PDFMaster.Infrastructure\PDFMaster.Infrastructure.csproj" />
     <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
     <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
+    <ProjectReference Include="..\PDFMaster.Conversion\PDFMaster.Conversion.csproj" />
+    <ProjectReference Include="..\PDFMaster.Compression\PDFMaster.Compression.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -19,5 +22,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="PDFsharp" />
+    <PackageReference Include="PdfPig" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- O SDK do WPF retira System.IO dos usings implícitos. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

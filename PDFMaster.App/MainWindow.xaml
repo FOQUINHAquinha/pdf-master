@@ -15,6 +15,12 @@
         <DataTemplate DataType="{x:Type vm:CombineViewModel}">
             <views:CombineView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ConvertViewModel}">
+            <views:ConvertView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CompressViewModel}">
+            <views:CompressView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:SplitViewModel}">
             <views:SplitView />
         </DataTemplate>

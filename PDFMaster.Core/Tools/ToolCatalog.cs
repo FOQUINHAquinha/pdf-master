@@ -40,6 +40,8 @@ public sealed class ToolCatalog
     {
         // Fase 2
         "view", "merge", "split", "extract-pages", "reorder", "rotate", "delete-pages", "interleave", "insert-pages",
+        // Fase 3
+        "pdf-to-image", "image-to-pdf", "office-to-pdf", "text-html-to-pdf", "pdf-to-word", "pdf-to-text", "compress",
     };
 
     public IReadOnlyList<ToolDefinition> All { get; } = Build();
@@ -126,7 +128,7 @@ public sealed class ToolCatalog
             "word para pdf", "docx para pdf", "excel para pdf", "xlsx", "powerpoint para pdf", "pptx");
         T("pdf-to-word", "PDF para Word", "Converte PDF em DOCX editável, com limitações de formatação informadas.", ToolCategory.Convert, 3, Sync,
             "pdf para docx", "pdf editável", "transformar em word");
-        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 3, Sync,
+        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 6, Sync,
             "pdf para xlsx", "pdf para planilha", "pdf para pptx", "tabela para excel");
         T("pdf-to-text", "PDF para texto e HTML", "Exporta o conteúdo em TXT ou HTML.", ToolCategory.Convert, 3, Font,
             "pdf para txt", "extrair texto", "copiar texto", "pdf para html");

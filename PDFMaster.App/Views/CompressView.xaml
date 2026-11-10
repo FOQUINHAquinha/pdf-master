@@ -1,0 +1,172 @@
+<UserControl x:Class="PDFMaster.App.Views.CompressView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,22,28,24" MaxWidth="1040" HorizontalAlignment="Left">
+            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolHeader}" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                <Button Content="Adicionar PDFs…" Style="{StaticResource PrimaryButton}"
+                        Command="{Binding PickFilesCommand}" />
+                <Button Content="Limpar lista" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                        Command="{Binding ClearCommand}" />
+            </StackPanel>
+
+            <!-- Lista de arquivos -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,8" MinHeight="84">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10"
+                                Visibility="{Binding HasFiles, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                        <TextBlock Text="&#xE73F;" Style="{StaticResource Icon}" FontSize="26"
+                                   Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Text="Arraste os PDFs para cá ou use “Adicionar PDFs…”" Style="{StaticResource Body}"
+                                   HorizontalAlignment="Center" Margin="0,8,0,0" />
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Files}" MaxHeight="230" Template="{StaticResource ScrollingItems}"
+                                  ItemsPanel="{StaticResource VirtualPanel}"
+                                  Visibility="{Binding HasFiles, Converter={StaticResource BoolToVis}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="0,7">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;"
+                                                FontSize="12" ToolTip="Remover da lista (o arquivo não é apagado)"
+                                                Command="{Binding RemoveCommand}" />
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding OriginalText}"
+                                                   Style="{StaticResource Secondary}" VerticalAlignment="Center"
+                                                   Margin="12,0" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}"
+                                                       Foreground="{DynamicResource Brush.Text}" />
+                                            <TextBlock x:Name="ResultLine" Text="{Binding ResultText}" FontSize="12"
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource Brush.Accent}"
+                                                       Visibility="{Binding ResultText, Converter={StaticResource NullToVis}}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Failed}" Value="True">
+                                        <Setter TargetName="ResultLine" Property="Foreground"
+                                                Value="{DynamicResource Brush.Danger}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+
+            <!-- Perfil -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Perfil de compressão" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="520" ItemsSource="{Binding Profiles}"
+                              DisplayMemberPath="Label" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" />
+
+                    <StackPanel Margin="0,12,0,0" Visibility="{Binding IsCustom, Converter={StaticResource BoolToVis}}">
+                        <WrapPanel>
+                            <StackPanel Margin="0,0,16,6">
+                                <TextBlock Text="Qualidade JPEG (1–100)" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                                <TextBox Width="110" Text="{Binding QualityText, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,6">
+                                <TextBlock Text="Resolução máxima das imagens (DPI)" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                                <TextBox Width="110" Text="{Binding DpiText, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </WrapPanel>
+                        <CheckBox Content="Regravar em JPEG também as imagens guardadas sem perda"
+                                  IsChecked="{Binding ConvertLossless, Mode=TwoWay}" />
+                        <CheckBox Content="Converter as imagens para escala de cinza" Margin="0,4,0,0"
+                                  IsChecked="{Binding Grayscale, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <CheckBox Content="Remover metadados (título, autor, assunto, palavras-chave)" Margin="0,12,0,0"
+                              IsChecked="{Binding RemoveMetadata, Mode=TwoWay}" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,10,0,0"
+                               Text="Em todos os perfis os dados sem compressão são compactados e os objetos não utilizados são descartados. A redução vem principalmente das imagens: documentos só com texto, ou já otimizados, mudam pouco. Imagens CMYK, de 1 bit, JBIG2 e JPEG 2000 não são regravadas. Se o resultado não ficar menor que o original, nada é gravado." />
+                </StackPanel>
+            </Border>
+
+            <!-- Destino e execução -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Comprimir" Style="{StaticResource PrimaryButton}"
+                            MinWidth="120" VerticalAlignment="Bottom" Margin="16,0,0,0"
+                            Command="{Binding StartCommand}" />
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolOutputFolder}" />
+                </DockPanel>
+            </Border>
+
+            <Grid Margin="2,10,0,0">
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Body}"
+                           Visibility="{Binding Problem, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+                <TextBlock Text="{Binding Problem}" FontSize="13" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Brush.Danger}"
+                           Visibility="{Binding Problem, Converter={StaticResource NullToVis}}" />
+            </Grid>
+
+            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolBusy}" />
+
+            <!-- Comparação -->
+            <Border Style="{StaticResource Card}" Margin="0,12,0,0"
+                    Visibility="{Binding HasComparison, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}">
+                        <Run Text="Antes e depois — " />
+                        <Run Text="{Binding ComparisonTitle, Mode=OneWay}" />
+                    </TextBlock>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Tamanho original" Style="{StaticResource Secondary}" />
+                            <TextBlock Text="{Binding OriginalSizeText}" FontSize="18" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.Text}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Tamanho final" Style="{StaticResource Secondary}" />
+                            <TextBlock Text="{Binding FinalSizeText}" FontSize="18" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Economia" Style="{StaticResource Secondary}" />
+                            <TextBlock Text="{Binding SavedText}" FontSize="18" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.Text}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="3">
+                            <TextBlock Text="Perfil utilizado" Style="{StaticResource Secondary}" />
+                            <TextBlock Text="{Binding QualityUsedText}" Style="{StaticResource Body}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Original — página 1" Style="{StaticResource Secondary}" Margin="0,0,0,4" />
+                            <Border Style="{StaticResource PageFrame}" MaxHeight="520" HorizontalAlignment="Left">
+                                <Image Source="{Binding BeforeImage}" Stretch="Uniform" />
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Comprimido — página 1" Style="{StaticResource Secondary}" Margin="0,0,0,4" />
+                            <Border Style="{StaticResource PageFrame}" MaxHeight="520" HorizontalAlignment="Left">
+                                <Image Source="{Binding AfterImage}" Stretch="Uniform" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -7,6 +7,6 @@
     <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Docnet.Core" />
+    <PackageReference Include="bblanchon.PDFium.Win32" />
   </ItemGroup>
 </Project>

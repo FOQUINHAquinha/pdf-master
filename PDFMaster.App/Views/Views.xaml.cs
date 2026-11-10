@@ -82,6 +82,24 @@ public partial class CombineView : UserControl
     }
 }
 
+public partial class ConvertView : UserControl
+{
+    public ConvertView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class CompressView : UserControl
+{
+    public CompressView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
 public partial class SplitView : UserControl
 {
     public SplitView()

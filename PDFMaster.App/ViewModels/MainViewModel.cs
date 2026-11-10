@@ -231,6 +231,8 @@ public sealed partial class MainViewModel : ObservableObject
             "merge" or "interleave" => "combine",
             "split" => "split",
             "view" => "viewer",
+            "compress" => "compress",
+            "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
             _ => "pages",
         };
 
@@ -240,6 +242,13 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 "combine" => new CombineViewModel(_toolContext),
                 "split" => new SplitViewModel(_toolContext),
+                "compress" => new CompressViewModel(_toolContext),
+                "pdf-to-image" => new ConvertViewModel(_toolContext, ConversionKind.PdfToImage),
+                "image-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.ImageToPdf),
+                "office-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.OfficeToPdf),
+                "text-html-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.TextHtmlToPdf),
+                "pdf-to-word" => new ConvertViewModel(_toolContext, ConversionKind.PdfToWord),
+                "pdf-to-text" => new ConvertViewModel(_toolContext, ConversionKind.PdfToText),
                 "viewer" => new ViewerViewModel(_toolContext) { OpenToolRequested = (id, path) => OpenTool(id, [path]) },
                 _ => new PageEditorViewModel(_toolContext),
             };

@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PDFMaster.App.Services;
+using PDFMaster.Compression;
+using PDFMaster.Conversion;
 using PDFMaster.Core;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Pdf;
@@ -27,7 +29,18 @@ public sealed record ToolContext(
     IDialogService Dialogs,
     ShellLauncher Shell,
     NotificationCenter Notifications,
-    ILoggerFactory LoggerFactory);
+    ILoggerFactory LoggerFactory,
+    ConversionToolkit Conversion);
+
+/// <summary>Serviços de conversão e compressão (Fase 3).</summary>
+public sealed record ConversionToolkit(
+    PdfToImageConverter PdfToImage,
+    ImagesToPdfConverter ImagesToPdf,
+    OfficeToPdfConverter Office,
+    TextToPdfConverter Text,
+    PdfTextExporter PdfText,
+    PdfCompressor Compressor,
+    LibreOffice LibreOffice);
 
 /// <summary>
 /// Base das telas de ferramenta: estado de ocupado, progresso, cancelamento, pasta de destino,
@@ -139,6 +152,12 @@ public abstract partial class ToolViewModelBase : ObservableObject
     protected static IReadOnlyList<string> OnlyPdfs(IReadOnlyList<string> paths) =>
         paths.Where(p => SupportedFiles.GetKind(p) == FileKind.Pdf && File.Exists(p)).ToList();
 
+    protected string? StartFolder()
+    {
+        var s = Context.Settings.Current;
+        return s.RememberLastFolder && !string.IsNullOrEmpty(s.LastFolder) ? s.LastFolder : s.DefaultOutputFolder;
+    }
+
     protected IReadOnlyList<string> PickPdfs(bool multiple)
     {
         var s = Context.Settings.Current;
@@ -207,7 +226,8 @@ public abstract partial class ToolViewModelBase : ObservableObject
         string operation,
         string inputName,
         string busyText,
-        Func<IProgress<double>, CancellationToken, Task<IReadOnlyList<ProducedFile>>> work)
+        Func<IProgress<double>, CancellationToken, Task<IReadOnlyList<ProducedFile>>> work,
+        Func<string?>? extraMessage = null)
     {
         if (IsBusy) return false;
 
@@ -253,6 +273,8 @@ public abstract partial class ToolViewModelBase : ObservableObject
             var message = files.Count == 1
                 ? $"{Path.GetFileName(first.Path)}\n{first.PageCount} página(s), {FileSizeFormatter.Format(first.Bytes)}"
                 : $"{files.Count} arquivos gerados ({FileSizeFormatter.Format(files.Sum(f => f.Bytes))}) em\n{Path.GetDirectoryName(first.Path)}";
+
+            if (extraMessage?.Invoke() is { Length: > 0 } extra) message += "\n" + extra;
 
             Context.Notifications.Show(NotificationKind.Success, $"{operation}: concluído", message,
                 new NotificationAction("Abrir arquivo", () => Context.Shell.OpenDocument(first.Path)),

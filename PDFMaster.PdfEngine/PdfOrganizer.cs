@@ -205,38 +205,5 @@ public sealed class PdfOrganizer
         OutputTarget target,
         string operationName,
         IReadOnlyList<string> sources,
-        ISet<string>? reserved)
-    {
-        if (string.IsNullOrWhiteSpace(target.Folder))
-            throw new PdfEngineException("Escolha a pasta de destino.");
-
-        OutputDecision decision;
-        try
-        {
-            var options = new OutputOptions(target.Folder, target.Policy, target.Subfolders, operationName);
-            decision = _resolver.Resolve(options, fileName, DateTime.Now, reserved);
-
-            // Um arquivo de origem nunca é o destino, nem com a política "substituir".
-            var collides = sources.Any(s => string.Equals(System.IO.Path.GetFullPath(s), decision.FullPath, StringComparison.OrdinalIgnoreCase));
-            if (collides)
-            {
-                var safe = options with { Policy = OverwritePolicy.AutoRename };
-                var taken = reserved ?? OutputPathResolver.CreateReservationSet();
-                taken.Add(decision.FullPath);
-                decision = _resolver.Resolve(safe, fileName, DateTime.Now, taken);
-            }
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
-        {
-            throw new PdfEngineException("Pasta ou nome de saída inválido: " + ex.Message, ex);
-        }
-
-        if (decision.Skip)
-        {
-            throw new PdfEngineException(
-                $"Já existe \"{System.IO.Path.GetFileName(decision.FullPath)}\" na pasta de destino e a configuração atual mantém o arquivo existente.");
-        }
-
-        return (decision.FullPath, decision.Overwrites);
-    }
+        ISet<string>? reserved) => new OutputPlanner(_resolver).Resolve(fileName, target, operationName, sources, reserved);
 }
