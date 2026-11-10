@@ -70,7 +70,19 @@ jobs:
             $g.Dispose(); $bmp.Dispose()
           }
 
+          # Arquivos de exemplo para exercitar a importação: um PDF válido, uma cópia idêntica,
+          # um arquivo que não é PDF com extensão .pdf e um tipo não suportado.
+          $samples = Join-Path $env:RUNNER_TEMP 'pdfm-samples'
+          New-Item -ItemType Directory -Force $samples | Out-Null
+          $pdf = "%PDF-1.4`n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj`n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj`ntrailer<</Root 1 0 R>>`n%%EOF`n"
+          [IO.File]::WriteAllText((Join-Path $samples 'contrato.pdf'), $pdf)
+          [IO.File]::WriteAllText((Join-Path $samples 'contrato - copia.pdf'), $pdf)
+          [IO.File]::WriteAllText((Join-Path $samples 'falso.pdf'), 'isto nao e um PDF')
+          [IO.File]::WriteAllText((Join-Path $samples 'notas.txt'), 'texto simples')
+          [IO.File]::WriteAllText((Join-Path $samples 'programa.exe'), 'MZ')
+
           $runs = @(
+            @{ name = 'light-files';    args = @('--theme','light',"`"$samples`"","`"$(Join-Path $samples 'programa.exe')`"") },
             @{ name = 'light-home';     args = @('--theme','light','--page','home') },
             @{ name = 'dark-home';      args = @('--theme','dark','--page','home') },
             @{ name = 'light-organize'; args = @('--theme','light','--page','organize') },
