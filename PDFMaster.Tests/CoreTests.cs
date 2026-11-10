@@ -51,13 +51,30 @@ public class ToolSearchTests
     }
 
     [Fact]
-    public void Catalog_ids_are_unique_and_nothing_is_marked_available_without_implementation()
+    public void Catalog_ids_are_unique_and_only_implemented_tools_are_available()
     {
         var all = new ToolCatalog().All;
         Assert.Equal(all.Count, all.Select(t => t.Id).Distinct().Count());
-        // Fase 1: nenhuma ferramenta de PDF está implementada ainda.
-        Assert.DoesNotContain(all, t => t.IsAvailable);
         Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 7));
+
+        // Somente as ferramentas da Fase 2 estão implementadas.
+        var available = all.Where(t => t.IsAvailable).Select(t => t.Id).OrderBy(id => id).ToArray();
+        Assert.Equal(
+            new[] { "delete-pages", "extract-pages", "insert-pages", "interleave", "merge", "reorder", "rotate", "split", "view" },
+            available);
+        Assert.All(all.Where(t => t.IsAvailable), t => Assert.Equal(2, t.PlannedPhase));
+        Assert.All(ToolCatalog.Implemented, id => Assert.NotNull(new ToolCatalog().Find(id)));
+    }
+
+    [Theory]
+    [InlineData("abrir pdf", "view")]
+    [InlineData("visualizar", "view")]
+    [InlineData("intercalar", "interleave")]
+    [InlineData("girar", "rotate")]
+    [InlineData("excluir páginas", "delete-pages")]
+    public void Finds_phase_two_tools(string query, string expectedId)
+    {
+        Assert.Equal(expectedId, _search.Search(query)[0].Id);
     }
 
     [Fact]

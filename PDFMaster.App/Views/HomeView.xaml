@@ -100,6 +100,9 @@
                                         <TextBlock Grid.Column="3" Text="{Binding SizeText}"
                                                    Style="{StaticResource Secondary}" VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                            <Button Style="{StaticResource IconButton}" Content="&#xE890;"
+                                                    ToolTip="Visualizar no PDF Master"
+                                                    Command="{Binding ViewCommand}" />
                                             <Button Style="{StaticResource IconButton}" Content="&#xE8E5;"
                                                     ToolTip="Abrir no aplicativo padrão do Windows"
                                                     Command="{Binding OpenCommand}" />
@@ -116,6 +119,45 @@
                     </ItemsControl>
                 </StackPanel>
             </Border>
+
+            <!-- Ferramentas mais utilizadas / recomendadas -->
+            <TextBlock Text="{Binding QuickToolsTitle}" Style="{StaticResource SectionTitle}" Margin="2,18,0,0" />
+            <TextBlock Style="{StaticResource Secondary}" Margin="2,2,0,0"
+                       Text="Abrem já com os PDFs da lista de arquivos abertos, quando houver." />
+            <ItemsControl ItemsSource="{Binding QuickTools}" Margin="-5,8,-5,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Margin="5" Command="{Binding OpenCommand}" ToolTip="{Binding Description}" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd" Style="{StaticResource Card}" Padding="12,9">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush"
+                                                    Value="{DynamicResource Brush.Accent}" />
+                                            <Setter TargetName="Bd" Property="Background"
+                                                    Value="{DynamicResource Brush.AccentSoft}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Glyph}" Style="{StaticResource Icon}" FontSize="16"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" Margin="9,0,0,0"
+                                           VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <!-- Recentes e últimas operações -->
             <Grid Margin="0,14,0,0">
@@ -204,8 +246,6 @@
                 </Border>
             </Grid>
 
-            <TextBlock Style="{StaticResource Secondary}" Margin="2,14,0,0"
-                       Text="As seções “Ferramentas mais utilizadas” e “Ferramentas recomendadas” passam a aparecer aqui quando as primeiras ferramentas de PDF forem liberadas (Fase 2)." />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

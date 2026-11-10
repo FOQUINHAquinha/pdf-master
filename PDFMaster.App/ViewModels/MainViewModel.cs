@@ -21,8 +21,11 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly HistoryViewModel _history;
     private readonly SettingsViewModel _settingsPage;
     private readonly ILogger<MainViewModel> _logger;
+    private readonly ToolContext _toolContext;
+    private readonly Dictionary<string, ToolViewModelBase> _tools = new(StringComparer.Ordinal);
     private NavItem? _lastNav;
     private bool _suppressSearchChange;
+    private bool _suppressNavChange;
 
     public MainViewModel(
         ToolCatalog catalog,
@@ -32,8 +35,10 @@ public sealed partial class MainViewModel : ObservableObject
         HomeViewModel home,
         HistoryViewModel history,
         SettingsViewModel settingsPage,
+        ToolContext toolContext,
         ILogger<MainViewModel> logger)
     {
+        _toolContext = toolContext;
         _catalog = catalog;
         _search = search;
         _settings = settings;
@@ -42,6 +47,7 @@ public sealed partial class MainViewModel : ObservableObject
         _settingsPage = settingsPage;
         _logger = logger;
         Notifications = notifications;
+        _home.OpenToolRequested = (id, files) => OpenTool(id, files);
 
         NavItems =
         [
@@ -100,7 +106,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedNavChanged(NavItem? value)
     {
-        if (value is null) return;
+        if (value is null || _suppressNavChange) return;
 
         if (SearchText.Length > 0)
         {
@@ -133,7 +139,8 @@ public sealed partial class MainViewModel : ObservableObject
                 ? $"Nenhuma ferramenta encontrada para \"{value.Trim()}\"."
                 : $"{results.Count} ferramenta(s) para \"{value.Trim()}\".",
             results,
-            showCategory: true);
+            showCategory: true,
+            OpenTool);
     }
 
     private object CreatePage(NavItem item)
@@ -154,10 +161,97 @@ public sealed partial class MainViewModel : ObservableObject
                 var tools = _catalog.ByCategory(category);
                 return new ToolsPageViewModel(
                     item.Title,
-                    "Ferramentas desta categoria e a fase em que cada uma será entregue.",
+                    "Clique em uma ferramenta disponível para abri-la. As demais mostram a fase em que serão entregues.",
                     tools,
-                    showCategory: false);
+                    showCategory: false,
+                    OpenTool);
         }
+    }
+
+    // ---------- Ferramentas ----------
+
+    private void OpenTool(ToolDefinition tool) => OpenTool(tool.Id, null);
+
+    /// <summary>
+    /// Abre uma ferramenta implementada. Sem arquivos informados, a ferramenta recebe os PDFs
+    /// que estão na lista de arquivos abertos da página inicial (se ela ainda estiver vazia).
+    /// </summary>
+    public async void OpenTool(string toolId, IReadOnlyList<string>? files)
+    {
+        try
+        {
+            var tool = _catalog.Find(toolId);
+            if (tool is null || !tool.IsAvailable)
+            {
+                Notifications.Show(NotificationKind.Warning, "Ferramenta indisponível",
+                    tool is null ? $"\"{toolId}\" não existe." : $"{tool.Name} está prevista para a Fase {tool.PlannedPhase}.");
+                return;
+            }
+
+            var viewModel = GetToolViewModel(toolId);
+
+            if (SearchText.Length > 0)
+            {
+                _suppressSearchChange = true;
+                SearchText = string.Empty;
+                _suppressSearchChange = false;
+            }
+
+            var nav = NavItems.FirstOrDefault(n => n.Category == tool.Category);
+            if (nav is not null)
+            {
+                _suppressNavChange = true;
+                SelectedNav = nav;
+                _suppressNavChange = false;
+                _lastNav = nav;
+            }
+
+            CurrentPage = viewModel;
+
+            IReadOnlyList<string> input = files is { Count: > 0 } ? files : viewModel.IsEmpty ? _home.OpenPdfPaths : [];
+            if (input.Count > 0) await viewModel.AddFilesAsync(input);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha ao abrir a ferramenta {Tool}", toolId);
+            Notifications.Show(NotificationKind.Error, "Não foi possível abrir a ferramenta", ex.Message);
+        }
+    }
+
+    /// <summary>Uma instância por tela, mantida enquanto o programa está aberto (o trabalho não se perde ao navegar).</summary>
+    private ToolViewModelBase GetToolViewModel(string toolId)
+    {
+        var key = toolId switch
+        {
+            "merge" or "interleave" => "combine",
+            "split" => "split",
+            "view" => "viewer",
+            _ => "pages",
+        };
+
+        if (!_tools.TryGetValue(key, out var viewModel))
+        {
+            viewModel = key switch
+            {
+                "combine" => new CombineViewModel(_toolContext),
+                "split" => new SplitViewModel(_toolContext),
+                "viewer" => new ViewerViewModel(_toolContext) { OpenToolRequested = (id, path) => OpenTool(id, [path]) },
+                _ => new PageEditorViewModel(_toolContext),
+            };
+            viewModel.CloseRequested = CloseTool;
+            _tools[key] = viewModel;
+        }
+
+        if (viewModel is CombineViewModel combine) combine.SetMode(interleave: toolId == "interleave");
+        return viewModel;
+    }
+
+    private void CloseTool() => CurrentPage = CreatePage(SelectedNav ?? _lastNav ?? NavItems[0]);
+
+    /// <summary>Clique em um item do menu que já estava selecionado: volta da ferramenta para a lista.</summary>
+    public void RefreshCurrentNav()
+    {
+        if (SelectedNav is not null && CurrentPage is ToolViewModelBase) CurrentPage = CreatePage(SelectedNav);
     }
 
     [RelayCommand]

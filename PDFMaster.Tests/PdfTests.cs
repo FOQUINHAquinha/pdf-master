@@ -636,3 +636,47 @@ public class PdfRendererTests : IDisposable
             _renderer.RenderPageAsync(path, 0, RenderSize.ByScale(1), cts.Token));
     }
 }
+
+/// <summary>
+/// Não é um teste de comportamento: gera os PDFs usados pelo teste de inicialização do CI
+/// (capturas de tela das ferramentas). Só grava quando PDFMASTER_SMOKE_DIR está definida.
+/// </summary>
+public class SmokeSamples
+{
+    [Fact]
+    public void Writes_sample_documents_for_the_startup_test()
+    {
+        var folder = Environment.GetEnvironmentVariable("PDFMASTER_SMOKE_DIR");
+        if (string.IsNullOrWhiteSpace(folder)) return;
+
+        Directory.CreateDirectory(folder);
+        Write(Path.Combine(folder, "Relatorio.pdf"), 7, XBrushes.SeaGreen, landscapeEvery: 3);
+        Write(Path.Combine(folder, "Anexos.pdf"), 4, XBrushes.SteelBlue, landscapeEvery: 0);
+    }
+
+    private static void Write(string path, int pages, XBrush brush, int landscapeEvery)
+    {
+        using var document = new PdfDocument();
+        for (var i = 0; i < pages; i++)
+        {
+            var landscape = landscapeEvery > 0 && i % landscapeEvery == landscapeEvery - 1;
+            double width = landscape ? 842 : 595, height = landscape ? 595 : 842;
+            var page = document.AddPage();
+            page.MediaBox = new PdfRectangle(new XPoint(0, 0), new XPoint(width, height));
+
+            using var graphics = XGraphics.FromPdfPage(page);
+            graphics.DrawRectangle(brush, new XRect(0, 0, width, 90));
+            // Uma barra por número de página, para as páginas ficarem distinguíveis sem texto.
+            for (var k = 0; k <= i; k++) graphics.DrawRectangle(brush, new XRect(60 + k * 60, 150, 40, 40));
+            var pen = new XPen(XColors.Gray, 1);
+            for (var line = 0; line < 22; line++)
+            {
+                graphics.DrawLine(pen, 60, 240 + line * 22, width - 60 - (line % 4) * 50, 240 + line * 22);
+            }
+
+            if (i % 3 == 0) document.Outlines.Add($"Seção {i / 3 + 1}", page, true);
+        }
+
+        document.Save(path);
+    }
+}

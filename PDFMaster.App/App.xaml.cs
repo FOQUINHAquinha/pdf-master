@@ -13,6 +13,8 @@ using PDFMaster.Core.Tools;
 using PDFMaster.Domain;
 using PDFMaster.Infrastructure;
 using PDFMaster.Infrastructure.Files;
+using PDFMaster.PdfEngine;
+using PDFMaster.Rendering;
 using PDFMaster.Storage;
 
 namespace PDFMaster.App;
@@ -63,6 +65,23 @@ public partial class App : Application
             services.AddSingleton<FileExportService>();
             services.AddSingleton<ShellLauncher>();
 
+            services.AddSingleton<IPdfEngine, PdfSharpEngine>();
+            services.AddSingleton<PdfOrganizer>();
+            services.AddSingleton<IPdfRenderer, PdfiumRenderer>();
+            services.AddSingleton<ThumbnailService>();
+            services.AddSingleton(provider => new ToolContext(
+                provider.GetRequiredService<IPdfEngine>(),
+                provider.GetRequiredService<PdfOrganizer>(),
+                provider.GetRequiredService<IPdfRenderer>(),
+                provider.GetRequiredService<ThumbnailService>(),
+                provider.GetRequiredService<SettingsService>(),
+                provider.GetRequiredService<IHistoryRepository>(),
+                provider.GetRequiredService<IRecentFilesRepository>(),
+                provider.GetRequiredService<IDialogService>(),
+                provider.GetRequiredService<ShellLauncher>(),
+                provider.GetRequiredService<NotificationCenter>(),
+                provider.GetRequiredService<ILoggerFactory>()));
+
             services.AddSingleton<NotificationCenter>();
             services.AddSingleton<ThemeService>();
             services.AddSingleton<IDialogService, DialogService>();
@@ -103,12 +122,17 @@ public partial class App : Application
             var main = _services.GetRequiredService<MainViewModel>();
             window.DataContext = main;
             MainWindow = window;
-            main.Navigate(options.Files.Count > 0 ? "home" : options.Page);
+            main.Navigate(options.Files.Count > 0 && options.Tool is null ? "home" : options.Page);
             window.Show();
 
-            // Arquivos e pastas passados na linha de comando ("Abrir com PDF Master").
-            if (options.Files.Count > 0)
+            if (options.Tool is not null)
             {
+                // "--tool merge a.pdf b.pdf": abre a ferramenta já com os arquivos.
+                main.OpenTool(options.Tool, options.Files);
+            }
+            else if (options.Files.Count > 0)
+            {
+                // Arquivos e pastas passados na linha de comando ("Abrir com PDF Master").
                 await _services.GetRequiredService<HomeViewModel>().AddPathsAsync(options.Files);
             }
 
@@ -145,16 +169,19 @@ public partial class App : Application
 }
 
 /// <summary>
-/// Linha de comando da interface: <c>PDFMaster.exe [--theme light|dark] [--page seção] [arquivos e pastas…]</c>.
-/// --theme define (e salva) o tema; --page abre direto numa seção; os demais argumentos são
-/// arquivos ou pastas adicionados à lista de arquivos abertos.
+/// Linha de comando da interface:
+/// <c>PDFMaster.exe [--theme light|dark] [--page seção] [--tool ferramenta] [arquivos e pastas…]</c>.
+/// --theme define (e salva) o tema; --page abre direto numa seção; --tool abre uma ferramenta
+/// (view, merge, split, reorder, interleave…) com os arquivos informados; sem --tool, os arquivos
+/// e pastas vão para a lista de arquivos abertos.
 /// </summary>
-public sealed record StartupOptions(AppTheme? Theme, string? Page, IReadOnlyList<string> Files)
+public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool, IReadOnlyList<string> Files)
 {
     public static StartupOptions Parse(IReadOnlyList<string> args)
     {
         AppTheme? theme = null;
         string? page = null;
+        string? tool = null;
         var files = new List<string>();
         for (var i = 0; i < args.Count; i++)
         {
@@ -169,12 +196,16 @@ public sealed record StartupOptions(AppTheme? Theme, string? Page, IReadOnlyList
             {
                 page = args[++i];
             }
+            else if (arg.Equals("--tool", StringComparison.OrdinalIgnoreCase) && hasValue)
+            {
+                tool = args[++i].ToLowerInvariant();
+            }
             else if (!arg.StartsWith("--", StringComparison.Ordinal) && arg.Length > 0)
             {
                 files.Add(arg);
             }
         }
 
-        return new StartupOptions(theme, page, files);
+        return new StartupOptions(theme, page, tool, files);
     }
 }

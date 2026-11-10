@@ -8,6 +8,7 @@ using PDFMaster.App.Services;
 using PDFMaster.Core;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Settings;
+using PDFMaster.Core.Tools;
 using PDFMaster.Domain;
 using PDFMaster.Infrastructure;
 using PDFMaster.Infrastructure.Files;
@@ -16,9 +17,11 @@ namespace PDFMaster.App.ViewModels;
 
 public sealed partial class FileItemViewModel : ObservableObject
 {
-    public FileItemViewModel(FileEntry entry, Action<FileItemViewModel> open, Action<FileItemViewModel> reveal, Action<FileItemViewModel> remove)
+    public FileItemViewModel(FileEntry entry, Action<FileItemViewModel> open, Action<FileItemViewModel> reveal,
+        Action<FileItemViewModel> remove, Action<FileItemViewModel> view)
     {
         Entry = entry;
+        ViewCommand = new RelayCommand(() => view(this), () => entry.IsUsable && entry.Kind == FileKind.Pdf);
         OpenCommand = new RelayCommand(() => open(this), () => entry.IsUsable);
         RevealCommand = new RelayCommand(() => reveal(this), () => entry.Problem != FileProblem.NotFound);
         RemoveCommand = new RelayCommand(() => remove(this));
@@ -61,6 +64,7 @@ public sealed partial class FileItemViewModel : ObservableObject
         _ => null,
     };
 
+    public ICommand ViewCommand { get; }
     public ICommand OpenCommand { get; }
     public ICommand RevealCommand { get; }
     public ICommand RemoveCommand { get; }
@@ -98,6 +102,7 @@ public sealed partial class HomeViewModel : ObservableObject
     private readonly ShellLauncher _shell;
     private readonly NotificationCenter _notifications;
     private readonly ILogger<HomeViewModel> _logger;
+    private readonly ToolCatalog _catalog;
     private CancellationTokenSource? _cts;
 
     public HomeViewModel(
@@ -110,8 +115,10 @@ public sealed partial class HomeViewModel : ObservableObject
         IDialogService dialogs,
         ShellLauncher shell,
         NotificationCenter notifications,
+        ToolCatalog catalog,
         ILogger<HomeViewModel> logger)
     {
+        _catalog = catalog;
         _inspector = inspector;
         _scanner = scanner;
         _export = export;
@@ -127,6 +134,17 @@ public sealed partial class HomeViewModel : ObservableObject
     public ObservableCollection<FileItemViewModel> Files { get; } = [];
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
     public ObservableCollection<HistoryRowViewModel> LastOperations { get; } = [];
+    public ObservableCollection<ToolCardViewModel> QuickTools { get; } = [];
+
+    /// <summary>Definido pela janela principal: abre uma ferramenta com os arquivos indicados.</summary>
+    public Action<string, IReadOnlyList<string>?>? OpenToolRequested { get; set; }
+
+    /// <summary>PDFs válidos da lista de arquivos abertos, na ordem da lista.</summary>
+    public IReadOnlyList<string> OpenPdfPaths =>
+        Files.Where(f => f.IsUsable && f.Entry.Kind == FileKind.Pdf).Select(f => f.Entry.FullPath).ToList();
+
+    [ObservableProperty]
+    private string _quickToolsTitle = "Ferramentas recomendadas";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddFilesCommand), nameof(AddFolderCommand), nameof(ExportCommand),
@@ -176,6 +194,26 @@ public sealed partial class HomeViewModel : ObservableObject
         LastOperations.Clear();
         foreach (var record in operations) LastOperations.Add(new HistoryRowViewModel(record, _shell, _notifications));
         OnPropertyChanged(nameof(HasLastOperations));
+
+        // Ferramentas disponíveis, com as mais usadas (segundo o histórico) na frente.
+        var usage = (await _history.QueryAsync(new HistoryQuery(Limit: 2000)))
+            .Where(r => r.Status == OperationStatus.Completed)
+            .GroupBy(r => r.Operation)
+            .ToDictionary(g => g.Key, g => g.Count());
+        var ranked = _catalog.All
+            .Where(t => t.IsAvailable)
+            .Select((tool, order) => (tool, order, uses: usage.GetValueOrDefault(tool.Name)))
+            .OrderByDescending(x => x.uses)
+            .ThenBy(x => x.order)
+            .Take(6)
+            .ToList();
+        QuickTools.Clear();
+        foreach (var entry in ranked)
+        {
+            QuickTools.Add(new ToolCardViewModel(entry.tool, tool => OpenToolRequested?.Invoke(tool.Id, null)));
+        }
+
+        QuickToolsTitle = ranked.Any(x => x.uses > 0) ? "Ferramentas mais utilizadas" : "Ferramentas recomendadas";
     }
 
     [RelayCommand(CanExecute = nameof(CanStart))]
@@ -223,7 +261,7 @@ public sealed partial class HomeViewModel : ObservableObject
                 }
 
                 var entry = await _inspector.InspectAsync(path, computeHash: true, ct);
-                var item = new FileItemViewModel(entry, OpenFile, RevealFile, RemoveFile);
+                var item = new FileItemViewModel(entry, OpenFile, RevealFile, RemoveFile, ViewFile);
 
                 if (!entry.IsUsable)
                 {
@@ -389,6 +427,8 @@ public sealed partial class HomeViewModel : ObservableObject
         if (!_shell.OpenDocument(item.Entry.FullPath))
             _notifications.Show(NotificationKind.Warning, "Não foi possível abrir o arquivo", item.Entry.FullPath);
     }
+
+    private void ViewFile(FileItemViewModel item) => OpenToolRequested?.Invoke("view", [item.Entry.FullPath]);
 
     private void RevealFile(FileItemViewModel item)
     {

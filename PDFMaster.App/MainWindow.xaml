@@ -12,6 +12,18 @@
         <DataTemplate DataType="{x:Type vm:ToolsPageViewModel}">
             <views:ToolsPageView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CombineViewModel}">
+            <views:CombineView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SplitViewModel}">
+            <views:SplitView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PageEditorViewModel}">
+            <views:PageEditorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ViewerViewModel}">
+            <views:ViewerView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
             <views:HistoryView />
         </DataTemplate>
@@ -180,7 +192,8 @@
                            Foreground="{DynamicResource Brush.SidebarTextMuted}"
                            Text="Processamento 100% local. Sem conta, sem anúncios, sem envio de arquivos." />
                 <ListBox ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav, Mode=TwoWay}"
-                         Margin="0,10,0,0" Background="Transparent" BorderThickness="0">
+                         Margin="0,10,0,0" Background="Transparent" BorderThickness="0"
+                         PreviewMouseLeftButtonUp="OnNavClick">
                     <ListBox.Template>
                         <ControlTemplate TargetType="ListBox">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"

@@ -145,4 +145,68 @@
     <ItemsPanelTemplate x:Key="VirtualPanel">
         <VirtualizingStackPanel />
     </ItemsPanelTemplate>
+
+    <!-- Botão pequeno de barra de ferramentas -->
+    <Style x:Key="ToolbarButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+        <Setter Property="Padding" Value="11,6" />
+        <Setter Property="Margin" Value="0,0,6,6" />
+        <Setter Property="FontSize" Value="12.5" />
+    </Style>
+
+    <!-- ===== Partes comuns das telas de ferramenta (DataContext = ToolViewModelBase) ===== -->
+
+    <DataTemplate x:Key="ToolHeader">
+        <DockPanel>
+            <Button DockPanel.Dock="Left" Style="{StaticResource IconButton}" Content="&#xE72B;" Margin="0,2,10,0"
+                    VerticalAlignment="Top" ToolTip="Voltar para a lista de ferramentas"
+                    Command="{Binding CloseCommand}" />
+            <StackPanel>
+                <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Secondary}" Margin="0,3,0,0" FontSize="13.5" />
+            </StackPanel>
+        </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ToolBusy">
+        <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,12,0,0"
+                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Cancelar" Style="{StaticResource SecondaryButton}"
+                        Margin="14,0,0,0" Command="{Binding CancelCommand}" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource Body}" TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
+                    <ProgressBar Height="5" Margin="0,7,0,0" Minimum="0" Maximum="100"
+                                 Value="{Binding ProgressValue, Mode=OneWay}"
+                                 IsIndeterminate="{Binding IsProgressIndeterminate}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ToolOutputFolder">
+        <StackPanel>
+            <TextBlock Text="Pasta de destino" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Escolher…" Style="{StaticResource SecondaryButton}"
+                        Margin="8,0,0,0" Command="{Binding BrowseOutputFolderCommand}" />
+                <Border Background="{DynamicResource Brush.Subtle}" CornerRadius="6" Padding="10,7">
+                    <Grid>
+                        <TextBlock Text="{Binding OutputFolder}" Style="{StaticResource Body}" TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding OutputFolder}" />
+                        <TextBlock Text="Escolha onde gravar o resultado" Style="{StaticResource Secondary}"
+                                   Visibility="{Binding HasOutputFolder, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+                    </Grid>
+                </Border>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Moldura de miniatura de página -->
+    <Style x:Key="PageFrame" TargetType="Border">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
 </ResourceDictionary>

@@ -81,7 +81,19 @@ jobs:
           [IO.File]::WriteAllText((Join-Path $samples 'notas.txt'), 'texto simples')
           [IO.File]::WriteAllText((Join-Path $samples 'programa.exe'), 'MZ')
 
+          # PDFs de várias páginas para as telas de ferramenta (gerados pelo próprio motor do programa).
+          $env:PDFMASTER_SMOKE_DIR = Join-Path $env:RUNNER_TEMP 'pdfm-smoke-pdfs'
+          dotnet test PDFMaster.Tests/PDFMaster.Tests.csproj -c Release --no-build -nologo --filter "FullyQualifiedName~SmokeSamples" 2>&1 | Out-File ci-out/samples.log -Encoding utf8
+          $a = Join-Path $env:RUNNER_TEMP 'pdfm-smoke-pdfs\Relatorio.pdf'
+          $b = Join-Path $env:RUNNER_TEMP 'pdfm-smoke-pdfs\Anexos.pdf'
+          "amostras: $(Test-Path $a) $(Test-Path $b)" | Out-File ci-out/smoke.log -Append
+
           $runs = @(
+            @{ name = 'tool-viewer';    args = @('--theme','light','--tool','view',"`"$a`"") },
+            @{ name = 'tool-pages';     args = @('--theme','light','--tool','reorder',"`"$a`"") },
+            @{ name = 'tool-merge';     args = @('--theme','dark','--tool','merge',"`"$a`"","`"$b`"") },
+            @{ name = 'tool-interleave'; args = @('--theme','light','--tool','interleave',"`"$a`"","`"$b`"") },
+            @{ name = 'tool-split';     args = @('--theme','light','--tool','split',"`"$a`"") },
             @{ name = 'light-files';    args = @('--theme','light',"`"$samples`"","`"$(Join-Path $samples 'programa.exe')`"") },
             @{ name = 'light-home';     args = @('--theme','light','--page','home') },
             @{ name = 'dark-home';      args = @('--theme','dark','--page','home') },

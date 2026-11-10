@@ -31,8 +31,20 @@ public sealed class ToolCatalog
     private const string Print = "";
     private const string Repair = "";
     private const string Add = "";
+    private const string View = "\uE8A5";
+
+    /// <summary>
+    /// Ferramentas implementadas e aprovadas nos testes. Só estas podem ser abertas na interface.
+    /// </summary>
+    public static readonly IReadOnlySet<string> Implemented = new HashSet<string>(StringComparer.Ordinal)
+    {
+        // Fase 2
+        "view", "merge", "split", "extract-pages", "reorder", "rotate", "delete-pages", "interleave", "insert-pages",
+    };
 
     public IReadOnlyList<ToolDefinition> All { get; } = Build();
+
+    public ToolDefinition? Find(string id) => All.FirstOrDefault(t => t.Id == id);
 
     public IReadOnlyList<ToolDefinition> ByCategory(ToolCategory category) =>
         All.Where(t => t.Category == category).ToList();
@@ -54,7 +66,10 @@ public sealed class ToolCatalog
     {
         var list = new List<ToolDefinition>();
         void T(string id, string name, string description, ToolCategory category, int phase, string glyph, params string[] synonyms) =>
-            list.Add(new ToolDefinition(id, name, description, category, phase, IsAvailable: false, glyph, synonyms));
+            list.Add(new ToolDefinition(id, name, description, category, phase, Implemented.Contains(id), glyph, synonyms));
+
+        T("view", "Visualizador de PDF", "Abre o documento para leitura, com miniaturas, zoom e navegação.", ToolCategory.Organize, 2, View,
+            "abrir pdf", "ler pdf", "ver documento", "leitor", "visualizar");
 
         // ----- Organizar -----
         T("merge", "Mesclar PDF", "Junta vários arquivos PDF em um único documento.", ToolCategory.Organize, 2, Copy,
