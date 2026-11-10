@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>PDFMaster</AssemblyName>
+    <RootNamespace>PDFMaster.App</RootNamespace>
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
+    <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
+    <ProjectReference Include="..\PDFMaster.Storage\PDFMaster.Storage.csproj" />
+    <ProjectReference Include="..\PDFMaster.Infrastructure\PDFMaster.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+</Project>

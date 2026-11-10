@@ -1,0 +1,71 @@
+using PDFMaster.Domain;
+
+namespace PDFMaster.Core.Settings;
+
+/// <summary>Mantém as configurações em memória e as persiste pelo <see cref="ISettingsStore"/>.</summary>
+public sealed class SettingsService
+{
+    private readonly ISettingsStore _store;
+
+    public SettingsService(ISettingsStore store) => _store = store;
+
+    public AppSettings Current { get; private set; } = new();
+
+    /// <summary>
+    /// Disparado depois que uma alteração é salva. É chamado no mesmo contexto de quem pediu a
+    /// alteração (a thread da interface, no aplicativo), por isso não há ConfigureAwait(false) aqui.
+    /// </summary>
+    public event EventHandler? Changed;
+
+    public async Task LoadAsync(CancellationToken ct = default)
+    {
+        var values = await _store.LoadAllAsync(ct);
+        Current = FromDictionary(values);
+    }
+
+    public async Task UpdateAsync(Action<AppSettings> change, CancellationToken ct = default)
+    {
+        var updated = Current.Clone();
+        change(updated);
+        await _store.SaveAsync(ToDictionary(updated), ct);
+        Current = updated;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public static bool IsValidAccent(string? value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length != 7 || value[0] != '#') return false;
+        for (var i = 1; i < 7; i++)
+        {
+            if (!Uri.IsHexDigit(value[i])) return false;
+        }
+
+        return true;
+    }
+
+    public static AppSettings FromDictionary(IReadOnlyDictionary<string, string> v)
+    {
+        var s = new AppSettings();
+        if (v.TryGetValue("theme", out var theme) && Enum.TryParse<AppTheme>(theme, out var t)) s.Theme = t;
+        if (v.TryGetValue("accent", out var accent) && IsValidAccent(accent)) s.AccentColor = accent.ToUpperInvariant();
+        if (v.TryGetValue("defaultFolder", out var df) && df.Length > 0) s.DefaultOutputFolder = df;
+        if (v.TryGetValue("rememberLastFolder", out var rl) && bool.TryParse(rl, out var rlb)) s.RememberLastFolder = rlb;
+        if (v.TryGetValue("lastFolder", out var lf) && lf.Length > 0) s.LastFolder = lf;
+        if (v.TryGetValue("overwritePolicy", out var op) && Enum.TryParse<OverwritePolicy>(op, out var opv)) s.OverwritePolicy = opv;
+        if (v.TryGetValue("subfolderMode", out var sm) && Enum.TryParse<SubfolderMode>(sm, out var smv)) s.SubfolderMode = smv;
+        if (v.TryGetValue("historyEnabled", out var he) && bool.TryParse(he, out var heb)) s.HistoryEnabled = heb;
+        return s;
+    }
+
+    public static IReadOnlyDictionary<string, string> ToDictionary(AppSettings s) => new Dictionary<string, string>
+    {
+        ["theme"] = s.Theme.ToString(),
+        ["accent"] = s.AccentColor ?? string.Empty,
+        ["defaultFolder"] = s.DefaultOutputFolder ?? string.Empty,
+        ["rememberLastFolder"] = s.RememberLastFolder.ToString(),
+        ["lastFolder"] = s.LastFolder ?? string.Empty,
+        ["overwritePolicy"] = s.OverwritePolicy.ToString(),
+        ["subfolderMode"] = s.SubfolderMode.ToString(),
+        ["historyEnabled"] = s.HistoryEnabled.ToString(),
+    };
+}

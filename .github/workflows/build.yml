@@ -1,0 +1,125 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Compilar
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-out | Out-Null
+          "${{ github.sha }}" | Out-File ci-out/commit.txt -Encoding utf8
+          dotnet build PDFMaster.sln -c Release -nologo 2>&1 | Tee-Object ci-out/build.log
+          "build exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Testar
+        shell: pwsh
+        run: |
+          dotnet test PDFMaster.Tests/PDFMaster.Tests.csproj -c Release --no-build -nologo --logger "console;verbosity=normal" 2>&1 | Tee-Object ci-out/test.log
+          "test exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Append -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Publicar executável
+        shell: pwsh
+        run: |
+          dotnet publish PDFMaster.App/PDFMaster.App.csproj -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish -nologo 2>&1 | Tee-Object ci-out/publish.log
+          "publish exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Append -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Get-ChildItem publish | Select-Object Name, Length | Format-Table | Out-File ci-out/publish-files.txt -Encoding utf8
+
+          New-Item -ItemType Directory -Force portable | Out-Null
+          Copy-Item publish/PDFMaster.exe portable/
+          "Modo portatil: os dados do PDF Master ficam na pasta Data ao lado do executavel." | Out-File portable/portable.flag -Encoding utf8
+
+      - name: Teste de inicialização e capturas de tela
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          try { Set-DisplayResolution -Width 1920 -Height 1080 -Force | Out-Null } catch { "resolucao: $_" | Out-File ci-out/smoke.log -Append }
+          $env:PDFMASTER_DATA_DIR = Join-Path $env:RUNNER_TEMP 'pdfm-smoke'
+          $failed = $false
+
+          function Capture($name) {
+            $b = [System.Windows.Forms.SystemInformation]::VirtualScreen
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            $g = [System.Drawing.Graphics]::FromImage($bmp)
+            $g.CopyFromScreen($b.Left, $b.Top, 0, 0, $bmp.Size)
+            $bmp.Save((Join-Path 'ci-out' "$name.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+            $g.Dispose(); $bmp.Dispose()
+          }
+
+          $runs = @(
+            @{ name = 'light-home';     args = @('--theme','light','--page','home') },
+            @{ name = 'dark-home';      args = @('--theme','dark','--page','home') },
+            @{ name = 'light-organize'; args = @('--theme','light','--page','organize') },
+            @{ name = 'dark-settings';  args = @('--theme','dark','--page','settings') },
+            @{ name = 'light-history';  args = @('--theme','light','--page','history') }
+          )
+          foreach ($run in $runs) {
+            $p = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList $run.args -PassThru
+            Start-Sleep -Seconds 10
+            try { Capture $run.name } catch { "captura $($run.name): $_" | Out-File ci-out/smoke.log -Append }
+            if ($p.HasExited) {
+              "$($run.name): o processo encerrou sozinho (codigo $($p.ExitCode))" | Out-File ci-out/smoke.log -Append
+              $failed = $true
+            } else {
+              "$($run.name): em execucao apos 10 s, janela='$($p.MainWindowTitle)'" | Out-File ci-out/smoke.log -Append
+              Stop-Process -Id $p.Id -Force
+              Start-Sleep -Seconds 1
+            }
+          }
+
+          if (Test-Path (Join-Path $env:PDFMASTER_DATA_DIR 'Logs')) {
+            Get-ChildItem (Join-Path $env:PDFMASTER_DATA_DIR 'Logs') | ForEach-Object { Copy-Item $_.FullName (Join-Path 'ci-out' ("app-" + $_.Name)) }
+          }
+          "smoke failed=$failed" | Out-File ci-out/status.txt -Append -Encoding utf8
+          if ($failed) { exit 1 }
+
+      - name: Guardar executável
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDFMaster-win-x64
+          path: publish/PDFMaster.exe
+          if-no-files-found: error
+
+      - name: Guardar versão portátil
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDFMaster-portatil-win-x64
+          path: portable/
+          if-no-files-found: error
+
+      # Publica logs e capturas no ramo "ci-results" para conferência do resultado.
+      - name: Publicar resultados do CI
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path ci-out)) { New-Item -ItemType Directory -Force ci-out | Out-Null }
+          Set-Location ci-out
+          git init -q
+          git checkout -q -b ci-results
+          git add -A
+          git -c user.name="github-actions" -c user.email="actions@users.noreply.github.com" commit -q -m "Resultados do CI para ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-results

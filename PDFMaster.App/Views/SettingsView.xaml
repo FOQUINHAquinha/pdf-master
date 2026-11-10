@@ -1,0 +1,134 @@
+<UserControl x:Class="PDFMaster.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,24,28,28" MaxWidth="860" HorizontalAlignment="Left">
+            <TextBlock Text="Configurações" Style="{StaticResource PageTitle}" />
+            <TextBlock Style="{StaticResource Secondary}" Margin="0,4,0,0" FontSize="13.5"
+                       Text="As alterações são salvas automaticamente neste computador." />
+
+            <!-- Aparência -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Geral — aparência" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Tema" Style="{StaticResource Body}" Margin="0,12,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="Claro" GroupName="Theme" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" />
+                        <RadioButton Content="Escuro" GroupName="Theme" Margin="18,0,0,0"
+                                     IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Cor de destaque" Style="{StaticResource Body}" Margin="0,16,0,6" />
+                    <ItemsControl ItemsSource="{Binding Swatches}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding SelectCommand}" ToolTip="{Binding Hex}" Margin="0,0,8,0"
+                                        Cursor="Hand" Width="30" Height="30" Background="{Binding Hex}">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" CornerRadius="15" Background="{TemplateBinding Background}"
+                                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" />
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="BorderBrush"
+                                                            Value="{DynamicResource Brush.Text}" />
+                                                    <Setter TargetName="Bd" Property="BorderThickness" Value="2" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBox Width="130" Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Código da cor no formato #RRGGBB" MaxLength="7" />
+                        <Button Content="Aplicar cor" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                                Command="{Binding ApplyAccentCommand}" />
+                        <Button Content="Usar cor padrão" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                                Command="{Binding ResetAccentCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding AccentStatus}" Style="{StaticResource Secondary}" Margin="0,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Arquivos -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Arquivos" Style="{StaticResource SectionTitle}" />
+
+                    <TextBlock Text="Pasta padrão para os resultados" Style="{StaticResource Body}" Margin="0,12,0,4" />
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Remover" Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Command="{Binding ClearDefaultFolderCommand}"
+                                Visibility="{Binding HasDefaultFolder, Converter={StaticResource BoolToVis}}" />
+                        <Button DockPanel.Dock="Right" Content="Escolher…" Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Command="{Binding BrowseDefaultFolderCommand}" />
+                        <Border Background="{DynamicResource Brush.Subtle}" CornerRadius="6" Padding="10,7">
+                            <Grid>
+                                <TextBlock Text="{Binding DefaultFolder}" Style="{StaticResource Body}"
+                                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="Nenhuma — o programa pergunta a cada operação."
+                                           Style="{StaticResource Secondary}"
+                                           Visibility="{Binding HasDefaultFolder, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+                            </Grid>
+                        </Border>
+                    </DockPanel>
+                    <CheckBox Content="Lembrar a última pasta utilizada" Margin="0,12,0,0"
+                              IsChecked="{Binding RememberLastFolder, Mode=TwoWay}" />
+
+                    <TextBlock Text="Quando o arquivo de saída já existir" Style="{StaticResource Body}"
+                               Margin="0,16,0,4" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="420" ItemsSource="{Binding OverwritePolicies}"
+                              DisplayMemberPath="Label"
+                              SelectedItem="{Binding SelectedOverwritePolicy, Mode=TwoWay}" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,4,0,0"
+                               Text="Os arquivos originais nunca são alterados. A substituição só acontece se você escolher essa opção e confirmar na hora." />
+
+                    <TextBlock Text="Organização dos resultados" Style="{StaticResource Body}" Margin="0,16,0,4" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="420" ItemsSource="{Binding SubfolderModes}"
+                              DisplayMemberPath="Label"
+                              SelectedItem="{Binding SelectedSubfolderMode, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Privacidade -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Privacidade" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0"
+                               Text="O PDF Master não usa a rede: não envia documentos, não coleta telemetria e não procura atualizações por conta própria." />
+
+                    <CheckBox Content="Registrar histórico de operações e arquivos recentes" Margin="0,12,0,0"
+                              IsChecked="{Binding HistoryEnabled, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Limpar histórico" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding ClearHistoryCommand}" />
+                        <Button Content="Limpar arquivos recentes" Style="{StaticResource SecondaryButton}"
+                                Margin="8,0,0,0" Command="{Binding ClearRecentCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Dados e diagnósticos locais" Style="{StaticResource Body}" Margin="0,16,0,4" />
+                    <TextBlock Style="{StaticResource Secondary}">
+                        <Run Text="Configurações e histórico: " />
+                        <Run Text="{Binding DataDirectory, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,2,0,0"
+                               Text="Modo portátil ativo: os dados ficam ao lado do executável."
+                               Visibility="{Binding IsPortable, Converter={StaticResource BoolToVis}}" />
+                    <Button Content="Abrir pasta de diagnósticos" Style="{StaticResource SecondaryButton}"
+                            HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding OpenLogsCommand}" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Style="{StaticResource Secondary}" Margin="2,14,0,0"
+                       Text="As configurações de conversão, OCR, compressão e desempenho entram nesta tela junto com as respectivas ferramentas (Fases 3, 4 e 7), para que nenhuma opção apareça aqui sem efeito real." />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

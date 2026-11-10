@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <Product>PDF Master</Product>
+    <Company>PDF Master</Company>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <SatelliteResourceLanguages>pt-BR</SatelliteResourceLanguages>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+</Project>
