@@ -159,6 +159,8 @@ public class GrayscaleTests : IDisposable
         {
             // Página 2, sem desenho do PDFsharp: CMYK (magenta puro) e RGB por nome de espaço de cor.
             var second = document.AddPage();
+            second.Width = XUnit.FromPoint(595);
+            second.Height = XUnit.FromPoint(842);
             second.Contents.AppendContent().CreateStream("q 0 1 0 0 k 60 500 200 60 re f Q\nq /DeviceRGB cs 1 0.5 0 sc 300 500 100 60 re f Q\n"u8.ToArray());
             document.Save(pdf);
         }
