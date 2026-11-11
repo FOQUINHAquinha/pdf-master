@@ -429,7 +429,7 @@ public static class PdfAValidator
 
     private static void CheckLimits(Group group, PdfDocument document, List<GraphNode> nodes, PdfALevel level)
     {
-        if (document.Internals.AllObjects.Length > 8_388_607) group.Add("Objetos demais no arquivo.");
+        if (document.Internals.GetAllObjects().Length > 8_388_607) group.Add("Objetos demais no arquivo.");
         foreach (var (d, _, _) in nodes)
         {
             if (level == PdfALevel.A1b && d.Elements.Count > 4095) group.Add("Dicionário com mais de 4095 entradas.");

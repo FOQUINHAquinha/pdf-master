@@ -149,7 +149,7 @@ internal sealed class TrueTypeInfo
     {
         if (!_tables.TryGetValue("hhea", out var hhea) || !_tables.TryGetValue("hmtx", out var hmtx)) return [];
         var count = U16(hhea.Offset + 34);
-        var advances = new ushort[Math.Max(count, 1)];
+        var advances = new ushort[Math.Max((int)count, 1)];
         for (var i = 0; i < count && 4 * i + 2 <= hmtx.Length; i++) advances[i] = U16(hmtx.Offset + 4 * i);
         return advances;
     }

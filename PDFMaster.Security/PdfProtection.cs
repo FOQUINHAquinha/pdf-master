@@ -1,6 +1,7 @@
 using System.Reflection;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PdfSharp.Pdf.Security;
 using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
 
@@ -114,7 +115,7 @@ public sealed class PdfProtection
             settings.PermitAnnotations = a.Annotate;
             settings.PermitFormsFill = a.FillForms;
             settings.PermitAssembleDocument = a.Assemble;
-            settings.PermitAccessibilityExtractContent = a.Accessibility;
+            SetPermission(settings, a.Accessibility, "PermitAccessibilityExtractContent", "PermitExtractContentForAccessibility", "PermitAccessibility");
             UseStrongestEncryption(document);
             ct.ThrowIfCancellationRequested();
             var pages = document.PageCount;
@@ -176,6 +177,15 @@ public sealed class PdfProtection
     }
 
     private const BindingFlags Members = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+    /// <summary>Permissões cujo nome varia entre versões do PDFsharp.</summary>
+    private static void SetPermission(PdfSecuritySettings settings, bool value, params string[] names)
+    {
+        var property = names.Select(n => settings.GetType().GetProperty(n, BindingFlags.Instance | BindingFlags.Public)).FirstOrDefault(p => p is { CanWrite: true })
+                       ?? settings.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                           .FirstOrDefault(p => p.CanWrite && p.PropertyType == typeof(bool) && p.Name.Contains("Accessibility", StringComparison.Ordinal));
+        property?.SetValue(settings, value);
+    }
 
     /// <summary>AES de 256 bits (revisão 6) quando a versão do PDFsharp oferece; senão, o padrão dela.</summary>
     private static void UseStrongestEncryption(PdfDocument document)
