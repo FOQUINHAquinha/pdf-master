@@ -1,0 +1,37 @@
+<UserControl x:Class="PDFMaster.App.Views.PdfAView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <DockPanel Margin="28,22,28,22">
+        <ContentPresenter DockPanel.Dock="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolHeader}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Content="Adicionar PDFs…" Style="{StaticResource PrimaryButton}" Command="{Binding PickFilesCommand}" />
+            <Button Content="Limpar lista" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Command="{Binding ClearCommand}" />
+        </StackPanel>
+
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="{Binding StartLabel}" Style="{StaticResource PrimaryButton}" MinWidth="150"
+                        VerticalAlignment="Bottom" Margin="16,0,0,0" Command="{Binding StartCommand}" />
+                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolOutputFolder}" />
+            </DockPanel>
+        </Border>
+        <ContentPresenter DockPanel.Dock="Bottom" Content="{Binding}" ContentTemplate="{StaticResource ToolBusy}" />
+
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock Text="Nível" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <CheckBox DockPanel.Dock="Right" Content="Só validar (não converter)" VerticalAlignment="Center" Margin="16,0,0,0"
+                              IsChecked="{Binding ValidateOnly, Mode=TwoWay}" />
+                    <ComboBox ItemsSource="{Binding Levels}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedLevel, Mode=TwoWay}" />
+                </DockPanel>
+                <TextBlock Text="{Binding ValidatorInfo}" Style="{StaticResource Secondary}" Margin="0,10,0,0" />
+                <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0"
+                           Text="A conversão incorpora as fontes, acrescenta o perfil de cor sRGB e os metadados, e retira o que o nível proíbe (cada mudança é listada). Quando algo não pode ser resolvido sem mudar a aparência, o arquivo não é gerado e o motivo aparece na lista." />
+            </StackPanel>
+        </Border>
+
+        <ContentPresenter Margin="0,12,0,0" Content="{Binding}" ContentTemplate="{StaticResource ToolFileList}" />
+    </DockPanel>
+</UserControl>

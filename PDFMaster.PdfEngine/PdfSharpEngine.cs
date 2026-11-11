@@ -193,7 +193,7 @@ public sealed class PdfSharpEngine : IPdfEngine
         {
             throw new PdfEngineException(
                 $"Não foi possível ler \"{Path.GetFileName(path)}\". O arquivo pode estar protegido por senha ou danificado. " +
-                "Proteção por senha e reparo de documentos chegam na Fase 6.", ex);
+                "Use \"Remover proteção\" (com a senha) ou \"Reparar PDF\" e abra a cópia gerada.", ex);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

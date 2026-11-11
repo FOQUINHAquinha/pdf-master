@@ -15,6 +15,7 @@ using PDFMaster.Rendering;
 using PDFMaster.Security;
 using Xunit;
 using Xunit.Abstractions;
+using PdfMetadata = PDFMaster.Security.PdfMetadata;
 
 namespace PDFMaster.Tests;
 

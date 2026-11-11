@@ -203,6 +203,48 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- Lista de documentos das telas da Fase 6 (DataContext = FileListViewModel) -->
+    <DataTemplate x:Key="ToolFileList">
+        <Border Style="{StaticResource Card}" Padding="16,8" MinHeight="90">
+            <Grid>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding HasFiles, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                    <TextBlock Text="&#xE8A5;" Style="{StaticResource Icon}" FontSize="26" Foreground="{DynamicResource Brush.Accent}" />
+                    <TextBlock Text="{Binding EmptyHint}" Style="{StaticResource Body}" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                    <TextBlock Text="Ou use o botão acima. Os originais nunca são alterados." Style="{StaticResource Secondary}"
+                               HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Files}" Template="{StaticResource ScrollingItems}" ItemsPanel="{StaticResource VirtualPanel}"
+                              Visibility="{Binding HasFiles, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="0,7">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="12" VerticalAlignment="Top"
+                                            ToolTip="Remover da lista (o arquivo não é apagado)" Command="{Binding RemoveCommand}" />
+                                    <TextBlock DockPanel.Dock="Left" Text="&#xE8A5;" Style="{StaticResource Icon}" FontSize="18" Margin="0,2,12,0"
+                                               VerticalAlignment="Top" Foreground="{DynamicResource Brush.Accent}" />
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Path}" Foreground="{DynamicResource Brush.Text}" />
+                                        <TextBlock Text="{Binding Details}" Style="{StaticResource Secondary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Name="StatusLine" Text="{Binding Status}" FontSize="12.5" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource Brush.Text}" Visibility="{Binding Status, Converter={StaticResource NullToVis}}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Failed}" Value="True">
+                                    <Setter TargetName="StatusLine" Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
     <!-- Moldura de miniatura de página -->
     <Style x:Key="PageFrame" TargetType="Border">
         <Setter Property="Background" Value="White" />

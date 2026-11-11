@@ -33,6 +33,30 @@
         <DataTemplate DataType="{x:Type vm:FormFillViewModel}">
             <views:FormFillView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProtectViewModel}">
+            <views:ProtectView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UnlockViewModel}">
+            <views:UnlockView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SecurityInfoViewModel}">
+            <views:SecurityInfoView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MetadataViewModel}">
+            <views:MetadataView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SignatureViewModel}">
+            <views:SignatureView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RepairViewModel}">
+            <views:RepairView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PdfAViewModel}">
+            <views:PdfAView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CompareViewModel}">
+            <views:CompareView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:VideoViewModel}">
             <views:VideoView />
         </DataTemplate>

@@ -37,7 +37,18 @@ public sealed record ToolContext(
     ConversionToolkit Conversion,
     OcrToolkit Ocr,
     VideoToolkit Video,
-    EditorToolkit Editor);
+    EditorToolkit Editor,
+    SecurityToolkit Security);
+
+/// <summary>Segurança e ferramentas avançadas (Fase 6).</summary>
+/// <param name="TrustedRootsFolder">Pasta onde a pessoa coloca certificados raiz adicionais (ex.: ICP-Brasil).</param>
+public sealed record SecurityToolkit(
+    PDFMaster.Security.PdfProtection Protection,
+    PDFMaster.Security.PdfMetadata Metadata,
+    PDFMaster.Security.PdfRepair Repair,
+    PDFMaster.Security.PdfAConverter PdfA,
+    PDFMaster.Comparison.ComparisonReport CompareReport,
+    string TrustedRootsFolder);
 
 /// <summary>Editor de PDF e as bibliotecas locais de carimbos e assinaturas (Fase 5).</summary>
 public sealed record EditorToolkit(PdfEditor Editor, StampLibrary Stamps, SignatureLibrary Signatures);
@@ -233,6 +244,50 @@ public abstract partial class ToolViewModelBase : ObservableObject
         {
             IsBusy = false;
             IsProgressIndeterminate = false;
+            StatusText = string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Executa em segundo plano uma análise que não gera arquivos, com progresso e cancelamento.
+    /// Devolve false quando foi cancelada ou falhou (o erro já foi mostrado).
+    /// </summary>
+    protected async Task<bool> AnalyzeAsync(string busyText, Func<IProgress<double>, CancellationToken, Task> work)
+    {
+        if (IsBusy) return false;
+        IsBusy = true;
+        IsProgressIndeterminate = false;
+        ProgressValue = 0;
+        StatusText = busyText;
+        _cts = new CancellationTokenSource();
+        var progress = new Progress<double>(value => ProgressValue = Math.Clamp(value, 0, 1) * 100);
+        try
+        {
+            await work(progress, _cts.Token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            Context.Notifications.Show(NotificationKind.Info, $"{Title}: cancelado", "A análise foi interrompida.");
+            return false;
+        }
+        catch (Exception ex) when (ex is PdfEngineException or PdfRenderException or IOException or UnauthorizedAccessException)
+        {
+            Context.Notifications.Show(NotificationKind.Error, $"{Title}: falhou", ex.Message);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha inesperada em {Tool}", Title);
+            Context.Notifications.Show(NotificationKind.Error, $"{Title}: falhou", ex.Message + "\nOs detalhes foram gravados no registro de diagnósticos local.");
+            return false;
+        }
+        finally
+        {
+            _cts?.Dispose();
+            _cts = null;
+            IsBusy = false;
+            ProgressValue = 0;
             StatusText = string.Empty;
         }
     }

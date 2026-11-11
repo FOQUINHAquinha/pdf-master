@@ -107,7 +107,7 @@ public sealed class PdfCompressor
         {
             var reason = ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase) ||
                          ex.Message.Contains("encrypt", StringComparison.OrdinalIgnoreCase)
-                ? "está protegido por senha (o suporte chega na Fase 6)"
+                ? "está protegido por senha (remova a proteção antes, em \"Remover proteção\")"
                 : "não é um PDF válido ou está danificado";
             throw new PdfEngineException($"{Path.GetFileName(full)} não pôde ser aberto: {reason}.", ex);
         }

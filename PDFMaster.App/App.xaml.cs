@@ -21,6 +21,8 @@ using PDFMaster.Infrastructure.Files;
 using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
 using PDFMaster.Scanner;
+using PDFMaster.Security;
+using PDFMaster.Comparison;
 using PDFMaster.Storage;
 
 namespace PDFMaster.App;
@@ -90,7 +92,21 @@ public partial class App : Application
                 provider.GetRequiredService<ConversionToolkit>(),
                 provider.GetRequiredService<OcrToolkit>(),
                 provider.GetRequiredService<VideoToolkit>(),
-                provider.GetRequiredService<EditorToolkit>()));
+                provider.GetRequiredService<EditorToolkit>(),
+                provider.GetRequiredService<SecurityToolkit>()));
+
+            services.AddSingleton<PdfProtection>();
+            services.AddSingleton<PdfMetadata>();
+            services.AddSingleton<PdfRepair>();
+            services.AddSingleton<PdfAConverter>();
+            services.AddSingleton<ComparisonReport>();
+            services.AddSingleton(provider => new SecurityToolkit(
+                provider.GetRequiredService<PdfProtection>(),
+                provider.GetRequiredService<PdfMetadata>(),
+                provider.GetRequiredService<PdfRepair>(),
+                provider.GetRequiredService<PdfAConverter>(),
+                provider.GetRequiredService<ComparisonReport>(),
+                System.IO.Path.Combine(paths.DataDirectory, "Certificados confiáveis")));
 
             services.AddSingleton<PdfEditor>();
             services.AddSingleton(new StampLibrary(paths.DataDirectory));

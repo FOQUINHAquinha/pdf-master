@@ -47,6 +47,8 @@ public sealed class ToolCatalog
         "ocr", "ocr-batch", "scan",
         // Fase 5
         "edit-text", "edit-images", "annotate", "sign-visual", "watermark", "header-footer", "stamps", "forms", "form-fields",
+        // Fase 6
+        "protect", "unlock", "security-info", "metadata", "verify-signature", "repair", "pdfa", "compare",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -98,15 +100,15 @@ public sealed class ToolCatalog
             "alternar páginas", "frente e verso", "mesclar alternado");
         T("insert-pages", "Inserir páginas", "Insere páginas em branco ou de outro documento.", ToolCategory.Organize, 2, Add,
             "adicionar páginas", "página em branco", "substituir páginas", "duplicar páginas");
-        T("crop", "Recortar e redimensionar páginas", "Recorta, ajusta margens e altera o tamanho das páginas.", ToolCategory.Organize, 6, Cut,
+        T("crop", "Recortar e redimensionar páginas", "Recorta, ajusta margens e altera o tamanho das páginas.", ToolCategory.Organize, 7, Cut,
             "cortar margens", "ajustar margens", "reduzir margens", "tamanho da página", "crop");
-        T("blank-duplicates", "Páginas em branco e duplicadas", "Detecta e remove páginas vazias ou repetidas.", ToolCategory.Organize, 6, Search,
+        T("blank-duplicates", "Páginas em branco e duplicadas", "Detecta e remove páginas vazias ou repetidas.", ToolCategory.Organize, 7, Search,
             "remover páginas vazias", "páginas repetidas", "limpar documento");
-        T("booklet", "Livreto e múltiplas páginas por folha", "Monta livretos e coloca 2 ou 4 páginas por folha.", ToolCategory.Organize, 6, Print,
+        T("booklet", "Livreto e múltiplas páginas por folha", "Monta livretos e coloca 2 ou 4 páginas por folha.", ToolCategory.Organize, 7, Print,
             "booklet", "duas páginas por folha", "quatro páginas por folha", "mosaico", "n-up", "imposição");
-        T("reverse", "Inverter ordem das páginas", "Coloca as páginas do documento na ordem inversa.", ToolCategory.Organize, 6, Sync,
+        T("reverse", "Inverter ordem das páginas", "Coloca as páginas do documento na ordem inversa.", ToolCategory.Organize, 7, Sync,
             "ordem inversa", "de trás para frente");
-        T("bookmarks", "Marcadores, links e anexos", "Cria e edita marcadores, sumário, links e anexos.", ToolCategory.Organize, 6, Link,
+        T("bookmarks", "Marcadores, links e anexos", "Cria e edita marcadores, sumário, links e anexos.", ToolCategory.Organize, 7, Link,
             "sumário", "índice", "bookmarks", "favoritos", "anexar arquivo", "hiperlink");
 
         // ----- Editar -----
@@ -138,7 +140,7 @@ public sealed class ToolCatalog
             "word para pdf", "docx para pdf", "excel para pdf", "xlsx", "powerpoint para pdf", "pptx");
         T("pdf-to-word", "PDF para Word", "Converte PDF em DOCX editável, com limitações de formatação informadas.", ToolCategory.Convert, 3, Sync,
             "pdf para docx", "pdf editável", "transformar em word");
-        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 6, Sync,
+        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 7, Sync,
             "pdf para xlsx", "pdf para planilha", "pdf para pptx", "tabela para excel");
         T("pdf-to-text", "PDF para texto e HTML", "Exporta o conteúdo em TXT ou HTML.", ToolCategory.Convert, 3, Font,
             "pdf para txt", "extrair texto", "copiar texto", "pdf para html");
@@ -146,13 +148,13 @@ public sealed class ToolCatalog
             "txt para pdf", "html para pdf", "página web para pdf");
         T("pdfa", "Converter e validar PDF/A", "Converte para PDF/A-1b, 2b ou 3b e gera relatório de validação.", ToolCategory.Convert, 6, Shield,
             "pdf a", "arquivamento", "longo prazo", "pdfa");
-        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, tabelas, anexos, fontes e metadados.", ToolCategory.Convert, 6, Folder,
+        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, tabelas, anexos, fontes e metadados.", ToolCategory.Convert, 7, Folder,
             "extrair imagens", "extrair tabelas", "extrair anexos", "listar fontes");
 
         // ----- Comprimir -----
         T("compress", "Comprimir PDF", "Reduz o tamanho do arquivo com perfis de compressão e comparação antes/depois.", ToolCategory.Compress, 3, Shrink,
             "reduzir tamanho", "diminuir pdf", "compactar", "otimizar", "pdf menor", "deixar mais leve");
-        T("grayscale", "Converter para preto e branco", "Converte as páginas para escala de cinza.", ToolCategory.Compress, 6, Shrink,
+        T("grayscale", "Converter para preto e branco", "Converte as páginas para escala de cinza.", ToolCategory.Compress, 7, Shrink,
             "escala de cinza", "tons de cinza", "monocromático", "sem cor");
 
         // ----- Segurança -----
@@ -162,6 +164,8 @@ public sealed class ToolCatalog
             "tirar senha", "desbloquear", "remover senha", "descriptografar");
         T("metadata", "Metadados", "Visualiza, edita e remove título, autor, assunto e demais propriedades.", ToolCategory.Security, 6, Tag,
             "propriedades", "autor", "título", "limpar metadados", "informações do documento");
+        T("security-info", "Propriedades de segurança", "Identifica documentos protegidos, permissões, assinaturas e danos estruturais.", ToolCategory.Security, 6, Shield,
+            "documento protegido", "verificar pdf", "integridade", "está com senha", "analisar segurança", "permissões do pdf");
         T("verify-signature", "Verificar assinaturas digitais", "Valida criptograficamente as assinaturas digitais existentes.", ToolCategory.Security, 6, Shield,
             "assinatura digital", "certificado", "validar assinatura", "icp brasil", "conferir assinatura");
         T("repair", "Reparar PDF", "Tenta recuperar documentos danificados e relata o que foi salvo e perdido.", ToolCategory.Security, 6, Repair,

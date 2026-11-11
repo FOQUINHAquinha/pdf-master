@@ -1,0 +1,17 @@
+<UserControl x:Class="PDFMaster.App.Views.SecurityInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <DockPanel Margin="28,22,28,22">
+        <ContentPresenter DockPanel.Dock="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolHeader}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Content="Adicionar PDFs…" Style="{StaticResource PrimaryButton}" Command="{Binding PickFilesCommand}" />
+            <Button Content="Analisar de novo" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Command="{Binding AnalyzeAgainCommand}" />
+            <Button Content="Limpar lista" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Command="{Binding ClearCommand}" />
+        </StackPanel>
+        <ContentPresenter DockPanel.Dock="Bottom" Content="{Binding}" ContentTemplate="{StaticResource ToolBusy}" />
+        <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Secondary}" Margin="2,10,0,0"
+                   Text="Somente leitura: nada é gravado. Documentos com senha de abertura são identificados, mas o conteúdo só é analisado com a senha." />
+        <ContentPresenter Margin="0,12,0,0" Content="{Binding}" ContentTemplate="{StaticResource ToolFileList}" />
+    </DockPanel>
+</UserControl>

@@ -20,6 +20,8 @@
     <ProjectReference Include="..\PDFMaster.Scanner\PDFMaster.Scanner.csproj" />
     <ProjectReference Include="..\PDFMaster.Video\PDFMaster.Video.csproj" />
     <ProjectReference Include="..\PDFMaster.Editor\PDFMaster.Editor.csproj" />
+    <ProjectReference Include="..\PDFMaster.Security\PDFMaster.Security.csproj" />
+    <ProjectReference Include="..\PDFMaster.Comparison\PDFMaster.Comparison.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
