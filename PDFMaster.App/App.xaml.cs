@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PDFMaster.App.Services;
+using PDFMaster.Batch;
 using PDFMaster.App.ViewModels;
 using PDFMaster.Compression;
 using PDFMaster.Conversion;
@@ -48,6 +49,28 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (CommandLine.IsHeadless(e.Args))
+        {
+            // Linha de comando sem janela (--merge, --compress, --ocr, --split, --flow, --watch…).
+            Shutdown(await HeadlessConsole.RunAsync(e.Args));
+            return;
+        }
+
+        var options = StartupOptions.Parse(e.Args);
+        if (options.Context is { } contextAction)
+        {
+            // Menu de contexto: o Explorador abre um processo por arquivo; o primeiro junta todos.
+            var collected = await ContextCollector.CollectAsync(contextAction, options.Files.Select(System.IO.Path.GetFullPath).ToList(),
+                TimeSpan.FromMilliseconds(700));
+            if (collected is null)
+            {
+                Shutdown(0);
+                return;
+            }
+
+            options = options with { Tool = ShellIntegration.Find(contextAction)?.ToolId ?? "view", Files = collected };
+        }
 
         try
         {
@@ -93,7 +116,33 @@ public partial class App : Application
                 provider.GetRequiredService<OcrToolkit>(),
                 provider.GetRequiredService<VideoToolkit>(),
                 provider.GetRequiredService<EditorToolkit>(),
-                provider.GetRequiredService<SecurityToolkit>()));
+                provider.GetRequiredService<SecurityToolkit>(),
+                provider.GetRequiredService<AutomationToolkit>()));
+
+            services.AddSingleton<PageTools>();
+            services.AddSingleton(new FlowStore(paths.DataDirectory));
+            services.AddSingleton(new WatchStore(paths.DataDirectory));
+            services.AddSingleton(provider => new FlowRunner(new FlowServices(
+                provider.GetRequiredService<IPdfEngine>(),
+                provider.GetRequiredService<PdfOrganizer>(),
+                provider.GetRequiredService<PdfCompressor>(),
+                provider.GetRequiredService<OcrService>(),
+                provider.GetRequiredService<PdfEditor>(),
+                provider.GetRequiredService<PdfAConverter>(),
+                provider.GetRequiredService<PdfMetadata>(),
+                provider.GetRequiredService<PdfRepair>(),
+                provider.GetRequiredService<ImagesToPdfConverter>(),
+                provider.GetRequiredService<TextToPdfConverter>(),
+                provider.GetRequiredService<OfficeToPdfConverter>(),
+                provider.GetRequiredService<PageTools>(),
+                provider.GetRequiredService<OutputPlanner>())));
+            services.AddSingleton<BatchQueue>();
+            services.AddSingleton(provider => new WatchService(
+                provider.GetRequiredService<WatchStore>(),
+                provider.GetRequiredService<FlowStore>(),
+                provider.GetRequiredService<BatchQueue>()));
+            services.AddSingleton(new ShellIntegration(Environment.ProcessPath ?? System.IO.Path.Combine(AppContext.BaseDirectory, "PDFMaster.exe")));
+            services.AddSingleton<AutomationToolkit>();
 
             services.AddSingleton<PdfProtection>();
             services.AddSingleton<PdfMetadata>();
@@ -161,7 +210,6 @@ public partial class App : Application
             ffmpeg.CustomPath = settings.Current.FfmpegPath;
             settings.Changed += (_, _) => ffmpeg.CustomPath = settings.Current.FfmpegPath;
 
-            var options = StartupOptions.Parse(e.Args);
             if (options.Theme is { } requestedTheme && requestedTheme != settings.Current.Theme)
             {
                 await settings.UpdateAsync(s => s.Theme = requestedTheme);
@@ -198,6 +246,10 @@ public partial class App : Application
                 await _services.GetRequiredService<HomeViewModel>().AddPathsAsync(options.Files);
             }
 
+            // Pastas monitoradas: só funcionam com o programa aberto (ou com --watch).
+            var watch = _services.GetRequiredService<WatchService>();
+            if (watch.Folders.Any(f => f.Enabled)) watch.Start();
+
             _logger.LogInformation("PDF Master iniciado. Dados em {DataDirectory}", paths.DataDirectory);
         }
         catch (Exception ex)
@@ -212,6 +264,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _services?.GetService<BatchQueue>()?.CancelAll();
         _services?.Dispose();
         base.OnExit(e);
     }
@@ -236,9 +289,10 @@ public partial class App : Application
 /// --theme define (e salva) o tema; --page abre direto numa seção; --tool abre uma ferramenta
 /// (view, merge, split, reorder, interleave…) com os arquivos informados; --output define a pasta
 /// de destino da ferramenta e --run executa a ação principal com as opções padrão. Sem --tool, os
-/// arquivos e pastas vão para a lista de arquivos abertos.
+/// arquivos e pastas vão para a lista de arquivos abertos. --context ação (usado pelo menu de contexto
+/// do Explorador) junta os arquivos de vários processos e abre a ferramenta da ação.
 /// </summary>
-public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool, string? Output, bool Run, IReadOnlyList<string> Files)
+public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool, string? Output, bool Run, IReadOnlyList<string> Files, string? Context = null)
 {
     public static StartupOptions Parse(IReadOnlyList<string> args)
     {
@@ -246,6 +300,7 @@ public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool,
         string? page = null;
         string? tool = null;
         string? output = null;
+        string? context = null;
         var run = false;
         var files = new List<string>();
         for (var i = 0; i < args.Count; i++)
@@ -269,6 +324,10 @@ public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool,
             {
                 output = args[++i];
             }
+            else if (arg.Equals("--context", StringComparison.OrdinalIgnoreCase) && hasValue)
+            {
+                context = args[++i].ToLowerInvariant();
+            }
             else if (arg.Equals("--run", StringComparison.OrdinalIgnoreCase))
             {
                 run = true;
@@ -279,6 +338,6 @@ public sealed record StartupOptions(AppTheme? Theme, string? Page, string? Tool,
             }
         }
 
-        return new StartupOptions(theme, page, tool, output, run, files);
+        return new StartupOptions(theme, page, tool, output, run, files, context);
     }
 }

@@ -38,7 +38,16 @@ public sealed record ToolContext(
     OcrToolkit Ocr,
     VideoToolkit Video,
     EditorToolkit Editor,
-    SecurityToolkit Security);
+    SecurityToolkit Security,
+    AutomationToolkit Automation);
+
+/// <summary>Automação (Fase 7): ferramentas de página, fluxos, fila, pastas monitoradas e integração com o Windows.</summary>
+public sealed record AutomationToolkit(
+    PDFMaster.Batch.PageTools Pages,
+    PDFMaster.Batch.FlowStore Flows,
+    PDFMaster.Batch.BatchQueue Queue,
+    PDFMaster.Batch.WatchService Watch,
+    PDFMaster.Batch.ShellIntegration Shell);
 
 /// <summary>Segurança e ferramentas avançadas (Fase 6).</summary>
 /// <param name="TrustedRootsFolder">Pasta onde a pessoa coloca certificados raiz adicionais (ex.: ICP-Brasil).</param>
