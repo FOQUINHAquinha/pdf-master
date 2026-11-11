@@ -133,7 +133,7 @@ public class GrayscaleTests : IDisposable
 
     public void Dispose() => _temp.Dispose();
 
-    private PDFMaster.Domain.OutputTarget Target => new(Path.Combine(_temp.Path, "saida"), PDFMaster.Domain.OverwritePolicy.AutoRename, PDFMaster.Domain.SubfolderMode.None);
+    private OutputTarget Target => new(Path.Combine(_temp.Path, "saida"), PDFMaster.Domain.OverwritePolicy.AutoRename, PDFMaster.Domain.SubfolderMode.None);
 
     /// <summary>Texto vermelho, retângulo azul (RGB), retângulo CMYK, imagem PNG verde e foto JPEG colorida.</summary>
     private string Colorful()
