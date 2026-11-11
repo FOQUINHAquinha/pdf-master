@@ -134,6 +134,18 @@ public sealed class AppSettings
     /// <summary>ffmpeg.exe escolhido pelo usuário; null usa o que vem com o programa.</summary>
     public string? FfmpegPath { get; set; }
 
+    /// <summary>Tarefas da fila processadas ao mesmo tempo; 0 = automático (metade dos núcleos, até 4).</summary>
+    public int BatchParallel { get; set; }
+
+    /// <summary>Perfil de compressão escolhido ao abrir "Comprimir PDF" (nome do perfil: Lossless, Light, Balanced…).</summary>
+    public string DefaultCompressionProfile { get; set; } = "Balanced";
+
+    /// <summary>Idiomas marcados ao abrir o OCR (códigos separados por "+", ex.: "por+eng").</summary>
+    public string OcrLanguages { get; set; } = "por";
+
+    /// <summary>Resolução padrão do OCR.</summary>
+    public int OcrDpi { get; set; } = 300;
+
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }
 

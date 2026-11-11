@@ -1,3 +1,4 @@
+using System.Globalization;
 using PDFMaster.Domain;
 
 namespace PDFMaster.Core.Settings;
@@ -55,6 +56,13 @@ public sealed class SettingsService
         if (v.TryGetValue("subfolderMode", out var sm) && Enum.TryParse<SubfolderMode>(sm, out var smv)) s.SubfolderMode = smv;
         if (v.TryGetValue("historyEnabled", out var he) && bool.TryParse(he, out var heb)) s.HistoryEnabled = heb;
         if (v.TryGetValue("ffmpegPath", out var fp) && fp.Length > 0) s.FfmpegPath = fp;
+        if (v.TryGetValue("batchParallel", out var bp) && int.TryParse(bp, NumberStyles.None, CultureInfo.InvariantCulture, out var bpv) && bpv is >= 0 and <= 8)
+            s.BatchParallel = bpv;
+        if (v.TryGetValue("compressionProfile", out var cp) && cp.Length is > 0 and < 32 && cp.All(char.IsAsciiLetter)) s.DefaultCompressionProfile = cp;
+        if (v.TryGetValue("ocrLanguages", out var ol) && ol.Length is > 0 and < 120 && ol.All(c => char.IsAsciiLetterOrDigit(c) || c is '+' or '_' or '-'))
+            s.OcrLanguages = ol;
+        if (v.TryGetValue("ocrDpi", out var od) && int.TryParse(od, NumberStyles.None, CultureInfo.InvariantCulture, out var odv) && odv is >= 100 and <= 600)
+            s.OcrDpi = odv;
         return s;
     }
 
@@ -69,5 +77,9 @@ public sealed class SettingsService
         ["subfolderMode"] = s.SubfolderMode.ToString(),
         ["historyEnabled"] = s.HistoryEnabled.ToString(),
         ["ffmpegPath"] = s.FfmpegPath ?? string.Empty,
+        ["batchParallel"] = s.BatchParallel.ToString(CultureInfo.InvariantCulture),
+        ["compressionProfile"] = s.DefaultCompressionProfile,
+        ["ocrLanguages"] = s.OcrLanguages,
+        ["ocrDpi"] = s.OcrDpi.ToString(CultureInfo.InvariantCulture),
     };
 }

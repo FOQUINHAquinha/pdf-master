@@ -31,6 +31,22 @@ public sealed class ShellLauncher
         }
     }
 
+    /// <summary>Abre uma página das Configurações do Windows (somente endereços ms-settings:).</summary>
+    public bool OpenSettingsPage(string uri)
+    {
+        if (!uri.StartsWith("ms-settings:", StringComparison.Ordinal)) return false;
+        try
+        {
+            Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true })?.Dispose();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Não foi possível abrir {Uri}", uri);
+            return false;
+        }
+    }
+
     /// <summary>Abre a pasta no Explorador de Arquivos, selecionando o arquivo quando ele existe.</summary>
     public bool OpenFolder(string fileOrFolder)
     {

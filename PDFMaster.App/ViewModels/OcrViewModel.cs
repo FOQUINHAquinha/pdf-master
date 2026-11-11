@@ -42,6 +42,7 @@ public sealed partial class OcrViewModel : ToolViewModelBase
         : base(context, "OCR — reconhecimento de texto",
             "Torne pesquisáveis os PDFs digitalizados e as imagens, ou extraia o texto para TXT e Word.")
     {
+        _dpiText = context.Settings.Current.OcrDpi.ToString(CultureInfo.InvariantCulture);
         LoadLanguages();
         Refresh();
     }
@@ -103,10 +104,12 @@ public sealed partial class OcrViewModel : ToolViewModelBase
             var installed = Context.Ocr.Runtime.InstalledLanguages();
             foreach (var language in installed)
             {
-                // Na primeira carga, o português vem marcado (ou o primeiro idioma, se não houver português).
+                // Na primeira carga vêm marcados os idiomas padrão das configurações (ou o primeiro instalado).
+                var preferred = Context.Settings.Current.OcrLanguages.Split('+', StringSplitOptions.RemoveEmptyEntries);
+                var anyPreferred = installed.Any(l => preferred.Contains(l.Code, StringComparer.OrdinalIgnoreCase));
                 var isSelected = selected.Count > 0
                     ? selected.Contains(language.Code)
-                    : language.Code == "por" || (installed.All(l => l.Code != "por") && language == installed[0]);
+                    : anyPreferred ? preferred.Contains(language.Code, StringComparer.OrdinalIgnoreCase) : language == installed[0];
                 Languages.Add(new OcrLanguageChoice(language, isSelected, Refresh));
             }
 

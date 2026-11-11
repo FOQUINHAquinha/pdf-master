@@ -379,7 +379,7 @@ public class BatchTests : IDisposable
         var third = await ContextCollector.CollectAsync("merge", ["c.pdf"], TimeSpan.FromMilliseconds(1500), channel);
         Assert.Null(second);
         Assert.Null(third);
-        Assert.Equal(["a.pdf", "b.pdf", "c.pdf"], await first);
+        Assert.Equal(new[] { "a.pdf", "b.pdf", "c.pdf" }, (await first)!);
     }
 
     // ---------- Linha de comando ----------
@@ -449,7 +449,7 @@ public class BatchTests : IDisposable
 
         (code, _) = await Cli("--rotate", a, "--degrees", "180", "--pages", "2", "--output", Path.Combine(_temp.Path, "cli", "g.pdf"));
         Assert.Equal(CommandLine.Success, code);
-        Assert.Equal([0, 180], (await _services.Engine.ReadInfoAsync(Path.Combine(_temp.Path, "cli", "g.pdf"))).Pages.Select(p => p.Rotation).ToArray());
+        Assert.Equal(new[] { 0, 180 }, (await _services.Engine.ReadInfoAsync(Path.Combine(_temp.Path, "cli", "g.pdf"))).Pages.Select(p => p.Rotation).ToArray());
     }
 
     [Fact]

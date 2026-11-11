@@ -98,6 +98,53 @@
                 </StackPanel>
             </Border>
 
+            <!-- Padrões das ferramentas e desempenho -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Padrões e desempenho" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Perfil de compressão ao abrir &quot;Comprimir PDF&quot;" Style="{StaticResource Body}" Margin="0,12,0,4" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="420" ItemsSource="{Binding CompressionProfiles}"
+                              DisplayMemberPath="Label" SelectedItem="{Binding SelectedCompressionProfile, Mode=TwoWay}" />
+
+                    <TextBlock Text="OCR: idiomas marcados e resolução ao abrir a ferramenta" Style="{StaticResource Body}" Margin="0,16,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Width="160" Text="{Binding OcrLanguagesText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Códigos do Tesseract separados por +, ex.: por+eng" />
+                        <TextBox Width="70" Margin="8,0,0,0" Text="{Binding OcrDpiText, UpdateSourceTrigger=PropertyChanged}" ToolTip="DPI (100 a 600)" />
+                        <TextBlock Text="DPI" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                        <Button Content="Salvar padrões do OCR" Style="{StaticResource SecondaryButton}" Margin="12,0,0,0"
+                                Command="{Binding ApplyOcrDefaultsCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding DefaultsStatus}" Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                    <TextBlock Text="Fila de tarefas: quantos documentos processar ao mesmo tempo" Style="{StaticResource Body}" Margin="0,16,0,4" />
+                    <ComboBox HorizontalAlignment="Left" MinWidth="420" ItemsSource="{Binding ParallelChoices}"
+                              DisplayMemberPath="Label" SelectedItem="{Binding SelectedParallel, Mode=TwoWay}" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,4,0,0" TextWrapping="Wrap"
+                               Text="Mais tarefas simultâneas terminam lotes grandes mais cedo, mas usam mais memória; OCR e PDF/A são as etapas mais pesadas." />
+                </StackPanel>
+            </Border>
+
+            <!-- Integração com o Windows -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Integração com o Windows" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="Alterações feitas apenas para o seu usuário (sem permissão de administrador). Podem ser desfeitas aqui a qualquer momento." />
+                    <CheckBox Content="Itens do PDF Master no menu de contexto dos PDFs (Mesclar, Comprimir, Converter para imagem, Extrair páginas, Proteger, Abrir)"
+                              Margin="0,12,0,0" IsChecked="{Binding ContextMenuInstalled, Mode=TwoWay}" />
+                    <CheckBox Content="Mostrar o PDF Master em &quot;Abrir com&quot; para arquivos PDF" Margin="0,8,0,0"
+                              IsChecked="{Binding OpenWithRegistered, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Escolher o programa padrão para PDF…" Style="{StaticResource SecondaryButton}"
+                                Command="{Binding OpenDefaultAppsCommand}" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="O Windows não permite que um programa se torne o padrão sozinho: a escolha é feita por você na tela de aplicativos padrão." />
+                    <TextBlock Text="{Binding WindowsStatus}" Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <!-- Privacidade -->
             <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                 <StackPanel>
@@ -140,8 +187,6 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Style="{StaticResource Secondary}" Margin="2,14,0,0"
-                       Text="As configurações de conversão, OCR, compressão e desempenho entram nesta tela junto com as respectivas ferramentas (Fases 3, 4 e 7), para que nenhuma opção apareça aqui sem efeito real." />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -47,7 +47,10 @@ public sealed partial class CompressViewModel : ToolViewModelBase
         Profiles = Enum.GetValues<CompressionProfile>()
             .Select(p => new Choice<CompressionProfile>(p, CompressionSettings.Describe(p)))
             .ToList();
-        _selectedProfile = Profiles.First(p => p.Value == CompressionProfile.Balanced);
+        var preferred = Enum.TryParse<CompressionProfile>(context.Settings.Current.DefaultCompressionProfile, out var saved) && saved != CompressionProfile.Custom
+            ? saved
+            : CompressionProfile.Balanced;
+        _selectedProfile = Profiles.First(p => p.Value == preferred);
         Refresh();
     }
 

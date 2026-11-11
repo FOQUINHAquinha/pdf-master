@@ -1,8 +1,11 @@
+using System.IO;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using PDFMaster.App.Services;
+using PDFMaster.Batch;
+using PDFMaster.Compression;
 using PDFMaster.Core;
 using PDFMaster.Core.Settings;
 using PDFMaster.Domain;
@@ -33,6 +36,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly ShellLauncher _shell;
     private readonly NotificationCenter _notifications;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly ShellIntegration _windows;
+    private readonly BatchQueue _queue;
     private bool _loading;
 
     public SettingsViewModel(
@@ -43,8 +48,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         ShellLauncher shell,
         NotificationCenter notifications,
         AppPaths paths,
+        ShellIntegration windows,
+        BatchQueue queue,
         ILogger<SettingsViewModel> logger)
     {
+        _windows = windows;
+        _queue = queue;
         _settings = settings;
         _history = history;
         _recent = recent;
@@ -71,6 +80,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             new(SubfolderMode.ByOperation, "Criar subpasta por operação"),
         ];
 
+        ParallelChoices = [new(0, $"Automático ({BatchQueue.DefaultParallel} neste computador)"),
+            .. Enumerable.Range(1, BatchQueue.MaxAllowedParallel).Select(n => new Choice<int>(n, n == 1 ? "1 tarefa por vez" : $"{n} tarefas ao mesmo tempo"))];
+        CompressionProfiles = Enum.GetValues<CompressionProfile>().Where(p => p != CompressionProfile.Custom)
+            .Select(p => new Choice<CompressionProfile>(p, CompressionSettings.Describe(p))).ToList();
+        _selectedParallel = ParallelChoices[0];
+        _selectedCompressionProfile = CompressionProfiles[2];
         _selectedOverwritePolicy = OverwritePolicies[0];
         _selectedSubfolderMode = SubfolderModes[0];
         _settings.Changed += (_, _) => Reload();
@@ -80,6 +95,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<AccentSwatch> Swatches { get; }
     public IReadOnlyList<Choice<OverwritePolicy>> OverwritePolicies { get; }
     public IReadOnlyList<Choice<SubfolderMode>> SubfolderModes { get; }
+    public IReadOnlyList<Choice<int>> ParallelChoices { get; }
+    public IReadOnlyList<Choice<CompressionProfile>> CompressionProfiles { get; }
+
+    [ObservableProperty] private Choice<int> _selectedParallel;
+    [ObservableProperty] private Choice<CompressionProfile> _selectedCompressionProfile;
+    [ObservableProperty] private string _ocrLanguagesText = "por";
+    [ObservableProperty] private string _ocrDpiText = "300";
+    [ObservableProperty] private string _defaultsStatus = string.Empty;
+    [ObservableProperty] private bool _contextMenuInstalled;
+    [ObservableProperty] private bool _openWithRegistered;
+    [ObservableProperty] private string _windowsStatus = string.Empty;
     public string DataDirectory { get; }
     public string AboutTitle => $"PDF Master {AppInfo.Version}";
     public string AuthorText => AppInfo.Credit + ".";
@@ -131,6 +157,14 @@ public sealed partial class SettingsViewModel : ObservableObject
             SelectedOverwritePolicy = OverwritePolicies.First(c => c.Value == s.OverwritePolicy);
             SelectedSubfolderMode = SubfolderModes.First(c => c.Value == s.SubfolderMode);
             HistoryEnabled = s.HistoryEnabled;
+            SelectedParallel = ParallelChoices.FirstOrDefault(c => c.Value == s.BatchParallel) ?? ParallelChoices[0];
+            SelectedCompressionProfile = CompressionProfiles.FirstOrDefault(c => c.Value.ToString() == s.DefaultCompressionProfile)
+                                         ?? CompressionProfiles.First(c => c.Value == CompressionProfile.Balanced);
+            OcrLanguagesText = s.OcrLanguages;
+            OcrDpiText = s.OcrDpi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ContextMenuInstalled = _windows.IsContextMenuInstalled;
+            OpenWithRegistered = _windows.IsOpenWithRegistered;
+            _queue.MaxParallel = s.BatchParallel > 0 ? s.BatchParallel : BatchQueue.DefaultParallel;
             OnPropertyChanged(nameof(HasDefaultFolder));
         }
         finally
@@ -162,6 +196,86 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     partial void OnHistoryEnabledChanged(bool value) => Save(s => s.HistoryEnabled = value);
+
+    partial void OnSelectedParallelChanged(Choice<int> value)
+    {
+        if (value is not null) Save(s => s.BatchParallel = value.Value);
+    }
+
+    partial void OnSelectedCompressionProfileChanged(Choice<CompressionProfile> value)
+    {
+        if (value is not null) Save(s => s.DefaultCompressionProfile = value.Value.ToString());
+    }
+
+    [RelayCommand]
+    private void ApplyOcrDefaults()
+    {
+        var languages = string.Join("+", OcrLanguagesText.Split(['+', ',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim().ToLowerInvariant()));
+        if (languages.Length == 0 || languages.Length > 100 || !languages.All(c => char.IsAsciiLetterOrDigit(c) || c is '+' or '_' or '-'))
+        {
+            DefaultsStatus = "Informe os idiomas pelo código do Tesseract, separados por "+" (ex.: por+eng).";
+            return;
+        }
+
+        if (!int.TryParse(OcrDpiText.Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var dpi) ||
+            dpi is < PDFMaster.OCR.OcrService.MinDpi or > PDFMaster.OCR.OcrService.MaxDpi)
+        {
+            DefaultsStatus = $"A resolução do OCR deve ficar entre {PDFMaster.OCR.OcrService.MinDpi} e {PDFMaster.OCR.OcrService.MaxDpi} DPI.";
+            return;
+        }
+
+        Save(s =>
+        {
+            s.OcrLanguages = languages;
+            s.OcrDpi = dpi;
+        });
+        DefaultsStatus = $"Padrões do OCR salvos: {languages}, {dpi} DPI. Valem para as próximas vezes que o OCR for aberto.";
+    }
+
+    partial void OnContextMenuInstalledChanged(bool value)
+    {
+        if (_loading || value == _windows.IsContextMenuInstalled) return;
+        ChangeWindows(() =>
+        {
+            if (value) _windows.InstallContextMenu();
+            else _windows.RemoveContextMenu();
+        }, value ? "Itens adicionados ao menu de contexto dos PDFs (no Windows 11, em \"Mostrar mais opções\")." : "Itens removidos do menu de contexto.");
+    }
+
+    partial void OnOpenWithRegisteredChanged(bool value)
+    {
+        if (_loading || value == _windows.IsOpenWithRegistered) return;
+        ChangeWindows(() =>
+        {
+            if (value) _windows.RegisterOpenWith();
+            else _windows.UnregisterOpenWith();
+        }, value ? "O PDF Master aparece em \"Abrir com\" e pode ser escolhido como programa padrão para PDF." : "Registro em \"Abrir com\" removido.");
+    }
+
+    private void ChangeWindows(Action change, string done)
+    {
+        try
+        {
+            change();
+            WindowsStatus = done;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            WindowsStatus = "Não foi possível alterar o registro do Windows: " + ex.Message;
+        }
+
+        _loading = true;
+        ContextMenuInstalled = _windows.IsContextMenuInstalled;
+        OpenWithRegistered = _windows.IsOpenWithRegistered;
+        _loading = false;
+    }
+
+    [RelayCommand]
+    private void OpenDefaultApps()
+    {
+        if (!_shell.OpenSettingsPage(ShellIntegration.DefaultAppsUri))
+            WindowsStatus = "Não foi possível abrir os aplicativos padrão do Windows.";
+    }
 
     private void SetAccent(string hex) => Save(s => s.AccentColor = hex);
 
