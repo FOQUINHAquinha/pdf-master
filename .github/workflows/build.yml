@@ -217,6 +217,8 @@ jobs:
             @{ name = 'run-reverse';    args = @('--theme','light','--tool','reverse','--output',"`"$out`"",'--run',"`"$a`"") },
             @{ name = 'run-blank';      wait = 12; args = @('--theme','dark','--tool','blank-duplicates','--output',"`"$out`"",'--run',"`"$s\Digitalizacao com brancas.pdf`"") },
             @{ name = 'run-crop';       args = @('--theme','light','--tool','crop','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-extract';    args = @('--theme','light','--tool','extract-content','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"") },
+            @{ name = 'run-grayscale';  args = @('--theme','dark','--tool','grayscale','--output',"`"$out`"",'--run',"`"$a`"") },
             @{ name = 'run-booklet';    args = @('--theme','light','--tool','booklet','--output',"`"$out`"",'--run',"`"$b`"") },
             @{ name = 'tool-watch';     wait = 25; args = @('--theme','light','--tool','watch-folder') },
             @{ name = 'dark-batch-page'; args = @('--theme','dark','--page','batch') },
@@ -252,6 +254,7 @@ jobs:
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
           $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf','Contrato v1_PDFA-2b.pdf','Contrato v1_metadados.pdf','Danificado_reparado.pdf')
+          $expected += @('Contrato v1_conteudo\metadados.txt','Relatorio_cinza.pdf')
           $expected += @('Relatorio_arquivo.pdf','Escaneado_arquivo.pdf','Relatorio_invertido.pdf','Digitalizacao com brancas_sem-brancas.pdf','Relatorio_recortado.pdf','Anexos_2-por-folha.pdf')
           foreach ($name in @('Relatorio_comprimido.pdf','Anexos_comprimido.pdf')) {
             $file = Join-Path $watchOut $name
