@@ -86,7 +86,7 @@ public class NavigationTests : IDisposable
         var xml = Path.Combine(_temp.Path, "dados.xml");
         File.WriteAllText(xml, "<nota>ok</nota>");
         var photo = Path.Combine(_temp.Path, "matrícula.txt");
-        File.WriteAllText(photo, "Matrícula 12.345", Encoding.UTF8);
+        File.WriteAllText(photo, "Matrícula 12.345", new UTF8Encoding(false));
 
         var added = await _navigation.SaveAsync(source, Nothing with { AddAttachments = [xml, photo, xml] }, Target);
         var info = await _navigation.ReadAsync(added.File.Path);

@@ -104,51 +104,82 @@ public sealed class PdfToOfficeConverter
 
     private sealed record Cell(double X, double Right, string Text);
 
+    private sealed record Word(double X, double Y, double Right, double Bottom, string Text)
+    {
+        public double Center => (Y + Bottom) / 2;
+        public double Height => Bottom - Y;
+    }
+
     /// <summary>Linhas de células de uma página, já distribuídas em colunas (null = célula vazia).</summary>
     public static IReadOnlyList<IReadOnlyList<string?>> ExtractTable(DisplayPageText page)
     {
-        var chars = page.Chars.Where(c => c.Value != ' ' && c.Height > 0).ToList();
-        if (chars.Count == 0) return [];
-
-        // Linhas: caracteres cujo centro vertical está próximo.
-        var lines = new List<List<DisplayChar>>();
-        foreach (var c in chars.OrderBy(c => c.Y + c.Height / 2))
+        // Palavras: caracteres seguidos na ordem do conteúdo, separados pelos espaços do próprio PDF
+        // ou por saltos de posição (outra linha ou volta para a esquerda).
+        var words = new List<Word>();
+        var current = new List<DisplayChar>();
+        void Flush()
         {
-            var center = c.Y + c.Height / 2;
-            var line = lines.LastOrDefault();
-            if (line is not null && Math.Abs(line.Average(x => x.Y + x.Height / 2) - center) <= Math.Max(2, line.Average(x => x.Height) * 0.5)) line.Add(c);
-            else lines.Add([c]);
+            if (current.Count == 0) return;
+            words.Add(new Word(current.Min(c => c.X), current.Min(c => c.Y), current.Max(c => c.X + c.Width), current.Max(c => c.Y + c.Height),
+                new string(current.Select(c => c.Value).ToArray())));
+            current.Clear();
         }
 
-        // Células: dentro da linha, um espaço maior que ~1,5 caractere separa colunas.
+        foreach (var c in page.Chars)
+        {
+            if (c.Value == ' ' || c.Height <= 0)
+            {
+                Flush();
+                continue;
+            }
+
+            if (current.Count > 0)
+            {
+                var previous = current[^1];
+                var sameLine = Math.Abs((previous.Y + previous.Height / 2) - (c.Y + c.Height / 2)) <= Math.Max(previous.Height, c.Height) * 0.5;
+                var forward = c.X >= previous.X - 0.5 && c.X - (previous.X + previous.Width) < Math.Max(previous.Height, c.Height) * 0.8;
+                if (!sameLine || !forward) Flush();
+            }
+
+            current.Add(c);
+        }
+
+        Flush();
+        if (words.Count == 0) return [];
+
+        // Linhas: palavras cujo centro vertical está próximo.
+        var lines = new List<List<Word>>();
+        foreach (var w in words.OrderBy(w => w.Center))
+        {
+            var line = lines.LastOrDefault();
+            if (line is not null && Math.Abs(line.Average(x => x.Center) - w.Center) <= Math.Max(2, line.Average(x => x.Height) * 0.5)) line.Add(w);
+            else lines.Add([w]);
+        }
+
+        // Células: dentro da linha, um espaço bem maior que o espaço entre palavras separa colunas.
         var rows = new List<List<Cell>>();
         foreach (var line in lines)
         {
-            var ordered = line.OrderBy(c => c.X).ToList();
-            var avgWidth = ordered.Average(c => c.Width);
-            var height = ordered.Average(c => c.Height);
-            var gap = Math.Max(avgWidth * 1.6, height * 0.9);
+            var ordered = line.OrderBy(w => w.X).ToList();
+            var gap = ordered.Average(w => w.Height) * 1.2;
             var cells = new List<Cell>();
-            var text = new StringBuilder();
-            double start = ordered[0].X, right = ordered[0].X + ordered[0].Width;
-            text.Append(ordered[0].Value);
+            var text = new StringBuilder(ordered[0].Text);
+            double start = ordered[0].X, right = ordered[0].Right;
             for (var i = 1; i < ordered.Count; i++)
             {
-                var c = ordered[i];
-                var space = c.X - right;
-                if (space > gap)
+                var w = ordered[i];
+                if (w.X - right > gap)
                 {
                     cells.Add(new Cell(start, right, text.ToString()));
-                    text.Clear();
-                    start = c.X;
+                    text.Clear().Append(w.Text);
+                    start = w.X;
                 }
-                else if (space > avgWidth * 0.25)
+                else
                 {
-                    text.Append(' ');
+                    text.Append(' ').Append(w.Text);
                 }
 
-                text.Append(c.Value);
-                right = Math.Max(right, c.X + c.Width);
+                right = Math.Max(right, w.Right);
             }
 
             cells.Add(new Cell(start, right, text.ToString()));
