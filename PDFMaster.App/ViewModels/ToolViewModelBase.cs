@@ -12,8 +12,10 @@ using PDFMaster.Core.Pdf;
 using PDFMaster.Core.Settings;
 using PDFMaster.Domain;
 using PDFMaster.Infrastructure;
+using PDFMaster.OCR;
 using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
+using PDFMaster.Scanner;
 
 namespace PDFMaster.App.ViewModels;
 
@@ -30,7 +32,11 @@ public sealed record ToolContext(
     ShellLauncher Shell,
     NotificationCenter Notifications,
     ILoggerFactory LoggerFactory,
-    ConversionToolkit Conversion);
+    ConversionToolkit Conversion,
+    OcrToolkit Ocr);
+
+/// <summary>Serviços de OCR e digitalização (Fase 4).</summary>
+public sealed record OcrToolkit(OcrRuntime Runtime, OcrService Service, WiaScanner Scanner);
 
 /// <summary>Serviços de conversão e compressão (Fase 3).</summary>
 public sealed record ConversionToolkit(

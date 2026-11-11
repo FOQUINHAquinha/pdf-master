@@ -82,6 +82,24 @@ public partial class CombineView : UserControl
     }
 }
 
+public partial class OcrView : UserControl
+{
+    public OcrView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class ScanView : UserControl
+{
+    public ScanView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
 public partial class ConvertView : UserControl
 {
     public ConvertView()

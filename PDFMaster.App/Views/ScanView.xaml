@@ -1,0 +1,146 @@
+<UserControl x:Class="PDFMaster.App.Views.ScanView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <DockPanel Margin="28,22,28,22">
+        <ContentPresenter DockPanel.Dock="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolHeader}" />
+
+        <!-- Aviso de teste pendente -->
+        <Border DockPanel.Dock="Top" Margin="0,14,0,0" Padding="14,10" CornerRadius="8"
+                Background="{DynamicResource Brush.AccentSoft}">
+            <TextBlock Style="{StaticResource Body}"
+                       Text="A digitalização usa o WIA, a interface de scanners do Windows. Esta função ainda não foi testada com um scanner de verdade: se algo não funcionar com o seu aparelho, a mensagem de erro e o registro de diagnósticos ajudam a corrigir. Scanners que só têm driver TWAIN ainda não são suportados." />
+        </Border>
+
+        <!-- Scanner e opções -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <StackPanel>
+                <WrapPanel>
+                    <StackPanel Margin="0,0,16,6">
+                        <TextBlock Text="Scanner" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox Width="280" ItemsSource="{Binding Devices}" DisplayMemberPath="Name"
+                                      SelectedItem="{Binding SelectedDevice, Mode=TwoWay}" />
+                            <Button Content="Procurar scanners" Style="{StaticResource SecondaryButton}"
+                                    Margin="8,0,0,0" Command="{Binding FindDevicesCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,16,6">
+                        <TextBlock Text="Origem do papel" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                        <ComboBox Width="290" ItemsSource="{Binding Sources}" DisplayMemberPath="Label"
+                                  SelectedItem="{Binding SelectedSource, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,16,6">
+                        <TextBlock Text="Cor" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                        <ComboBox Width="170" ItemsSource="{Binding ColorModes}" DisplayMemberPath="Label"
+                                  SelectedItem="{Binding SelectedColor, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,16,6">
+                        <TextBlock Text="Resolução (DPI)" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                        <TextBox Width="90" Text="{Binding DpiText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="200 para leitura na tela · 300 para OCR e impressão" />
+                    </StackPanel>
+                </WrapPanel>
+                <TextBlock Text="{Binding DeviceStatus}" Style="{StaticResource Secondary}" Margin="0,4,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button Content="Digitalizar" Style="{StaticResource PrimaryButton}" MinWidth="120"
+                            Command="{Binding ScanCommand}" />
+                    <Button Content="Adicionar imagens…" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                            Command="{Binding AddImagesCommand}"
+                            ToolTip="Inclui imagens já digitalizadas como páginas do documento" />
+                    <Button Content="Limpar" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                            Command="{Binding ClearCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Rodapé: gravação -->
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Width="220" Margin="0,0,12,0">
+                        <TextBlock Text="Nome do PDF" Style="{StaticResource Secondary}" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="A extensão .pdf é adicionada automaticamente" />
+                    </StackPanel>
+                    <ContentPresenter Grid.Column="1" Content="{Binding}"
+                                      ContentTemplate="{StaticResource ToolOutputFolder}" />
+                    <Button Grid.Column="3" Content="Gravar PDF" Style="{StaticResource PrimaryButton}" MinWidth="120"
+                            VerticalAlignment="Bottom" Command="{Binding SaveCommand}" />
+                </Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <CheckBox Content="Reconhecer o texto (OCR) e gravar um PDF pesquisável"
+                              IsChecked="{Binding RunOcr, Mode=TwoWay}" />
+                    <CheckBox Content="Compactar as páginas em JPEG (arquivo bem menor)" Margin="24,0,0,0"
+                              IsChecked="{Binding UseJpeg, Mode=TwoWay}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <ContentPresenter DockPanel.Dock="Bottom" Content="{Binding}" ContentTemplate="{StaticResource ToolBusy}" />
+
+        <Grid DockPanel.Dock="Bottom" Margin="2,10,0,0">
+            <TextBlock Text="{Binding Summary}" Style="{StaticResource Body}"
+                       Visibility="{Binding Problem, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+            <TextBlock Text="{Binding Problem}" FontSize="13" TextWrapping="Wrap"
+                       Foreground="{DynamicResource Brush.Danger}"
+                       Visibility="{Binding Problem, Converter={StaticResource NullToVis}}" />
+        </Grid>
+
+        <!-- Páginas -->
+        <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="12" MinHeight="120">
+            <Grid>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding HasPages, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                    <TextBlock Text="&#xE8FE;" Style="{StaticResource Icon}" FontSize="26"
+                               Foreground="{DynamicResource Brush.Accent}" />
+                    <TextBlock Text="As páginas digitalizadas aparecem aqui" Style="{StaticResource Body}"
+                               HorizontalAlignment="Center" Margin="0,8,0,0" />
+                    <TextBlock Text="Também é possível arrastar imagens para cá." Style="{StaticResource Secondary}"
+                               HorizontalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False"
+                              Visibility="{Binding HasPages, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl ItemsSource="{Binding Pages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Width="150" Margin="6">
+                                    <Border Style="{StaticResource PageFrame}" Height="170" HorizontalAlignment="Center">
+                                        <Image Source="{Binding Thumbnail}" Stretch="Uniform" MaxWidth="130" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource Secondary}" FontSize="11.5"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                               HorizontalAlignment="Center" Margin="0,4,0,0" ToolTip="{Binding Path}" />
+                                    <TextBlock Text="{Binding Details}" Style="{StaticResource Secondary}" FontSize="11"
+                                               HorizontalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE76B;" FontSize="12"
+                                                Width="28" Height="28" ToolTip="Mover para antes"
+                                                Command="{Binding MoveUpCommand}" />
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE76C;" FontSize="12"
+                                                Width="28" Height="28" ToolTip="Mover para depois"
+                                                Command="{Binding MoveDownCommand}" />
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="11"
+                                                Width="28" Height="28" ToolTip="Remover esta página"
+                                                Command="{Binding RemoveCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </DockPanel>
+</UserControl>

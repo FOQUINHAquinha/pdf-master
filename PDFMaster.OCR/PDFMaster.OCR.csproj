@@ -1,9 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- Os decodificadores de imagem do Windows (WIC) são usados pelo WPF. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
     <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
+    <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
+    <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
+    <ProjectReference Include="..\PDFMaster.Conversion\PDFMaster.Conversion.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" />
+    <PackageReference Include="Tesseract" GeneratePathProperty="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Modelos de idioma (tessdata_fast, Apache-2.0). Não ficam no repositório: veja tessdata/LEIA-ME.md. -->
+    <EmbeddedResource Include="tessdata\*.traineddata" LogicalName="ocr.tessdata.%(Filename)%(Extension)" />
+    <!-- Bibliotecas nativas do Tesseract e do Leptonica, extraídas na primeira utilização. -->
+    <EmbeddedResource Include="$(PkgTesseract)\x64\*.dll" LogicalName="ocr.native.%(Filename)%(Extension)" Condition="'$(PkgTesseract)' != ''" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- O SDK do WPF retira System.IO dos usings implícitos. -->
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

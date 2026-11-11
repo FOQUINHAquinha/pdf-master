@@ -32,7 +32,7 @@ PDFMaster.Rendering      Renderização e miniaturas                  (Fase 2)
 PDFMaster.Conversion     Conversões                                 (Fase 3)
 PDFMaster.Compression    Compressão e otimização                    (Fase 3)
 PDFMaster.OCR            OCR                                        (Fase 4)
-PDFMaster.Scanner        TWAIN/WIA                                  (Fase 4)
+PDFMaster.Scanner        WIA (TWAIN não implementado)               (Fase 4)
 PDFMaster.Editor         Editor visual                              (Fase 5)
 PDFMaster.Security       Senhas, permissões, assinaturas            (Fase 6)
 PDFMaster.Batch          Fila de tarefas e fluxos                   (Fase 7)
@@ -108,7 +108,7 @@ Ghostscript nem qpdf.
 | Senhas, permissões e metadados | PDFsharp 6 (já em uso) | MIT | Fase 6. |
 | Comparação de documentos | PdfPig (já em uso) | Apache-2.0 | Fase 6. |
 | PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 6, junto com a extração de tabelas. |
-| OCR | Tesseract (binding .NET) + modelos `tessdata` | Apache-2.0 | Modelos por idioma instalados localmente. |
+| OCR | Tesseract 5.2.0 (binding .NET de charlesw) + modelos `tessdata_fast` | Apache-2.0 | por/eng/spa incorporados na compilação (`tools/obter-modelos-ocr.ps1`) e extraídos para a pasta de dados; outros idiomas instalados pelo usuário. |
 | Otimização estrutural, reparo | qpdf | Apache-2.0 | Alternativa permissiva ao Ghostscript. |
 | Assinaturas digitais | BouncyCastle | MIT | Validação criptográfica real (CMS/PAdES). |
 | Scanner | WIA (COM do Windows) e NTwain | — / MIT | |
@@ -133,8 +133,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | 1 | Fundação: solução, arquitetura, interface, temas, menu, pesquisa, SQLite, gerenciamento de arquivos | Entregue |
 | 2 | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | Entregue |
 | 3 | Conversões e compressão | Entregue |
-| 4 | OCR e digitalização | Próxima |
-| 5 | Editor | |
+| 4 | OCR e digitalização (scanner WIA aguardando teste com aparelho real) | Entregue |
+| 5 | Editor | Próxima |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | |
 | 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando | |
 | 8 | Testes gerais, otimização, instalador, documentação | |

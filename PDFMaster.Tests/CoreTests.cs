@@ -57,18 +57,18 @@ public class ToolSearchTests
         Assert.Equal(all.Count, all.Select(t => t.Id).Distinct().Count());
         Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 7));
 
-        // Somente as ferramentas das Fases 2 e 3 estão implementadas.
+        // Somente as ferramentas das Fases 2 a 4 estão implementadas.
         var available = all.Where(t => t.IsAvailable).Select(t => t.Id).OrderBy(id => id, StringComparer.Ordinal).ToArray();
         Assert.Equal(
             new[]
             {
                 "compress", "delete-pages", "extract-pages", "image-to-pdf", "insert-pages", "interleave", "merge",
-                "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "reorder", "rotate", "split",
-                "text-html-to-pdf", "view",
+                "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "reorder", "rotate",
+                "scan", "split", "text-html-to-pdf", "view",
             },
             available);
-        Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 3));
-        Assert.All(all.Where(t => !t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 4, 7));
+        Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 4));
+        Assert.All(all.Where(t => !t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 5, 7));
         Assert.All(ToolCatalog.Implemented, id => Assert.NotNull(new ToolCatalog().Find(id)));
     }
 

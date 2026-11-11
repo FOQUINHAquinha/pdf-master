@@ -42,6 +42,8 @@ public sealed class ToolCatalog
         "view", "merge", "split", "extract-pages", "reorder", "rotate", "delete-pages", "interleave", "insert-pages",
         // Fase 3
         "pdf-to-image", "image-to-pdf", "office-to-pdf", "text-html-to-pdf", "pdf-to-word", "pdf-to-text", "compress",
+        // Fase 4
+        "ocr", "ocr-batch", "scan",
     };
 
     public IReadOnlyList<ToolDefinition> All { get; } = Build();
@@ -162,7 +164,7 @@ public sealed class ToolCatalog
             "reconhecer texto", "pdf escaneado", "texto de imagem", "tornar pesquisável", "tesseract");
         T("ocr-batch", "OCR em lote", "Executa OCR em vários documentos com acompanhamento de progresso.", ToolCategory.Ocr, 4, List,
             "ocr em vários arquivos", "reconhecer vários");
-        T("scan", "Digitalizar", "Digitaliza documentos de scanners TWAIN e WIA direto para PDF.", ToolCategory.Ocr, 4, Scan,
+        T("scan", "Digitalizar", "Digitaliza documentos de scanners compatíveis com WIA direto para PDF, com OCR opcional.", ToolCategory.Ocr, 4, Scan,
             "scanner", "escanear", "digitalização", "twain", "wia");
 
         // ----- Comparar -----

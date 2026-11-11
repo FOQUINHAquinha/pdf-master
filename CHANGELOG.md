@@ -1,5 +1,23 @@
 # Histórico de alterações
 
+## 0.4.0 — 10/11/2026 — Fase 4: OCR e digitalização
+
+### Adicionado
+- **OCR** (Tesseract 5, local) para PDFs digitalizados e imagens, em português, inglês e espanhol,
+  com instalação de outros idiomas por arquivo `.traineddata`.
+- **PDF pesquisável**: camada de texto invisível posicionada sobre cada palavra; a aparência da
+  página não muda e o original é preservado (`nome_ocr.pdf`).
+- **Extração do texto reconhecido** para TXT e Word.
+- Pré-processamento próprio: orientação automática (90°/180°/270°), correção de inclinação,
+  realce de contraste e redução de ruído.
+- **OCR em lote** com fila, progresso por página, tempo decorrido/estimado e erros por arquivo.
+- **Digitalizar**: páginas vindas de scanner WIA ou de imagens, reordenação e PDF com OCR opcional.
+  A parte do scanner não pôde ser testada sem um aparelho e está marcada assim no programa.
+- Testes novos de OCR, geometria da camada de texto e scanner; o CI executa o OCR pelo executável.
+
+### Alterado
+- A ferramenta "Digitalizar" passou a informar que usa WIA (TWAIN não implementado).
+
 ## 0.3.0 — 10/11/2026 — Fase 3: Conversão e compressão
 
 ### Adicionado

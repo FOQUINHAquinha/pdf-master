@@ -8,9 +8,18 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
   LibreOffice instalado, Word/Excel/PowerPoint/HTML → PDF;
-- compressão de PDF com perfis e comparação antes/depois.
+- compressão de PDF com perfis e comparação antes/depois;
+- OCR local (Tesseract) com PDF pesquisável, extração para TXT/Word e OCR em lote;
+- digitalização por scanner WIA ou a partir de imagens (o scanner ainda não foi testado com um aparelho real).
 
-OCR, editor, segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
+Editor, segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
+
+### Modelos de idioma do OCR
+
+Antes de compilar no seu computador, rode `tools/obter-modelos-ocr.ps1`: ele baixa os modelos
+de português, inglês e espanhol (tessdata_fast, Apache-2.0) para `PDFMaster.OCR/tessdata`, de onde
+são incorporados ao programa. Sem eles o programa compila, mas a tela de OCR avisa que não há
+idiomas instalados. O executável gerado pelo GitHub Actions já vem com os três.
 
 ### LibreOffice (opcional)
 
@@ -62,6 +71,8 @@ PDFMaster.exe --tool split documento.pdf
 PDFMaster.exe --tool view documento.pdf
 PDFMaster.exe --tool compress --output C:\Saida --run digitalizado.pdf
 PDFMaster.exe --tool pdf-to-image --output C:\Saida --run documento.pdf
+PDFMaster.exe --tool ocr --output C:\Saida --run escaneado.pdf
+PDFMaster.exe --tool scan --output C:\Saida --run pagina1.png pagina2.jpg
 ```
 
 A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.

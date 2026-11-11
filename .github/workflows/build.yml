@@ -23,6 +23,13 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Modelos de idioma do OCR (tessdata_fast, Apache-2.0): incorporados ao programa na compilação.
+      - name: Baixar modelos de idioma do OCR
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-out | Out-Null
+          ./tools/obter-modelos-ocr.ps1 2>&1 | Tee-Object ci-out/ocr-modelos.log
+
       - name: Compilar
         shell: pwsh
         run: |
@@ -43,6 +50,7 @@ jobs:
         shell: pwsh
         env:
           PDFMASTER_REQUIRE_LIBREOFFICE: '1'
+          PDFMASTER_REQUIRE_OCR: '1'
         run: |
           dotnet test PDFMaster.Tests/PDFMaster.Tests.csproj -c Release --no-build -nologo --logger "console;verbosity=normal" 2>&1 | Tee-Object ci-out/test.log
           "test exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Append -Encoding utf8
@@ -107,6 +115,10 @@ jobs:
             @{ name = 'run-to-text';    args = @('--theme','light','--tool','pdf-to-text','--output',"`"$out`"",'--run',"`"$s\Texto.pdf`"") },
             @{ name = 'run-office';     wait = 75; args = @('--theme','light','--tool','office-to-pdf','--output',"`"$out`"",'--run',"`"$s\Carta.docx`"") },
             @{ name = 'run-compress';   wait = 20; args = @('--theme','light','--tool','compress','--output',"`"$out`"",'--run',"`"$s\Digitalizado.pdf`"") },
+            @{ name = 'run-ocr';        wait = 60; args = @('--theme','light','--tool','ocr','--output',"`"$out`"",'--run',"`"$s\Escaneado.pdf`"") },
+            @{ name = 'run-scan';       wait = 15; args = @('--theme','light','--tool','scan','--output',"`"$out`"",'--run',"`"$s\Foto.png`"","`"$s\Recibo.jpg`"") },
+            @{ name = 'tool-ocr';       args = @('--theme','dark','--tool','ocr',"`"$s\Escaneado.pdf`"") },
+            @{ name = 'light-ocr';      args = @('--theme','light','--page','ocr') },
             @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
             @{ name = 'run-interleave'; args = @('--theme','light','--tool','interleave','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
             @{ name = 'run-split';      args = @('--theme','light','--tool','split','--output',"`"$out`"",'--run',"`"$a`"") },
@@ -141,7 +153,7 @@ jobs:
           # Resultado das execuções feitas pela interface (--run).
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
-          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf')
+          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf')
           foreach ($name in $expected) {
             $file = Join-Path $out $name
             if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {

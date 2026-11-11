@@ -16,6 +16,8 @@
     <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
     <ProjectReference Include="..\PDFMaster.Conversion\PDFMaster.Conversion.csproj" />
     <ProjectReference Include="..\PDFMaster.Compression\PDFMaster.Compression.csproj" />
+    <ProjectReference Include="..\PDFMaster.OCR\PDFMaster.OCR.csproj" />
+    <ProjectReference Include="..\PDFMaster.Scanner\PDFMaster.Scanner.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />

@@ -232,6 +232,8 @@ public sealed partial class MainViewModel : ObservableObject
             "split" => "split",
             "view" => "viewer",
             "compress" => "compress",
+            "ocr" or "ocr-batch" => "ocr",
+            "scan" => "scan",
             "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
             _ => "pages",
         };
@@ -243,6 +245,8 @@ public sealed partial class MainViewModel : ObservableObject
                 "combine" => new CombineViewModel(_toolContext),
                 "split" => new SplitViewModel(_toolContext),
                 "compress" => new CompressViewModel(_toolContext),
+                "ocr" => new OcrViewModel(_toolContext),
+                "scan" => new ScanViewModel(_toolContext),
                 "pdf-to-image" => new ConvertViewModel(_toolContext, ConversionKind.PdfToImage),
                 "image-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.ImageToPdf),
                 "office-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.OfficeToPdf),

@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 10/11/2026 · Versão 0.3.0
+Atualizado em 10/11/2026 · Versão 0.4.0
 
 ## Fases
 
@@ -9,8 +9,8 @@ Atualizado em 10/11/2026 · Versão 0.3.0
 | 1 — Fundação | Solução, arquitetura, interface, temas, menu, pesquisa, SQLite, gerenciamento de arquivos | **Concluída** |
 | 2 — Visualizador e organização | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | **Concluída** |
 | 3 — Conversão e compressão | PDF ↔ imagens, Office → PDF, PDF → Word, compressão | **Concluída** |
-| 4 — OCR e digitalização | OCR, PDF pesquisável, digitalização, OCR em lote | Próxima |
-| 5 — Editor | | Pendente |
+| 4 — OCR e digitalização | OCR, PDF pesquisável, extração de texto, digitalização, OCR em lote | **Concluída** (digitalização aguardando teste com scanner real) |
+| 5 — Editor | | Próxima |
 | 6 — Segurança e ferramentas avançadas | | Pendente |
 | 7 — Automação | | Pendente |
 | 8 — Finalização | | Pendente |
@@ -25,6 +25,37 @@ Atualizado em 10/11/2026 · Versão 0.3.0
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Fase 4 — OCR e digitalização
+
+| Funcionalidade | Estado | Testes |
+|---|---|---|
+| **OCR** de PDFs digitalizados e de imagens (JPG, PNG, BMP, TIFF, GIF) com Tesseract 5, tudo no computador | Concluído | Automático (texto reconhecido conferido) + execução pela interface |
+| **PDF pesquisável**: camada de texto invisível sobre a imagem; aparência da página inalterada | Concluído | Automático (texto, posição da palavra e pixels conferidos) |
+| Idiomas incluídos: português, inglês e espanhol; vários idiomas ao mesmo tempo | Concluído | Português: automático; inglês, espanhol e combinações: manual pendente |
+| Instalar outros idiomas a partir de um arquivo `.traineddata` | Concluído | Automático (validação e instalação); botão na tela: manual pendente |
+| Correção automática de orientação (páginas deitadas ou de cabeça para baixo) | Concluído | Automático (90°, 180° e 270°) |
+| Correção de inclinação (até 7°), realce de contraste e redução de ruído | Concluído | Automático |
+| Páginas que já têm texto são puladas (ou reconhecidas de novo, se pedido) | Concluído | Automático |
+| **Extração de texto** do reconhecimento para TXT e Word (DOCX) | Concluído | Automático |
+| Seleção de páginas e resolução de 100 a 600 DPI | Concluído | Validação: automático; seleção de páginas: manual pendente |
+| **OCR em lote**: fila de documentos, falha isolada por arquivo, progresso por página, tempo decorrido e estimado | Concluído | Um documento: execução pela interface; vários documentos: manual pendente |
+| Cancelamento sem deixar arquivo parcial; original nunca alterado | Concluído | Automático |
+| **Digitalizar**: montar PDF a partir de páginas (scanner ou imagens), reordenar, excluir, OCR opcional | Concluído | Com imagens: execução pela interface |
+| Digitalizar com scanner WIA: mesa, alimentador, frente e verso, cor, resolução | **Implementado, aguardando teste com scanner real** | Somente erros (sem scanner, dispositivo inexistente): automático. Nenhuma digitalização real foi feita: o CI não tem scanner. |
+
+### Limitações conhecidas da Fase 4
+
+| Item | Situação |
+|---|---|
+| Precisão do OCR | Depende da qualidade da digitalização. Não há garantia de acerto; a tela mostra a confiança média informada pelo Tesseract. Manuscritos não são reconhecidos de forma útil. |
+| Modelos de idioma | São os modelos "fast" do Tesseract (menores e mais rápidos, um pouco menos precisos que os "best"). Os modelos "best" podem ser instalados pela tela. |
+| Camada de texto com alfabetos não latinos | A camada invisível usa a codificação WinAnsi: grego, cirílico, árabe, chinês etc. são reconhecidos e saem corretos no TXT/DOCX, mas no PDF pesquisável aparecem como "?". |
+| Orientação automática | Feita comparando o reconhecimento nas 4 posições (mais lento que a primeira passada). Páginas com pouquíssimo texto podem não ser corrigidas. |
+| Scanner | Somente WIA. TWAIN não foi implementado. Corte automático de bordas e detecção do tamanho do papel não existem. O comportamento com alimentador e frente e verso varia conforme o driver e não foi testado. |
+| Tabelas e colunas | O texto extraído segue a ordem de leitura do Tesseract; tabelas não são reconstruídas. |
+| Padrões de OCR na tela de Configurações | Ainda não existem; a tela de OCR abre com valores fixos (Fase 7). |
+| Desempenho | Uma página por vez (cerca de 1 a 4 s por página a 300 DPI, conforme o computador); sem paralelismo ainda. |
 
 ### Fase 3 — Conversão e compressão
 
@@ -135,12 +166,12 @@ Atualizado em 10/11/2026 · Versão 0.3.0
 |---|---|
 | "Repetir operação" no histórico | Depende do sistema de tarefas (Fase 7). |
 | Padrões de conversão e compressão na tela de Configurações | Adiados para a Fase 7, junto com as configurações de desempenho; hoje cada tela usa padrões fixos. |
-| Configurações de OCR e desempenho | Entram com as respectivas ferramentas. |
+| Configurações de OCR e desempenho | Adiadas para a Fase 7, com os demais padrões. |
 | Idioma da interface | Somente português por enquanto. |
 | Ícone próprio do aplicativo e logotipo definitivo | O ícone do `.exe` ainda é o padrão. |
 | Cache de miniaturas em disco | O cache atual é em memória; em disco será avaliado na Fase 8 (otimização). |
 
-### Fases 4 a 8
+### Fases 5 a 8
 
 As demais ferramentas estão **pendentes** e aparecem na interface como "Prevista para a Fase N",
 desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
@@ -182,6 +213,9 @@ Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke
 | PDFsharp | 6.2.4 | MIT |
 | bblanchon.PDFium.Win32 (binário do PDFium) | 152.0.7961 | BSD-3-Clause / Apache-2.0 |
 | PdfPig | 0.1.14 | Apache-2.0 |
+| Tesseract (wrapper .NET de charlesw, com Tesseract 5.2 e Leptonica nativos) | 5.2.0 | Apache-2.0 |
+| Modelos tessdata_fast: por, eng, spa (baixados na compilação, incorporados ao programa) | — | Apache-2.0 |
+| WIA (componente do Windows, usado por COM; nada é distribuído) | — | — |
 | LibreOffice (opcional, instalado pelo usuário; não distribuído) | — | MPL-2.0 |
 | CommunityToolkit.Mvvm | 8.4.0 | MIT |
 | Microsoft.Data.Sqlite | 10.0.0 | MIT |
@@ -204,4 +238,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.3.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.4.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

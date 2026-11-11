@@ -14,9 +14,11 @@ using PDFMaster.Core.Settings;
 using PDFMaster.Core.Tools;
 using PDFMaster.Domain;
 using PDFMaster.Infrastructure;
+using PDFMaster.OCR;
 using PDFMaster.Infrastructure.Files;
 using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
+using PDFMaster.Scanner;
 using PDFMaster.Storage;
 
 namespace PDFMaster.App;
@@ -83,7 +85,13 @@ public partial class App : Application
                 provider.GetRequiredService<ShellLauncher>(),
                 provider.GetRequiredService<NotificationCenter>(),
                 provider.GetRequiredService<ILoggerFactory>(),
-                provider.GetRequiredService<ConversionToolkit>()));
+                provider.GetRequiredService<ConversionToolkit>(),
+                provider.GetRequiredService<OcrToolkit>()));
+
+            services.AddSingleton(new OcrRuntime(paths.DataDirectory));
+            services.AddSingleton<OcrService>();
+            services.AddSingleton<WiaScanner>();
+            services.AddSingleton<OcrToolkit>();
 
             services.AddSingleton<OutputPlanner>();
             services.AddSingleton<LibreOffice>();

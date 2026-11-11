@@ -15,6 +15,12 @@
         <DataTemplate DataType="{x:Type vm:CombineViewModel}">
             <views:CombineView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OcrViewModel}">
+            <views:OcrView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ScanViewModel}">
+            <views:ScanView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ConvertViewModel}">
             <views:ConvertView />
         </DataTemplate>
