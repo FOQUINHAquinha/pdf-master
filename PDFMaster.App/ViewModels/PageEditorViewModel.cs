@@ -90,7 +90,7 @@ public sealed partial class PageEditorViewModel : ToolViewModelBase
     private bool _hasChanges;
 
     public override bool IsEmpty => Pages.Count == 0;
-    protected internal override IReadOnlyList<string> RepeatInputs => SourcePath is null ? [] : [SourcePath];
+    protected internal override IReadOnlyList<string> RepeatInputs => Pages.Select(p => p.SourcePath).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     public bool HasPages => Pages.Count > 0;
 
     private List<PageItemViewModel> Selected => Pages.Where(p => p.IsSelected).ToList();

@@ -5,7 +5,7 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 
 Criado por **Gustavo Farias Medeiros**.
 
-**Estado atual: Fases 1 a 6 concluídas.** Já funcionam:
+**Estado atual: Fases 1 a 7 concluídas.** Já funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
@@ -21,10 +21,15 @@ Criado por **Gustavo Farias Medeiros**.
 - PDF/A-1b, 2b e 3b: conversão e validação, com relatório (a conformidade só é afirmada quando o
   validador veraPDF, opcional, confirma);
 - comparação de dois PDFs lado a lado (texto, páginas, imagens e diferenças visuais) com relatório;
+- automação: fila de tarefas com fluxos encadeados (ex.: OCR → comprimir → numerar → PDF/A) montados
+  num editor visual, pastas monitoradas, menu de contexto do Explorador, "Abrir com" e linha de
+  comando sem janela; "Repetir operação" no histórico;
+- páginas: inverter ordem, remover páginas em branco e repetidas, recortar margens, 2 ou 4 páginas
+  por folha e livreto;
 - **extra:** compressão de vídeo — qualquer formato que o FFmpeg abra vira MP4 (H.264 + AAC) em 360p.
 
-Automação (lote, pasta monitorada, menu de contexto) e algumas ferramentas extras aparecem no
-programa como "Prevista para a Fase 7".
+Quatro ferramentas extras do catálogo (marcadores/links/anexos, PDF → Excel/PowerPoint, extrair
+conteúdo e preto e branco) aparecem no programa como "Prevista para a Fase 8".
 
 ### Modelos de idioma do OCR
 
@@ -95,7 +100,7 @@ PDFMaster.exe [--theme light|dark] [--page <seção>] [--tool <ferramenta>] [--o
 |---|---|
 | `--theme light` / `--theme dark` | Define e salva o tema. |
 | `--page <seção>` | Abre direto numa seção: `home`, `organize`, `edit`, `convert`, `compress`, `security`, `ocr`, `video`, `compare`, `batch`, `history`, `settings`. |
-| `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados: `view`, `merge`, `interleave`, `split`, `reorder`, `rotate`, `delete-pages`, `insert-pages`, `extract-pages`, `pdf-to-image`, `image-to-pdf`, `office-to-pdf`, `text-html-to-pdf`, `pdf-to-word`, `pdf-to-text`, `compress`. |
+| `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados (qualquer ferramenta disponível do catálogo, por exemplo `view`, `merge`, `split`, `compress`, `ocr`, `pdfa`, `batch`, `reverse`, `blank-duplicates`, `crop`, `booklet`). |
 | `--output <pasta>` | Define a pasta de destino da ferramenta aberta com `--tool`. |
 | `--run` | Executa a ação principal da ferramenta com as opções padrão (a janela continua aberta para mostrar o resultado). |
 | arquivos e pastas | Sem `--tool`, vão para a lista de arquivos abertos (pastas são lidas com as subpastas). |
@@ -115,11 +120,61 @@ PDFMaster.exe --tool watermark --output C:\Saida --run contrato.pdf
 PDFMaster.exe --tool edit-text contrato.pdf
 ```
 
-A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.
+### Sem janela (terminal, scripts e agendador de tarefas)
+
+```
+PDFMaster.exe --merge a.pdf b.pdf [mais arquivos] --output resultado.pdf
+PDFMaster.exe --compress documento.pdf [--profile sem-perda|leve|equilibrada|forte|maxima] [--output arquivo.pdf|pasta]
+PDFMaster.exe --ocr documento.pdf [--language por|por+eng] [--dpi 300] [--output arquivo.pdf|pasta]
+PDFMaster.exe --split documento.pdf --output pasta [--every N | --ranges "1-3,4-6"]
+PDFMaster.exe --pdfa documento.pdf [--level 1b|2b|3b] [--output arquivo.pdf|pasta]
+PDFMaster.exe --rotate documento.pdf --degrees 90|180|270 [--pages "1,3-5"] [--output arquivo.pdf|pasta]
+PDFMaster.exe --to-image documento.pdf [--format png|jpg] [--dpi 150] [--output pasta]
+PDFMaster.exe --flow "Nome do fluxo" arquivos-ou-pastas [--output pasta]
+PDFMaster.exe --watch [--duration segundos]
+PDFMaster.exe --list-flows | --help | --version
+```
+
+| Opção | Efeito |
+|---|---|
+| `--output` | Arquivo (`.pdf`, quando há um só resultado) ou pasta. Sem ela, o resultado vai para a pasta do primeiro arquivo. |
+| `--overwrite` | Permite substituir um arquivo de saída existente. Sem ela nada é substituído: na pasta é criado um nome novo (`arquivo (2).pdf`); com um arquivo exato em `--output`, a operação é recusada. Um arquivo de entrada nunca é substituído. |
+| `--log arquivo` | Grava também as mensagens neste arquivo (útil no agendador de tarefas). |
+| pastas como entrada | Os arquivos da pasta (sem subpastas) são processados um a um; em lote, uma falha não interrompe os demais. |
+
+Códigos de saída: `0` sucesso, `1` parâmetros inválidos, `2` falha, `3` sucesso parcial (parte do lote falhou).
+
+`--flow` usa os fluxos salvos na tela **Fila de tarefas** (`--list-flows` mostra os nomes).
+`--watch` monitora as pastas configuradas em **Monitorar pasta** sem abrir a janela, até Ctrl+C ou
+até `--duration` segundos.
+
+Como o PDF Master é um programa de janela, o prompt do `cmd` volta antes de a operação terminar
+(as mensagens aparecem logo depois). Para esperar o fim e ler o código de saída, use
+`start /wait PDFMaster.exe --compress …` no `cmd` ou `Start-Process -Wait -PassThru` no PowerShell;
+em scripts `.bat`, redirecionar a saída (`> saida.txt`) também faz o `cmd` esperar.
+
+### Menu de contexto e "Abrir com"
+
+Em **Configurações › Integração com o Windows** é possível (só para o seu usuário, sem permissão
+de administrador):
+
+- acrescentar ao menu de contexto dos PDFs: *Abrir com o PDF Master*, *Mesclar PDFs selecionados*,
+  *Comprimir PDF*, *Converter para imagem*, *Extrair páginas* e *Proteger PDF* — com vários
+  arquivos selecionados, todos abrem juntos numa só janela. No Windows 11 os itens ficam em
+  **Mostrar mais opções**;
+- registrar o PDF Master em **Abrir com** e abrir a tela de aplicativos padrão do Windows para
+  escolhê-lo como leitor de PDF (o Windows não permite que um programa se torne padrão sozinho).
+
+### Pastas monitoradas
+
+Em **Processamento em lote › Monitorar pasta**: cada documento que chega à pasta de entrada passa
+pelo fluxo escolhido e o resultado vai para a pasta de saída. Cada arquivo é processado uma vez e
+só depois de terminar de ser copiado; os originais ficam onde estão. O monitoramento é opcional,
+pode ser pausado e só funciona com o programa aberto (ou com `PDFMaster.exe --watch`).
 
 ## Onde ficam os dados
 
-- Padrão: `%LOCALAPPDATA%\PDFMaster` (banco `pdfmaster.db` e pasta `Logs`).
+- Padrão: `%LOCALAPPDATA%\PDFMaster` (banco `pdfmaster.db`, pasta `Logs`, `fluxos.json` com os fluxos da fila e `pastas-monitoradas.json`).
 - Modo portátil: pasta `Data` ao lado do executável.
 - Variável de ambiente `PDFMASTER_DATA_DIR`: usa a pasta indicada.
 
