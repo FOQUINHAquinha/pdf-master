@@ -1,0 +1,40 @@
+<UserControl x:Class="PDFMaster.App.Views.PdfToOfficeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <DockPanel Margin="28,22,28,22">
+        <ContentPresenter DockPanel.Dock="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolHeader}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Content="Adicionar PDFs…" Style="{StaticResource PrimaryButton}" Command="{Binding PickFilesCommand}" />
+            <Button Content="Limpar lista" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Command="{Binding ClearCommand}" />
+        </StackPanel>
+        <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Padding="16,12" Margin="0,12,0,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="Excel (.xlsx)" GroupName="Office" IsChecked="{Binding ToExcel, Mode=TwoWay}" />
+                    <RadioButton Content="PowerPoint (.pptx)" GroupName="Office" Margin="24,0,0,0" IsChecked="{Binding ToPowerPoint, Mode=TwoWay}" />
+                </StackPanel>
+                <TextBlock Style="{StaticResource Secondary}" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Visibility="{Binding ToExcel, Converter={StaticResource BoolToVis}}"
+                           Text="O texto de cada página vai para uma aba, separado em colunas pelos espaços e pelo alinhamento na página; valores como 1.234,56 viram números. Bordas, cores e células mescladas não são reproduzidas. PDFs digitalizados precisam de OCR antes." />
+                <StackPanel Visibility="{Binding ToPowerPoint, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Resolução das imagens" Style="{StaticResource Body}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <ComboBox MinWidth="200" ItemsSource="{Binding Resolutions}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedResolution, Mode=TwoWay}" />
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Secondary}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="Cada página vira um slide com a imagem da página, no mesmo formato. O texto não fica editável no PowerPoint." />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="{Binding ActionText}" Style="{StaticResource PrimaryButton}" MinWidth="180"
+                        VerticalAlignment="Bottom" Margin="16,0,0,0" Command="{Binding ConvertCommand}" />
+                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolOutputFolder}" />
+            </DockPanel>
+        </Border>
+        <ContentPresenter DockPanel.Dock="Bottom" Content="{Binding}" ContentTemplate="{StaticResource ToolBusy}" />
+        <ContentPresenter Margin="0,12,0,0" Content="{Binding}" ContentTemplate="{StaticResource ToolFileList}" />
+    </DockPanel>
+</UserControl>

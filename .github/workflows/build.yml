@@ -219,6 +219,8 @@ jobs:
             @{ name = 'run-crop';       args = @('--theme','light','--tool','crop','--output',"`"$out`"",'--run',"`"$a`"") },
             @{ name = 'run-extract';    args = @('--theme','light','--tool','extract-content','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"") },
             @{ name = 'run-grayscale';  args = @('--theme','dark','--tool','grayscale','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-office';     args = @('--theme','light','--tool','pdf-to-office','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"") },
+            @{ name = 'run-bookmarks';  args = @('--theme','light','--tool','bookmarks','--output',"`"$out`"",'--run',"`"$b`"") },
             @{ name = 'run-booklet';    args = @('--theme','light','--tool','booklet','--output',"`"$out`"",'--run',"`"$b`"") },
             @{ name = 'tool-watch';     wait = 25; args = @('--theme','light','--tool','watch-folder') },
             @{ name = 'dark-batch-page'; args = @('--theme','dark','--page','batch') },
@@ -254,7 +256,7 @@ jobs:
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
           $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf','Contrato v1_PDFA-2b.pdf','Contrato v1_metadados.pdf','Danificado_reparado.pdf')
-          $expected += @('Relatorio_cinza.pdf')
+          $expected += @('Relatorio_cinza.pdf','Contrato v1.xlsx','Anexos_navegacao.pdf')
           foreach ($name in @('metadados.txt','texto.txt')) {
             $file = Join-Path $out "Contrato v1_conteudo\$name"
             if (Test-Path $file) { "extraido ok: $name ($((Get-Item $file).Length) bytes)" | Out-File ci-out/smoke.log -Append }

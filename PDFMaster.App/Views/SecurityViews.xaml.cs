@@ -136,3 +136,21 @@ public partial class GrayscaleView : UserControl
         ToolDrop.Attach(this);
     }
 }
+
+public partial class PdfToOfficeView : UserControl
+{
+    public PdfToOfficeView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class BookmarksView : UserControl
+{
+    public BookmarksView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}

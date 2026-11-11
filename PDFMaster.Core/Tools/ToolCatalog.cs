@@ -52,7 +52,7 @@ public sealed class ToolCatalog
         // Fase 7
         "batch", "watch-folder", "reverse", "blank-duplicates", "crop", "booklet",
         // Fase 8
-        "extract-content", "grayscale",
+        "extract-content", "grayscale", "pdf-to-office", "bookmarks",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -144,7 +144,7 @@ public sealed class ToolCatalog
             "word para pdf", "docx para pdf", "excel para pdf", "xlsx", "powerpoint para pdf", "pptx");
         T("pdf-to-word", "PDF para Word", "Converte PDF em DOCX editável, com limitações de formatação informadas.", ToolCategory.Convert, 3, Sync,
             "pdf para docx", "pdf editável", "transformar em word");
-        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 8, Sync,
+        T("pdf-to-office", "PDF para Excel e PowerPoint", "Texto em planilha (uma aba por página) ou slides com a imagem de cada página.", ToolCategory.Convert, 8, Sync,
             "pdf para xlsx", "pdf para planilha", "pdf para pptx", "tabela para excel");
         T("pdf-to-text", "PDF para texto e HTML", "Exporta o conteúdo em TXT ou HTML.", ToolCategory.Convert, 3, Font,
             "pdf para txt", "extrair texto", "copiar texto", "pdf para html");

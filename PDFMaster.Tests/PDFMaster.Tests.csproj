@@ -30,6 +30,8 @@
   <ItemGroup>
     <PackageReference Include="PDFsharp" />
     <PackageReference Include="PdfPig" />
+    <!-- Somente nos testes: valida os XLSX/PPTX gerados contra o esquema do Office. -->
+    <PackageReference Include="DocumentFormat.OpenXml" />
   </ItemGroup>
   <ItemGroup>
     <!-- O SDK do WPF retira System.IO dos usings implícitos. -->

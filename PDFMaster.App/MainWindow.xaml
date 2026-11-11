@@ -90,6 +90,12 @@
         <DataTemplate DataType="{x:Type vm:GrayscaleViewModel}">
             <views:GrayscaleView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PdfToOfficeViewModel}">
+            <views:PdfToOfficeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BookmarksViewModel}">
+            <views:BookmarksView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
             <views:HistoryView />
         </DataTemplate>

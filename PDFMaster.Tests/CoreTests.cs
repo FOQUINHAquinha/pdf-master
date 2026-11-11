@@ -57,20 +57,20 @@ public class ToolSearchTests
         Assert.Equal(all.Count, all.Select(t => t.Id).Distinct().Count());
         Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 8));
 
-        // Somente as ferramentas das Fases 2 a 7 (e a compressão de vídeo, extra) estão implementadas.
+        // Todas as ferramentas das Fases 2 a 8 (e a compressão de vídeo, extra) estão implementadas.
         var available = all.Where(t => t.IsAvailable).Select(t => t.Id).OrderBy(id => id, StringComparer.Ordinal).ToArray();
         Assert.Equal(
             new[]
             {
-                "annotate", "batch", "blank-duplicates", "booklet", "compare", "compress", "crop", "delete-pages", "edit-images", "edit-text", "extract-content", "extract-pages",
+                "annotate", "batch", "blank-duplicates", "bookmarks", "booklet", "compare", "compress", "crop", "delete-pages", "edit-images", "edit-text", "extract-content", "extract-pages",
                 "form-fields", "forms", "grayscale", "header-footer", "image-to-pdf", "insert-pages", "interleave", "merge", "metadata",
-                "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "pdfa", "protect", "reorder", "repair", "reverse", "rotate",
+                "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-office", "pdf-to-text", "pdf-to-word", "pdfa", "protect", "reorder", "repair", "reverse", "rotate",
                 "scan", "security-info", "sign-visual", "split", "stamps", "text-html-to-pdf", "unlock", "verify-signature", "video-compress", "view",
                 "watch-folder", "watermark",
             },
             available);
         Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 8));
-        Assert.All(all.Where(t => !t.IsAvailable), t => Assert.Equal(8, t.PlannedPhase));
+        Assert.DoesNotContain(all, t => !t.IsAvailable); // ao fim da Fase 8 todo o catálogo está implementado
         Assert.All(ToolCatalog.Implemented, id => Assert.NotNull(new ToolCatalog().Find(id)));
     }
 
