@@ -412,7 +412,7 @@ public sealed partial class CombineViewModel : ToolViewModelBase
                 }
 
                 var folder = System.IO.Path.Combine(work, paths.Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                var pdf = await Context.ImagesToPdf.ConvertAsync([file.Path], System.IO.Path.GetFileNameWithoutExtension(file.Path) + ".pdf", imageOptions,
+                var pdf = await Context.Conversion.ImagesToPdf.ConvertAsync([file.Path], System.IO.Path.GetFileNameWithoutExtension(file.Path), imageOptions,
                     new OutputTarget(folder, OverwritePolicy.AutoRename, SubfolderMode.None), null, ct);
                 paths.Add(pdf.Path);
                 progress.Report(0.3 * ++done / images);

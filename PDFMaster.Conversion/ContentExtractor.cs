@@ -227,7 +227,7 @@ public sealed class ContentExtractor
         var embedded = spec.Elements.GetDictionary("/EF");
         var stream = embedded?.Elements.GetDictionary("/UF")?.Stream ?? embedded?.Elements.GetDictionary("/F")?.Stream;
         if (stream is null) return null;
-        var data = stream.TryUnfilter() ? stream.Value : stream.UnfilteredValue;
+        var data = stream.UnfilteredValue;
         return (name, data);
     }
 
@@ -245,7 +245,7 @@ public sealed class ContentExtractor
                 var ext = key == "/FontFile3" && fontFile.Elements.GetName("/Subtype") == "/OpenType" ? ".otf" : extension;
                 var name = descriptor.Elements.GetName("/FontName").TrimStart('/');
                 // Prefixo de subconjunto (ABCDEF+Nome): a fonte contém só os caracteres usados no documento.
-                var data = stream.TryUnfilter() ? stream.Value : stream.UnfilteredValue;
+                var data = stream.UnfilteredValue;
                 Directory.CreateDirectory(folder);
                 File.WriteAllBytes(FreeFile(Path.Combine(folder, SafeName(name.Length > 0 ? name : "fonte") + ext)), data);
                 written++;
@@ -281,7 +281,7 @@ public sealed class ContentExtractor
 
         if (document.Internals.Catalog.Elements.GetDictionary("/Metadata") is { Stream: { } xmp })
         {
-            var data = xmp.TryUnfilter() ? xmp.Value : xmp.UnfilteredValue;
+            var data = xmp.UnfilteredValue;
             File.WriteAllBytes(Path.Combine(folder, "metadados-xmp.xml"), data);
         }
 
