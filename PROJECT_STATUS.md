@@ -384,7 +384,7 @@ nenhuma aparece mais como "Prevista".
 | App — linha de comando sem janela (códigos de saída e arquivos gerados), `--watch`, menu de contexto | 17 | Aprovado |
 | App — abertura das telas nos dois temas | 28 | Aprovado |
 
-Total de testes automatizados: TOTAL_TESTES (mais 58 execuções da interface do programa publicado no CI, 15 comandos da linha de comando, uma execução de `--watch`, a pasta monitorada com o programa aberto e o menu de contexto com dois processos).
+Total de testes automatizados: 327 (mais 58 execuções da interface do programa publicado no CI, 15 comandos da linha de comando, uma execução de `--watch`, a pasta monitorada com o programa aberto e o menu de contexto com dois processos).
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
