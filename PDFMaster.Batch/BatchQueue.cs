@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using PDFMaster.Core.Files;
 using PDFMaster.PdfEngine;
 
 namespace PDFMaster.Batch;
