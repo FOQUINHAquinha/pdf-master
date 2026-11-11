@@ -25,6 +25,7 @@ public abstract partial class FileListViewModel : ToolViewModelBase
 
     public ObservableCollection<ConvertFileViewModel> Files { get; } = [];
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public bool HasFiles => Files.Count > 0;
     public string? FirstPath => Files.Count > 0 ? Files[0].Path : null;
 

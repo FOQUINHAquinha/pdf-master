@@ -48,6 +48,7 @@ public sealed partial class MainViewModel : ObservableObject
         _logger = logger;
         Notifications = notifications;
         _home.OpenToolRequested = (id, files) => OpenTool(id, files);
+        _history.RepeatRequested = (id, files) => OpenTool(id, files);
 
         NavItems =
         [
@@ -249,6 +250,7 @@ public sealed partial class MainViewModel : ObservableObject
             "forms" => "forms",
             "protect" or "unlock" or "security-info" or "metadata" or "verify-signature" or "repair" or "pdfa" or "compare" => toolId,
             "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
+            "batch" or "watch-folder" or "reverse" or "blank-duplicates" or "crop" or "booklet" => toolId,
             _ => "pages",
         };
 
@@ -280,6 +282,12 @@ public sealed partial class MainViewModel : ObservableObject
                 "text-html-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.TextHtmlToPdf),
                 "pdf-to-word" => new ConvertViewModel(_toolContext, ConversionKind.PdfToWord),
                 "pdf-to-text" => new ConvertViewModel(_toolContext, ConversionKind.PdfToText),
+                "batch" => new BatchViewModel(_toolContext),
+                "watch-folder" => new WatchFolderViewModel(_toolContext),
+                "reverse" => new PageToolViewModel(_toolContext, PageToolKind.Reverse),
+                "blank-duplicates" => new PageToolViewModel(_toolContext, PageToolKind.BlankPages),
+                "crop" => new PageToolViewModel(_toolContext, PageToolKind.Crop),
+                "booklet" => new PageToolViewModel(_toolContext, PageToolKind.NUp),
                 "viewer" => new ViewerViewModel(_toolContext) { OpenToolRequested = (id, path) => OpenTool(id, [path]) },
                 _ => new PageEditorViewModel(_toolContext),
             };
@@ -287,6 +295,7 @@ public sealed partial class MainViewModel : ObservableObject
             _tools[key] = viewModel;
         }
 
+        viewModel.ToolId = toolId;
         if (viewModel is CombineViewModel combine) combine.SetMode(interleave: toolId == "interleave");
         if (viewModel is EditorViewModel editor) editor.UseCatalogTool(toolId);
         return viewModel;

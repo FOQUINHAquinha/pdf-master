@@ -140,6 +140,7 @@ public sealed partial class EditorViewModel : ToolViewModelBase
     public ObservableCollection<StampTemplate> Stamps { get; } = [];
 
     public override bool IsEmpty => _document is null;
+    protected internal override IReadOnlyList<string> RepeatInputs => _document is null ? [] : [_document.Path];
     public bool HasDocument => _document is not null;
     public string DocumentPath => _document?.Path ?? string.Empty;
     public string DocumentName => _document is null ? string.Empty : Path.GetFileName(_document.Path);

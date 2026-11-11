@@ -49,6 +49,8 @@ public sealed class ToolCatalog
         "edit-text", "edit-images", "annotate", "sign-visual", "watermark", "header-footer", "stamps", "forms", "form-fields",
         // Fase 6
         "protect", "unlock", "security-info", "metadata", "verify-signature", "repair", "pdfa", "compare",
+        // Fase 7
+        "batch", "watch-folder", "reverse", "blank-duplicates", "crop", "booklet",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -100,7 +102,7 @@ public sealed class ToolCatalog
             "alternar páginas", "frente e verso", "mesclar alternado");
         T("insert-pages", "Inserir páginas", "Insere páginas em branco ou de outro documento.", ToolCategory.Organize, 2, Add,
             "adicionar páginas", "página em branco", "substituir páginas", "duplicar páginas");
-        T("crop", "Recortar e redimensionar páginas", "Recorta, ajusta margens e altera o tamanho das páginas.", ToolCategory.Organize, 7, Cut,
+        T("crop", "Recortar margens das páginas", "Recorta as margens de todas as páginas (a área visível fica menor).", ToolCategory.Organize, 7, Cut,
             "cortar margens", "ajustar margens", "reduzir margens", "tamanho da página", "crop");
         T("blank-duplicates", "Páginas em branco e duplicadas", "Detecta e remove páginas vazias ou repetidas.", ToolCategory.Organize, 7, Search,
             "remover páginas vazias", "páginas repetidas", "limpar documento");
@@ -108,7 +110,7 @@ public sealed class ToolCatalog
             "booklet", "duas páginas por folha", "quatro páginas por folha", "mosaico", "n-up", "imposição");
         T("reverse", "Inverter ordem das páginas", "Coloca as páginas do documento na ordem inversa.", ToolCategory.Organize, 7, Sync,
             "ordem inversa", "de trás para frente");
-        T("bookmarks", "Marcadores, links e anexos", "Cria e edita marcadores, sumário, links e anexos.", ToolCategory.Organize, 7, Link,
+        T("bookmarks", "Marcadores, links e anexos", "Cria e edita marcadores, sumário, links e anexos.", ToolCategory.Organize, 8, Link,
             "sumário", "índice", "bookmarks", "favoritos", "anexar arquivo", "hiperlink");
 
         // ----- Editar -----
@@ -140,7 +142,7 @@ public sealed class ToolCatalog
             "word para pdf", "docx para pdf", "excel para pdf", "xlsx", "powerpoint para pdf", "pptx");
         T("pdf-to-word", "PDF para Word", "Converte PDF em DOCX editável, com limitações de formatação informadas.", ToolCategory.Convert, 3, Sync,
             "pdf para docx", "pdf editável", "transformar em word");
-        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 7, Sync,
+        T("pdf-to-office", "PDF para Excel e PowerPoint", "Converte PDF em XLSX ou PPTX quando o conteúdo permite.", ToolCategory.Convert, 8, Sync,
             "pdf para xlsx", "pdf para planilha", "pdf para pptx", "tabela para excel");
         T("pdf-to-text", "PDF para texto e HTML", "Exporta o conteúdo em TXT ou HTML.", ToolCategory.Convert, 3, Font,
             "pdf para txt", "extrair texto", "copiar texto", "pdf para html");
@@ -148,13 +150,13 @@ public sealed class ToolCatalog
             "txt para pdf", "html para pdf", "página web para pdf");
         T("pdfa", "Converter e validar PDF/A", "Converte para PDF/A-1b, 2b ou 3b e gera relatório de validação.", ToolCategory.Convert, 6, Shield,
             "pdf a", "arquivamento", "longo prazo", "pdfa");
-        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, tabelas, anexos, fontes e metadados.", ToolCategory.Convert, 7, Folder,
+        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, tabelas, anexos, fontes e metadados.", ToolCategory.Convert, 8, Folder,
             "extrair imagens", "extrair tabelas", "extrair anexos", "listar fontes");
 
         // ----- Comprimir -----
         T("compress", "Comprimir PDF", "Reduz o tamanho do arquivo com perfis de compressão e comparação antes/depois.", ToolCategory.Compress, 3, Shrink,
             "reduzir tamanho", "diminuir pdf", "compactar", "otimizar", "pdf menor", "deixar mais leve");
-        T("grayscale", "Converter para preto e branco", "Converte as páginas para escala de cinza.", ToolCategory.Compress, 7, Shrink,
+        T("grayscale", "Converter para preto e branco", "Converte as páginas para escala de cinza.", ToolCategory.Compress, 8, Shrink,
             "escala de cinza", "tons de cinza", "monocromático", "sem cor");
 
         // ----- Segurança -----

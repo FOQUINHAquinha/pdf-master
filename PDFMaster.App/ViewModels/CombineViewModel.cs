@@ -114,6 +114,7 @@ public sealed partial class CombineViewModel : ToolViewModelBase
     private string? _problem;
 
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public bool HasFiles => Files.Count > 0;
     public string RunLabel => IsInterleave ? "Intercalar" : "Mesclar";
 

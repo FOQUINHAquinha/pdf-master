@@ -20,6 +20,7 @@ public abstract partial class PdfBatchViewModel : ToolViewModelBase
 
     public ObservableCollection<ConvertFileViewModel> Files { get; } = [];
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public bool HasFiles => Files.Count > 0;
 
     [ObservableProperty] private string? _problem;
@@ -365,6 +366,7 @@ public sealed partial class FormFillViewModel : ToolViewModelBase
 
     public ObservableCollection<FormFieldEntry> Fields { get; } = [];
     public override bool IsEmpty => _path is null;
+    protected internal override IReadOnlyList<string> RepeatInputs => _path is null ? [] : [_path];
     public bool HasDocument => _path is not null;
     public bool HasFields => Fields.Count > 0;
     public string DocumentName => _path is null ? string.Empty : Path.GetFileName(_path);

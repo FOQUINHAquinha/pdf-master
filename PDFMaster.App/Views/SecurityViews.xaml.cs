@@ -91,3 +91,30 @@ public partial class CompareView : UserControl
         ToolDrop.Attach(this);
     }
 }
+
+public partial class BatchView : UserControl
+{
+    public BatchView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class WatchFolderView : UserControl
+{
+    public WatchFolderView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class PageToolView : UserControl
+{
+    public PageToolView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}

@@ -5,7 +5,7 @@ namespace PDFMaster.Batch;
 
 /// <summary>
 /// O Explorador abre um processo por arquivo selecionado ao usar o menu de contexto. O primeiro
-/// processo recebe os caminhos dos demais por um pipe local (apenas do mesmo usuário) e abre uma
+/// processo cria um pipe local (apenas do mesmo usuário), recebe os caminhos dos demais e abre uma
 /// única janela com todos os arquivos; os outros terminam logo depois de enviar o seu.
 /// </summary>
 public static class ContextCollector
@@ -13,40 +13,37 @@ public static class ContextCollector
     private const int ConnectTimeoutMs = 1500;
 
     /// <summary>
-    /// Devolve todos os arquivos (quando este processo é o primeiro) ou null quando o caminho foi
-    /// entregue a outro processo, que abrirá a janela.
+    /// Devolve todos os arquivos (quando este processo é o primeiro) ou null quando os caminhos
+    /// foram entregues a outro processo, que abrirá a janela.
     /// </summary>
     public static async Task<IReadOnlyList<string>?> CollectAsync(string action, IReadOnlyList<string> files, TimeSpan quiet, string? channel = null,
         CancellationToken ct = default)
     {
         var name = "PDFMaster.Context." + (channel ?? Environment.UserName) + "." + action;
-        using var mutex = new Mutex(initiallyOwned: false, @"Local\" + name, out _);
-        bool owner;
+
+        // O próprio pipe (uma única instância) decide quem coleta: quem conseguir criá-lo.
+        NamedPipeServerStream server;
         try
         {
-            owner = mutex.WaitOne(0);
+            server = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
         }
-        catch (AbandonedMutexException)
-        {
-            owner = true;
-        }
-
-        if (!owner)
+        catch (IOException)
         {
             if (await SendAsync(name, files, ct).ConfigureAwait(false)) return null;
-            // O primeiro processo já terminou de coletar: este abre a sua própria janela.
+            // O primeiro processo terminou de coletar neste meio-tempo: este abre a sua própria janela.
             return files;
         }
 
-        try
+        await using (server.ConfigureAwait(false))
         {
             var all = new List<string>(files);
             var deadline = DateTime.UtcNow + quiet;
-            while (DateTime.UtcNow < deadline)
+            while (true)
             {
-                using var server = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                var remaining = deadline - DateTime.UtcNow;
+                if (remaining <= TimeSpan.Zero) break;
                 using var wait = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                wait.CancelAfter(deadline - DateTime.UtcNow);
+                wait.CancelAfter(remaining);
                 try
                 {
                     await server.WaitForConnectionAsync(wait.Token).ConfigureAwait(false);
@@ -56,21 +53,20 @@ public static class ContextCollector
                     break;
                 }
 
-                using var reader = new StreamReader(server, Encoding.UTF8);
-                while (await reader.ReadLineAsync(ct).ConfigureAwait(false) is { } line)
+                using (var reader = new StreamReader(server, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 4096, leaveOpen: true))
                 {
-                    if (line.Length > 0 && !all.Contains(line, StringComparer.OrdinalIgnoreCase)) all.Add(line);
+                    while (await reader.ReadLineAsync(ct).ConfigureAwait(false) is { } line)
+                    {
+                        if (line.Length > 0 && !all.Contains(line, StringComparer.OrdinalIgnoreCase)) all.Add(line);
+                    }
                 }
 
-                // Cada arquivo novo dá mais um tempo para os próximos chegarem.
+                server.Disconnect();
+                // Cada processo novo dá mais um tempo para os próximos chegarem.
                 deadline = DateTime.UtcNow + quiet;
             }
 
             return all;
-        }
-        finally
-        {
-            mutex.ReleaseMutex();
         }
     }
 

@@ -137,6 +137,12 @@ public abstract partial class ToolViewModelBase : ObservableObject
     /// <summary>Recebe arquivos por seleção, arrastar e soltar ou linha de comando.</summary>
     public abstract Task AddFilesAsync(IReadOnlyList<string> paths);
 
+    /// <summary>Ferramenta do catálogo aberta nesta tela (definida pela janela principal; usada em "Repetir operação").</summary>
+    public string? ToolId { get; set; }
+
+    /// <summary>Arquivos de entrada atuais, gravados no histórico para "Repetir operação".</summary>
+    protected internal virtual IReadOnlyList<string> RepeatInputs => [];
+
     /// <summary>Verdadeiro quando a tela ainda não tem nenhum documento carregado.</summary>
     public abstract bool IsEmpty { get; }
 
@@ -351,7 +357,7 @@ public abstract partial class ToolViewModelBase : ObservableObject
                 {
                     await Context.History.AddAsync(new HistoryRecord(0, inputName, operation, started,
                         $"{Path.GetFileName(file.Path)} — {Describe(file)}",
-                        file.Path, watch.Elapsed, OperationStatus.Completed));
+                        file.Path, watch.Elapsed, OperationStatus.Completed, ToolId, RepeatInputs));
                 }
             }
 
@@ -404,7 +410,7 @@ public abstract partial class ToolViewModelBase : ObservableObject
         if (!Context.Settings.Current.HistoryEnabled) return;
         try
         {
-            await Context.History.AddAsync(new HistoryRecord(0, inputName, operation, started, message, null, duration, status));
+            await Context.History.AddAsync(new HistoryRecord(0, inputName, operation, started, message, null, duration, status, ToolId, RepeatInputs));
         }
         catch (Exception ex)
         {

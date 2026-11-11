@@ -132,48 +132,50 @@ public class BatchTests : IDisposable
     {
         // Página 300 × 400 com /Rotate 90: o quadrado vermelho aparece no canto superior direito.
         var source = PdfSamples.Create(_temp, "girada.pdf", 5, 300, rotation: _ => 90);
-        var (rx, ry) = await RedCentroid(source, 0, RenderSize.ByScale(1));
+        var (rx, ry, _, _) = await RedCentroid(source, 0, 0, 1);
+        Assert.InRange(rx, 0.7, 0.8);
+        Assert.InRange(ry, 0.28, 0.39);
 
         var two = await _services.Pages.NUpAsync(source, 2, booklet: false, SheetSize.A4, Target("dois"));
         Assert.Equal(3, (await _services.Engine.ReadInfoAsync(two.File!.Path)).PageCount);
 
-        // Folha A4 deitada: célula esquerda de 403 × 559 pt; página exibida 400 × 300 centralizada nela.
+        // Folha A4 deitada (842 × 595): célula esquerda de 403 × 559 pt; página exibida 400 × 300 centralizada nela.
         const double margin = 18, cellW = (842 - 36) / 2.0, cellH = 595 - 36;
         var scale = Math.Min((cellW - 8) / 400, (cellH - 8) / 300);
         double boxLeft = margin + cellW / 2 - 200 * scale, boxTop = margin + cellH / 2 - 150 * scale;
-        var (sx, sy) = await RedCentroid(two.File.Path, 0, RenderSize.ByScale(1));
-        Assert.InRange(sx, boxLeft + rx * 400 * scale - 4, boxLeft + rx * 400 * scale + 4);
-        Assert.InRange(sy, boxTop + ry * 300 * scale - 4, boxTop + ry * 300 * scale + 4);
+        var (sx, sy, w, h) = await RedCentroid(two.File.Path, 0, 0, 0.5);
+        var message = $"centro na folha: {sx * 842:0} × {sy * 595:0} pt (imagem {w} × {h})";
+        Assert.True(Math.Abs(sx * 842 - (boxLeft + rx * 400 * scale)) < 6, message);
+        Assert.True(Math.Abs(sy * 595 - (boxTop + ry * 300 * scale)) < 6, message);
 
         var four = await _services.Pages.NUpAsync(source, 4, booklet: false, SheetSize.A4, Target("quatro"));
         Assert.Equal(2, (await _services.Engine.ReadInfoAsync(four.File!.Path)).PageCount);
     }
 
-    /// <summary>Centro (relativo, 0–1) dos pixels vermelhos da página renderizada; e em pixels quando a escala é 1.</summary>
-    private async Task<(double X, double Y)> RedCentroid(string path, int page, RenderSize size)
+    /// <summary>Centro (relativo, 0–1) dos pixels vermelhos da página, considerando só a faixa horizontal [from, to).</summary>
+    private async Task<(double X, double Y, int Width, int Height)> RedCentroid(string path, int page, double from, double to)
     {
         double sx = 0, sy = 0;
         long n = 0;
         int w = 0, h = 0;
-        await _services.Renderer.RenderPagesAsync(path, [page], size, (_, p) =>
+        await _services.Renderer.RenderPagesAsync(path, [page], RenderSize.Fit(600, 850), (_, p) =>
         {
             w = p.Width;
             h = p.Height;
             for (var y = 0; y < p.Height; y++)
-            for (var x = 0; x < p.Width; x++)
+            for (var x = (int)(from * p.Width); x < (int)(to * p.Width); x++)
             {
                 var i = 4 * (y * p.Width + x);
                 if (p.Bgra[i + 2] > 180 && p.Bgra[i + 1] < 90 && p.Bgra[i] < 90)
                 {
-                    sx += x;
-                    sy += y;
+                    sx += x + 0.5;
+                    sy += y + 0.5;
                     n++;
                 }
             }
         });
         Assert.True(n > 0, "Nenhum pixel vermelho encontrado.");
-        // Páginas de origem: posição relativa; folhas montadas: pixels (escala 1 = 1 px por ponto).
-        return path.EndsWith("girada.pdf", StringComparison.Ordinal) ? (sx / n / w, sy / n / h) : (sx / n, sy / n);
+        return (sx / n / w, sy / n / h, w, h);
     }
 
     [Fact]
@@ -196,7 +198,7 @@ public class BatchTests : IDisposable
         Assert.Contains("Folha 3", texts[2]);
         var info = await _services.Engine.ReadInfoAsync(result.File.Path);
         Assert.Equal([90, 0, 0], info.Pages.Select(p => p.Rotation).ToArray());
-        Assert.Null(PdfMetadata.Read(result.File.Path).Title);
+        Assert.True(string.IsNullOrEmpty(PdfMetadata.Read(result.File.Path).Title));
 
         // Segunda execução: nome novo, nunca sobrescreve.
         var again = await _services.Runner.RunAsync(source, flow, Target());

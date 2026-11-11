@@ -72,6 +72,7 @@ public sealed partial class VideoViewModel : ToolViewModelBase
     public ObservableCollection<VideoFileViewModel> Files { get; } = [];
 
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public override bool AcceptsOpenPdfs => false;
     public bool HasFiles => Files.Count > 0;
 

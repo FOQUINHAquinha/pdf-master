@@ -80,7 +80,13 @@ public sealed record HistoryRecord(
     string Result,
     string? OutputPath,
     TimeSpan Duration,
-    OperationStatus Status);
+    OperationStatus Status,
+    string? ToolId = null,
+    IReadOnlyList<string>? Inputs = null)
+{
+    /// <summary>A operação pode ser repetida: a ferramenta é conhecida e os arquivos de entrada foram registrados.</summary>
+    public bool CanRepeat => ToolId is not null && Inputs is { Count: > 0 };
+}
 
 public sealed record HistoryQuery(
     string? Text = null,

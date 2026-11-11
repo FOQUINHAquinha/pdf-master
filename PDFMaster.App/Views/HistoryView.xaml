@@ -53,7 +53,7 @@
                             <ColumnDefinition Width="90" />
                             <ColumnDefinition Width="80" />
                             <ColumnDefinition Width="3*" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="156" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Data" Style="{StaticResource Secondary}" FontWeight="SemiBold" />
                         <TextBlock Grid.Column="1" Text="Arquivo" Style="{StaticResource Secondary}" FontWeight="SemiBold" />
@@ -79,7 +79,7 @@
                                             <ColumnDefinition Width="90" />
                                             <ColumnDefinition Width="80" />
                                             <ColumnDefinition Width="3*" />
-                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="156" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Text="{Binding WhenText}" Style="{StaticResource Secondary}"
                                                    VerticalAlignment="Center" />
@@ -100,6 +100,9 @@
                                                    TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                                    Margin="0,0,10,0" ToolTip="{Binding Result}" />
                                         <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Style="{StaticResource IconButton}" Content="&#xE72C;"
+                                                    ToolTip="{Binding RepeatTooltip}" ToolTipService.ShowOnDisabled="True"
+                                                    Command="{Binding RepeatCommand}" />
                                             <Button Style="{StaticResource IconButton}" Content="&#xE8E5;"
                                                     ToolTip="Abrir arquivo resultante"
                                                     Command="{Binding OpenFileCommand}" />

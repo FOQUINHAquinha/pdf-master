@@ -15,7 +15,7 @@ namespace PDFMaster.App.ViewModels;
 public sealed class HistoryRowViewModel
 {
     public HistoryRowViewModel(HistoryRecord record, ShellLauncher shell, NotificationCenter notifications,
-        Action<HistoryRowViewModel>? delete = null)
+        Action<HistoryRowViewModel>? delete = null, Action<string, IReadOnlyList<string>>? repeat = null)
     {
         Record = record;
         var hasOutput = !string.IsNullOrEmpty(record.OutputPath);
@@ -35,7 +35,27 @@ public sealed class HistoryRowViewModel
         }, () => hasOutput);
 
         DeleteCommand = new RelayCommand(() => delete?.Invoke(this), () => delete is not null);
+
+        RepeatCommand = new RelayCommand(() =>
+        {
+            var existing = record.Inputs!.Where(File.Exists).ToList();
+            if (existing.Count == 0)
+            {
+                notifications.Show(NotificationKind.Warning, "Arquivos de entrada não encontrados",
+                    "Nenhum dos arquivos usados nesta operação existe mais no local original.");
+                return;
+            }
+
+            if (existing.Count < record.Inputs!.Count)
+                notifications.Show(NotificationKind.Info, "Alguns arquivos não existem mais",
+                    $"{record.Inputs.Count - existing.Count} arquivo(s) de entrada não foram encontrados e ficaram de fora.");
+            repeat!(record.ToolId!, existing);
+        }, () => repeat is not null && record.CanRepeat);
+        RepeatTooltip = record.CanRepeat ? "Repetir: abre a mesma ferramenta com os mesmos arquivos de entrada" : "Operação registrada antes da versão 0.7 (sem os arquivos de entrada)";
     }
+
+    public ICommand RepeatCommand { get; }
+    public string RepeatTooltip { get; }
 
     public HistoryRecord Record { get; }
     public string FileName => Record.FileName;
@@ -93,6 +113,9 @@ public sealed partial class HistoryViewModel : ObservableObject
     }
 
     public ObservableCollection<HistoryRowViewModel> Records { get; } = [];
+
+    /// <summary>Definido pela janela principal: abre a ferramenta com os arquivos ("Repetir operação").</summary>
+    public Action<string, IReadOnlyList<string>>? RepeatRequested { get; set; }
     public ObservableCollection<string> Operations { get; } = [AllOperations];
 
     [ObservableProperty]
@@ -156,7 +179,7 @@ public sealed partial class HistoryViewModel : ObservableObject
 
         var records = await _history.QueryAsync(query);
         Records.Clear();
-        foreach (var record in records) Records.Add(new HistoryRowViewModel(record, _shell, _notifications, Delete));
+        foreach (var record in records) Records.Add(new HistoryRowViewModel(record, _shell, _notifications, Delete, RepeatRequested));
         OnPropertyChanged(nameof(HasRecords));
         OnPropertyChanged(nameof(HistoryEnabled));
         OnPropertyChanged(nameof(EmptyText));

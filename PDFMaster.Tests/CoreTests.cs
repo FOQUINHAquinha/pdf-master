@@ -55,21 +55,22 @@ public class ToolSearchTests
     {
         var all = new ToolCatalog().All;
         Assert.Equal(all.Count, all.Select(t => t.Id).Distinct().Count());
-        Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 7));
+        Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 8));
 
-        // Somente as ferramentas das Fases 2 a 6 (e a compressão de vídeo, extra) estão implementadas.
+        // Somente as ferramentas das Fases 2 a 7 (e a compressão de vídeo, extra) estão implementadas.
         var available = all.Where(t => t.IsAvailable).Select(t => t.Id).OrderBy(id => id, StringComparer.Ordinal).ToArray();
         Assert.Equal(
             new[]
             {
-                "annotate", "compare", "compress", "delete-pages", "edit-images", "edit-text", "extract-pages", "form-fields", "forms",
-                "header-footer", "image-to-pdf", "insert-pages", "interleave", "merge", "metadata",
-                "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "pdfa", "protect", "reorder", "repair", "rotate",
-                "scan", "security-info", "sign-visual", "split", "stamps", "text-html-to-pdf", "unlock", "verify-signature", "video-compress", "view", "watermark",
+                "annotate", "batch", "blank-duplicates", "booklet", "compare", "compress", "crop", "delete-pages", "edit-images", "edit-text", "extract-pages",
+                "form-fields", "forms", "header-footer", "image-to-pdf", "insert-pages", "interleave", "merge", "metadata",
+                "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "pdfa", "protect", "reorder", "repair", "reverse", "rotate",
+                "scan", "security-info", "sign-visual", "split", "stamps", "text-html-to-pdf", "unlock", "verify-signature", "video-compress", "view",
+                "watch-folder", "watermark",
             },
             available);
-        Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 6));
-        Assert.All(all.Where(t => !t.IsAvailable), t => Assert.Equal(7, t.PlannedPhase));
+        Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 7));
+        Assert.All(all.Where(t => !t.IsAvailable), t => Assert.Equal(8, t.PlannedPhase));
         Assert.All(ToolCatalog.Implemented, id => Assert.NotNull(new ToolCatalog().Find(id)));
     }
 

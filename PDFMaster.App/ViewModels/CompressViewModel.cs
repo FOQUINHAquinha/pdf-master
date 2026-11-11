@@ -58,6 +58,7 @@ public sealed partial class CompressViewModel : ToolViewModelBase
     public IReadOnlyList<Choice<CompressionProfile>> Profiles { get; }
 
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public bool HasFiles => Files.Count > 0;
 
     [ObservableProperty] private Choice<CompressionProfile> _selectedProfile;

@@ -119,6 +119,9 @@ public sealed class BatchQueue
     /// <summary>A fila começou, pausou, retomou ou ficou ociosa.</summary>
     public event Action? StateChanged;
 
+    /// <summary>Tarefas entraram ou saíram da lista.</summary>
+    public event Action? JobsChanged;
+
     public int MaxParallel
     {
         get => _maxParallel;
@@ -163,6 +166,7 @@ public sealed class BatchQueue
         }
 
         _wake.Release();
+        JobsChanged?.Invoke();
         return job;
     }
 
@@ -268,12 +272,16 @@ public sealed class BatchQueue
         }
 
         _wake.Release();
+        JobsChanged?.Invoke();
     }
 
     /// <summary>Tira da lista as tarefas concluídas (com ou sem sucesso).</summary>
     public int ClearFinished()
     {
-        lock (_gate) return _jobs.RemoveAll(j => j.IsFinished);
+        int removed;
+        lock (_gate) removed = _jobs.RemoveAll(j => j.IsFinished);
+        if (removed > 0) JobsChanged?.Invoke();
+        return removed;
     }
 
     /// <summary>Completa quando não houver tarefa aguardando nem em andamento.</summary>

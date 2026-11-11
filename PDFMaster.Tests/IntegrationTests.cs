@@ -135,6 +135,43 @@ public class StorageTests : IDisposable
     }
 
     [Fact]
+    public async Task History_keeps_tool_and_inputs_and_upgrades_version_1_databases()
+    {
+        // Banco no formato da versão 1 (sem as colunas novas), com um registro antigo.
+        var path = Path.Combine(_temp.Path, "v1.db");
+        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=" + path + ";Pooling=False"))
+        {
+            connection.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = """
+                CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                CREATE TABLE history (id INTEGER PRIMARY KEY AUTOINCREMENT, file_name TEXT NOT NULL, operation TEXT NOT NULL,
+                    started_utc TEXT NOT NULL, result TEXT NOT NULL, output_path TEXT NULL, duration_ms INTEGER NOT NULL, status INTEGER NOT NULL);
+                CREATE TABLE recent_files (path TEXT PRIMARY KEY COLLATE NOCASE, last_opened_utc TEXT NOT NULL);
+                INSERT INTO history (file_name, operation, started_utc, result, output_path, duration_ms, status)
+                    VALUES ('antigo.pdf', 'Mesclar PDF', '2026-01-01T10:00:00.000Z', 'ok', NULL, 10, 0);
+                PRAGMA user_version = 1;
+                """;
+            cmd.ExecuteNonQuery();
+        }
+
+        var db = new SqliteDatabase(path);
+        db.Initialize();
+        db.Initialize();
+        var repo = new SqliteHistoryRepository(db);
+        var old = Assert.Single(await repo.QueryAsync(new HistoryQuery()));
+        Assert.Null(old.ToolId);
+        Assert.False(old.CanRepeat);
+
+        await repo.AddAsync(new HistoryRecord(0, "a.pdf", "Comprimir PDF", DateTime.UtcNow, "ok", null, TimeSpan.Zero, OperationStatus.Completed,
+            "compress", [@"C:\docs\a.pdf", @"C:\docs\b ç.pdf"]));
+        var added = (await repo.QueryAsync(new HistoryQuery()))[0];
+        Assert.Equal("compress", added.ToolId);
+        Assert.Equal(new[] { @"C:\docs\a.pdf", @"C:\docs\b ç.pdf" }, added.Inputs);
+        Assert.True(added.CanRepeat);
+    }
+
+    [Fact]
     public async Task History_text_filter_is_not_sql_injectable()
     {
         var repo = new SqliteHistoryRepository(_db);

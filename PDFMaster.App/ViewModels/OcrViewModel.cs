@@ -51,6 +51,7 @@ public sealed partial class OcrViewModel : ToolViewModelBase
     public ObservableCollection<OcrLanguageChoice> Languages { get; } = [];
 
     public override bool IsEmpty => Files.Count == 0;
+    protected internal override IReadOnlyList<string> RepeatInputs => Files.Select(f => f.Path).ToList();
     public bool HasFiles => Files.Count > 0;
     public bool HasLanguages => Languages.Count > 0;
     public string ModelsDirectory => Context.Ocr.Runtime.ModelsDirectory;

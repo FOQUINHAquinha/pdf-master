@@ -54,6 +54,7 @@ public sealed partial class CompareViewModel : ToolViewModelBase
     public string NameB => PathB is null ? "Escolha o segundo PDF (versão nova)" : Path.GetFileName(PathB);
     public bool HasResult => Result is not null;
     public override bool IsEmpty => PathA is null && PathB is null;
+    protected internal override IReadOnlyList<string> RepeatInputs => new[] { PathA, PathB }.OfType<string>().ToList();
 
     public override Task<bool> RunPrimaryAsync() => ExecuteIfPossibleAsync(CompareCommand);
 

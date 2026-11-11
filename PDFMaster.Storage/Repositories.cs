@@ -53,8 +53,8 @@ public sealed class SqliteHistoryRepository : IHistoryRepository
         using var connection = _db.Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO history (file_name, operation, started_utc, result, output_path, duration_ms, status)
-            VALUES ($file, $op, $started, $result, $output, $duration, $status);
+            INSERT INTO history (file_name, operation, started_utc, result, output_path, duration_ms, status, tool_id, inputs)
+            VALUES ($file, $op, $started, $result, $output, $duration, $status, $tool, $inputs);
             SELECT last_insert_rowid();
             """;
         cmd.Parameters.AddWithValue("$file", record.FileName);
@@ -64,6 +64,10 @@ public sealed class SqliteHistoryRepository : IHistoryRepository
         cmd.Parameters.AddWithValue("$output", (object?)record.OutputPath ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$duration", (long)record.Duration.TotalMilliseconds);
         cmd.Parameters.AddWithValue("$status", (int)record.Status);
+        cmd.Parameters.AddWithValue("$tool", (object?)record.ToolId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$inputs", record.Inputs is { Count: > 0 } inputs
+            ? System.Text.Json.JsonSerializer.Serialize(inputs)
+            : DBNull.Value);
         return Convert.ToInt64(cmd.ExecuteScalar());
     }, ct);
 
@@ -98,7 +102,7 @@ public sealed class SqliteHistoryRepository : IHistoryRepository
         }
 
         cmd.CommandText =
-            "SELECT id, file_name, operation, started_utc, result, output_path, duration_ms, status FROM history" +
+            "SELECT id, file_name, operation, started_utc, result, output_path, duration_ms, status, tool_id, inputs FROM history" +
             (where.Count > 0 ? " WHERE " + string.Join(" AND ", where) : string.Empty) +
             " ORDER BY started_utc DESC, id DESC LIMIT $limit;";
         cmd.Parameters.AddWithValue("$limit", Math.Clamp(query.Limit, 1, 10_000));
@@ -115,11 +119,25 @@ public sealed class SqliteHistoryRepository : IHistoryRepository
                 reader.GetString(4),
                 reader.IsDBNull(5) ? null : reader.GetString(5),
                 TimeSpan.FromMilliseconds(reader.GetInt64(6)),
-                (OperationStatus)reader.GetInt32(7)));
+                (OperationStatus)reader.GetInt32(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : ReadInputs(reader.GetString(9))));
         }
 
         return (IReadOnlyList<HistoryRecord>)list;
     }, ct);
+
+    private static IReadOnlyList<string>? ReadInputs(string json)
+    {
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(json);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
 
     public Task<IReadOnlyList<string>> GetOperationNamesAsync(CancellationToken ct = default) => Task.Run(() =>
     {

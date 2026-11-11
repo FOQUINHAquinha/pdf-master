@@ -75,6 +75,15 @@
         <DataTemplate DataType="{x:Type vm:ViewerViewModel}">
             <views:ViewerView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BatchViewModel}">
+            <views:BatchView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WatchFolderViewModel}">
+            <views:WatchFolderView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PageToolViewModel}">
+            <views:PageToolView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
             <views:HistoryView />
         </DataTemplate>

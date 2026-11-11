@@ -43,6 +43,7 @@ public sealed partial class ViewerViewModel : ToolViewModelBase
     public ObservableCollection<ViewerPageViewModel> Pages { get; } = [];
 
     public override bool IsEmpty => _document is null;
+    protected internal override IReadOnlyList<string> RepeatInputs => _document is null ? [] : [_document.Path];
     public bool HasDocument => _document is not null;
     public string DocumentName => _document is null ? string.Empty : Path.GetFileName(_document.Path);
 

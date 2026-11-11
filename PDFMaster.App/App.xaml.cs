@@ -246,6 +246,10 @@ public partial class App : Application
                 await _services.GetRequiredService<HomeViewModel>().AddPathsAsync(options.Files);
             }
 
+            // Tarefas da fila e das pastas monitoradas entram no histórico como as demais operações.
+            var history = _services.GetRequiredService<IHistoryRepository>();
+            _services.GetRequiredService<BatchQueue>().JobFinished += job => _ = RecordJobAsync(history, settings, job);
+
             // Pastas monitoradas: só funcionam com o programa aberto (ou com --watch).
             var watch = _services.GetRequiredService<WatchService>();
             if (watch.Folders.Any(f => f.Enabled)) watch.Start();
@@ -259,6 +263,33 @@ public partial class App : Application
                 "O PDF Master não pôde ser iniciado.\n\n" + ex.Message,
                 "PDF Master", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
+        }
+    }
+
+    private async Task RecordJobAsync(IHistoryRepository history, SettingsService settings, BatchJob job)
+    {
+        if (!settings.Current.HistoryEnabled) return;
+        var status = job.State switch
+        {
+            JobState.Completed => OperationStatus.Completed,
+            JobState.Cancelled => OperationStatus.Cancelled,
+            _ => OperationStatus.Failed,
+        };
+        var result = job.State switch
+        {
+            JobState.Completed => $"{System.IO.Path.GetFileName(job.OutputPath)} — {FileSizeFormatter.Format(job.FinalBytes ?? 0)}" +
+                                  (job.Notes.Count > 0 ? " · " + string.Join(" ", job.Notes) : string.Empty),
+            JobState.Cancelled => "Cancelado pelo usuário.",
+            _ => job.Error ?? "Falhou.",
+        };
+        try
+        {
+            await history.AddAsync(new HistoryRecord(0, job.FileName, $"{job.Origin}: {job.Operation}", DateTime.UtcNow - job.Elapsed, result,
+                job.State == JobState.Completed ? job.OutputPath : null, job.Elapsed, status, "batch", [job.SourcePath]));
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Falha ao registrar a tarefa no histórico");
         }
     }
 

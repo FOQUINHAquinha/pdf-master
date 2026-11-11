@@ -8,7 +8,7 @@ namespace PDFMaster.Storage;
 /// </summary>
 public sealed class SqliteDatabase
 {
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
     private readonly string _connectionString;
 
     public SqliteDatabase(string databasePath)
@@ -48,6 +48,28 @@ public sealed class SqliteDatabase
         if (version >= SchemaVersion) return;
 
         using var tx = connection.BeginTransaction();
+        if (version < 1) CreateVersion1(connection, tx);
+        if (version < 2)
+        {
+            // Versão 2: ferramenta e arquivos de entrada de cada operação ("Repetir operação").
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "ALTER TABLE history ADD COLUMN tool_id TEXT NULL; ALTER TABLE history ADD COLUMN inputs TEXT NULL;";
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText = $"PRAGMA user_version = {SchemaVersion};";
+            cmd.ExecuteNonQuery();
+        }
+
+        tx.Commit();
+    }
+
+    private static void CreateVersion1(SqliteConnection connection, SqliteTransaction tx)
+    {
         using (var cmd = connection.CreateCommand())
         {
             cmd.Transaction = tx;
@@ -74,15 +96,6 @@ public sealed class SqliteDatabase
                 """;
             cmd.ExecuteNonQuery();
         }
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.Transaction = tx;
-            cmd.CommandText = $"PRAGMA user_version = {SchemaVersion};";
-            cmd.ExecuteNonQuery();
-        }
-
-        tx.Commit();
     }
 
     internal static string ToDbTime(DateTime utc) =>
