@@ -184,8 +184,21 @@ public sealed partial class BatchViewModel : ToolViewModelBase
         OnStateChanged();
     }
 
+    private string? _lastFolder;
+
     protected override void OnStateChanged()
     {
+        // A pasta de destino vale também para as tarefas desta tela que ainda aguardam.
+        if (_queue is not null && OutputFolder != _lastFolder)
+        {
+            _lastFolder = OutputFolder;
+            if (HasOutputFolder)
+            {
+                var target = CreateTarget();
+                foreach (var job in _queue.Jobs.Where(j => j.State == JobState.Waiting && j.Origin == "Fila")) _queue.Retarget(job, target);
+            }
+        }
+
         StartCommand.NotifyCanExecuteChanged();
         PauseCommand.NotifyCanExecuteChanged();
         ResumeCommand.NotifyCanExecuteChanged();

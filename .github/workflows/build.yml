@@ -212,8 +212,27 @@ jobs:
             @{ name = 'dark-home';      args = @('--theme','dark','--page','home') },
             @{ name = 'light-organize'; args = @('--theme','light','--page','organize') },
             @{ name = 'dark-settings';  args = @('--theme','dark','--page','settings') },
-            @{ name = 'light-history';  args = @('--theme','light','--page','history') }
+            @{ name = 'light-history';  args = @('--theme','light','--page','history') },
+            @{ name = 'run-batch';      wait = 90; args = @('--theme','light','--tool','batch','--output',"`"$out`"",'--run',"`"$a`"","`"$s\Escaneado.pdf`"") },
+            @{ name = 'run-reverse';    args = @('--theme','light','--tool','reverse','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-blank';      wait = 12; args = @('--theme','dark','--tool','blank-duplicates','--output',"`"$out`"",'--run',"`"$s\Digitalizacao com brancas.pdf`"") },
+            @{ name = 'run-crop';       args = @('--theme','light','--tool','crop','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-booklet';    args = @('--theme','light','--tool','booklet','--output',"`"$out`"",'--run',"`"$b`"") },
+            @{ name = 'tool-watch';     wait = 25; args = @('--theme','light','--tool','watch-folder') },
+            @{ name = 'dark-batch-page'; args = @('--theme','dark','--page','batch') },
+            @{ name = 'light-settings-automation'; args = @('--theme','light','--page','settings') }
           )
+
+          # Pasta monitorada configurada antes de abrir o programa: os PDFs já presentes devem ser processados.
+          $watchIn = Join-Path $env:RUNNER_TEMP 'pdfm-watch-in'
+          $watchOut = Join-Path $env:RUNNER_TEMP 'pdfm-watch-out'
+          New-Item -ItemType Directory -Force $watchIn, $watchOut | Out-Null
+          Copy-Item $a $watchIn
+          Copy-Item $b $watchIn
+          $watchJson = @(@{ Id = [guid]::NewGuid().ToString(); Name = 'Entrada do scanner'; InputFolder = $watchIn; FlowName = 'Comprimir (equilibrada)';
+                            OutputFolder = $watchOut; IncludeSubfolders = $false; ProcessExisting = $true; Enabled = $true }) | ConvertTo-Json -AsArray
+          New-Item -ItemType Directory -Force $env:PDFMASTER_DATA_DIR | Out-Null
+          [IO.File]::WriteAllText((Join-Path $env:PDFMASTER_DATA_DIR 'pastas-monitoradas.json'), $watchJson)
           foreach ($run in $runs) {
             $p = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList $run.args -PassThru
             $wait = if ($run.wait) { $run.wait } else { 10 }
@@ -233,6 +252,12 @@ jobs:
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
           $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf','Contrato v1_PDFA-2b.pdf','Contrato v1_metadados.pdf','Danificado_reparado.pdf')
+          $expected += @('Relatorio_arquivo.pdf','Escaneado_arquivo.pdf','Relatorio_invertido.pdf','Digitalizacao com brancas_sem-brancas.pdf','Relatorio_recortado.pdf','Anexos_2-por-folha.pdf')
+          foreach ($name in @('Relatorio_comprimido.pdf','Anexos_comprimido.pdf')) {
+            $file = Join-Path $watchOut $name
+            if (Test-Path $file) { "pasta monitorada ok: $name ($((Get-Item $file).Length) bytes)" | Out-File ci-out/smoke.log -Append }
+            else { "pasta monitorada AUSENTE: $name" | Out-File ci-out/smoke.log -Append; $failed = $true }
+          }
           foreach ($name in $expected) {
             $file = Join-Path $out $name
             if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {
@@ -246,6 +271,74 @@ jobs:
             "temporarios deixados na pasta de saida" | Out-File ci-out/smoke.log -Append
             $failed = $true
           }
+
+          # ----- Linha de comando sem janela (Fase 7) -----
+          $cli = Join-Path $env:RUNNER_TEMP 'pdfm-cli'
+          New-Item -ItemType Directory -Force $cli | Out-Null
+          $clilog = Join-Path $cli 'cli.log'
+          function Cli($label, $expectedCode, [string[]]$cliArgs) {
+            $p = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList ($cliArgs + @('--log', "`"$clilog`"")) -Wait -PassThru `
+                   -RedirectStandardOutput (Join-Path $cli "$label.out.txt") -RedirectStandardError (Join-Path $cli "$label.err.txt")
+            $text = Get-Content (Join-Path $cli "$label.out.txt") -Raw -ErrorAction SilentlyContinue
+            "cli $label -> codigo $($p.ExitCode) (esperado $expectedCode)`n$text" | Out-File ci-out/cli.log -Append -Encoding utf8
+            if ($p.ExitCode -ne $expectedCode) { $script:failed = $true; "cli FALHOU: $label" | Out-File ci-out/smoke.log -Append }
+          }
+          Cli 'help' 0 @('--help')
+          Cli 'version' 0 @('--version')
+          Cli 'list-flows' 0 @('--list-flows')
+          Cli 'merge' 0 @('--merge', "`"$a`"", "`"$b`"", '--output', "`"$cli\resultado.pdf`"")
+          Cli 'merge-again' 2 @('--merge', "`"$a`"", "`"$b`"", '--output', "`"$cli\resultado.pdf`"")
+          Cli 'merge-one' 1 @('--merge', "`"$a`"", '--output', "`"$cli\x.pdf`"")
+          Cli 'compress' 0 @('--compress', "`"$s\Digitalizado.pdf`"", '--profile', 'forte', '--output', "`"$cli\comprimido.pdf`"")
+          Cli 'split' 0 @('--split', "`"$a`"", '--every', '3', '--output', "`"$cli\partes`"")
+          Cli 'ocr' 0 @('--ocr', "`"$s\Escaneado.pdf`"", '--language', 'por', '--output', "`"$cli`"")
+          Cli 'pdfa' 0 @('--pdfa', "`"$s\Contrato v1.pdf`"", '--level', '2b', '--output', "`"$cli`"")
+          Cli 'rotate' 0 @('--rotate', "`"$a`"", '--degrees', '90', '--pages', '1-2', '--output', "`"$cli\girado.pdf`"")
+          Cli 'to-image' 0 @('--to-image', "`"$b`"", '--format', 'jpg', '--dpi', '72', '--output', "`"$cli\imagens`"")
+          Cli 'flow' 0 @('--flow', '"Limpar: remover páginas em branco e metadados"', "`"$s\Digitalizacao com brancas.pdf`"", '--output', "`"$cli`"")
+          Cli 'bad-option' 1 @('--compress', "`"$a`"", '--qualidade', '3')
+          Cli 'missing-file' 1 @('--compress', "`"$cli\nao-existe.pdf`"")
+          $cliExpected = @('resultado.pdf','comprimido.pdf','Escaneado_ocr.pdf','Contrato v1_PDFA-2b.pdf','girado.pdf','Digitalizacao com brancas_limpo.pdf')
+          foreach ($name in $cliExpected) {
+            if (Test-Path (Join-Path $cli $name)) { "cli saida ok: $name" | Out-File ci-out/smoke.log -Append }
+            else { "cli saida AUSENTE: $name" | Out-File ci-out/smoke.log -Append; $failed = $true }
+          }
+          $parts = @(Get-ChildItem (Join-Path $cli 'partes') -Filter *.pdf -ErrorAction SilentlyContinue).Count
+          $images = @(Get-ChildItem (Join-Path $cli 'imagens') -Filter *.jpg -ErrorAction SilentlyContinue).Count
+          "cli partes=$parts imagens=$images" | Out-File ci-out/smoke.log -Append
+          if ($parts -lt 2 -or $images -lt 1) { $failed = $true }
+          if (Test-Path $clilog) { Copy-Item $clilog 'ci-out/cli-log-arquivo.txt' }
+
+          # --watch sem janela, com outra pasta de dados e uma pasta monitorada própria.
+          $wData = Join-Path $env:RUNNER_TEMP 'pdfm-watch-cli-data'
+          $wIn = Join-Path $env:RUNNER_TEMP 'pdfm-watch-cli-in'
+          $wOut = Join-Path $env:RUNNER_TEMP 'pdfm-watch-cli-out'
+          New-Item -ItemType Directory -Force $wData, $wIn, $wOut | Out-Null
+          $wJson = @(@{ Id = [guid]::NewGuid().ToString(); Name = 'CLI'; InputFolder = $wIn; FlowName = 'Comprimir (equilibrada)'; OutputFolder = $wOut;
+                        IncludeSubfolders = $false; ProcessExisting = $false; Enabled = $true }) | ConvertTo-Json -AsArray
+          [IO.File]::WriteAllText((Join-Path $wData 'pastas-monitoradas.json'), $wJson)
+          $saved = $env:PDFMASTER_DATA_DIR
+          $env:PDFMASTER_DATA_DIR = $wData
+          $w = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList @('--watch','--duration','25') -PassThru `
+                 -RedirectStandardOutput (Join-Path $cli 'watch.out.txt') -RedirectStandardError (Join-Path $cli 'watch.err.txt')
+          Start-Sleep -Seconds 6
+          Copy-Item $b (Join-Path $wIn 'chegou.pdf')
+          $w.WaitForExit(90000) | Out-Null
+          $env:PDFMASTER_DATA_DIR = $saved
+          "cli watch -> codigo $($w.ExitCode)`n$(Get-Content (Join-Path $cli 'watch.out.txt') -Raw)" | Out-File ci-out/cli.log -Append -Encoding utf8
+          if (Test-Path (Join-Path $wOut 'chegou_comprimido.pdf')) { "cli watch ok" | Out-File ci-out/smoke.log -Append }
+          else { "cli watch AUSENTE" | Out-File ci-out/smoke.log -Append; $failed = $true }
+
+          # Menu de contexto: dois processos "--context merge" viram uma única janela com os dois arquivos.
+          Get-Process PDFMaster -ErrorAction SilentlyContinue | Stop-Process -Force
+          $c1 = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList @('--theme','light','--context','merge',"`"$a`"") -PassThru
+          $c2 = Start-Process -FilePath 'publish/PDFMaster.exe' -ArgumentList @('--theme','light','--context','merge',"`"$b`"") -PassThru
+          Start-Sleep -Seconds 12
+          $alive = @(Get-Process PDFMaster -ErrorAction SilentlyContinue).Count
+          try { Capture 'context-merge' } catch { }
+          "contexto: processos vivos=$alive (esperado 1); c2 encerrou=$($c2.HasExited) codigo=$(if ($c2.HasExited) { $c2.ExitCode })" | Out-File ci-out/smoke.log -Append
+          if ($alive -ne 1) { $failed = $true }
+          Get-Process PDFMaster -ErrorAction SilentlyContinue | Stop-Process -Force
 
           if (Test-Path (Join-Path $env:PDFMASTER_DATA_DIR 'Logs')) {
             Get-ChildItem (Join-Path $env:PDFMASTER_DATA_DIR 'Logs') | ForEach-Object { Copy-Item $_.FullName (Join-Path 'ci-out' ("app-" + $_.Name)) }

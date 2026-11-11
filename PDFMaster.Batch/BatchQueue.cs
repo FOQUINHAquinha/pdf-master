@@ -27,13 +27,14 @@ public sealed class BatchJob : INotifyPropertyChanged
     private TimeSpan _elapsed;
     private string? _error;
     private IReadOnlyList<string> _notes = [];
+    private OutputTarget _target;
 
     internal BatchJob(string source, BatchFlow flow, OutputTarget target, string origin)
     {
         SourcePath = Path.GetFullPath(source);
         FileName = Path.GetFileName(SourcePath);
         Flow = flow;
-        Target = target;
+        _target = target;
         Origin = origin;
         OriginalBytes = File.Exists(SourcePath) ? new FileInfo(SourcePath).Length : 0;
     }
@@ -44,7 +45,15 @@ public sealed class BatchJob : INotifyPropertyChanged
     public string SourcePath { get; }
     public string FileName { get; }
     public BatchFlow Flow { get; }
-    public OutputTarget Target { get; }
+    public OutputTarget Target
+    {
+        get => _target;
+        internal set
+        {
+            Set(ref _target, value);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Destination)));
+        }
+    }
 
     /// <summary>De onde veio a tarefa ("Fila", "Pasta monitorada: …", "Linha de comando").</summary>
     public string Origin { get; }
@@ -239,6 +248,17 @@ public sealed class BatchQueue
 
         _wake.Release();
         StateChanged?.Invoke();
+    }
+
+    /// <summary>Muda o destino de uma tarefa que ainda aguarda; devolve false se ela já começou.</summary>
+    public bool Retarget(BatchJob job, OutputTarget target)
+    {
+        lock (_gate)
+        {
+            if (job.State != JobState.Waiting) return false;
+            job.Target = target;
+            return true;
+        }
     }
 
     /// <summary>Volta a tarefa para a fila (concluída, com falha ou cancelada).</summary>

@@ -481,3 +481,16 @@ public class BatchTests : IDisposable
         Assert.Contains("--overwrite", output);
     }
 }
+
+/// <summary>Amostra da Fase 7 para os testes da interface no CI (só roda com PDFMASTER_SMOKE_DIR).</summary>
+public class SmokeSamplesPhase7
+{
+    [Fact]
+    public void Writes_a_document_with_blank_and_repeated_pages()
+    {
+        var folder = Environment.GetEnvironmentVariable("PDFMASTER_SMOKE_DIR");
+        if (string.IsNullOrWhiteSpace(folder)) return;
+        SecuritySamples.Pages(Path.Combine(folder, "Digitalizacao com brancas.pdf"),
+            ["Folha 1 do processo"], [], ["Folha 2 do processo"], ["Folha 1 do processo"], [], ["Folha 3 do processo"]);
+    }
+}
