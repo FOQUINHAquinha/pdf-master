@@ -63,6 +63,12 @@ public sealed partial class PdfRepair
     [GeneratedRegex(@"\G\s?(\d{1,7})\s+(\d{1,5})\s+obj\b")]
     private static partial Regex ObjectHerePattern();
 
+    [GeneratedRegex(@"(?:^|[\r\n])xref\s*[\r\n]")]
+    private static partial Regex ClassicTablePattern();
+
+    [GeneratedRegex(@"/Type\s*/XRef\b")]
+    private static partial Regex XrefStreamPattern();
+
     [GeneratedRegex(@"startxref\s+(\d+)")]
     private static partial Regex StartXrefPattern();
 
@@ -263,24 +269,90 @@ public sealed partial class PdfRepair
     }
 
     /// <summary>
-    /// Confere a tabela de referências cruzadas clássica apontada por "startxref": cada entrada em uso
-    /// deve apontar para "N G obj". Tabelas compactadas (fluxos XRef) são conferidas só no endereço inicial.
+    /// Confere a tabela de referências cruzadas: cada entrada em uso deve apontar para "N G obj".
+    /// Aceita a tabela clássica e a compactada (fluxo XRef). Quando "startxref" aponta para o lugar
+    /// errado, procura a última tabela no arquivo e confere as entradas dela mesmo assim.
     /// </summary>
     private static (bool Valid, int Entries, int Wrong, string? Problem) CheckXref(string text, int headerAt)
     {
+        string? problem = null;
+        var position = -1;
         var starts = StartXrefPattern().Matches(text);
-        if (starts.Count == 0) return (false, 0, 0, "A posição da tabela de referências (startxref) não foi encontrada.");
-        if (!long.TryParse(starts[^1].Groups[1].Value, CultureInfo.InvariantCulture, out var start) || start <= 0 || start >= text.Length)
-            return (false, 0, 0, "A posição da tabela de referências aponta para fora do arquivo.");
-
-        var position = (int)start;
-        if (string.CompareOrdinal(text, position, "xref", 0, 4) != 0)
+        if (starts.Count == 0)
         {
-            if (ObjectHerePattern().Match(text, position).Success)
-                return (true, 0, 0, null);
-            return (false, 0, 0, "A posição da tabela de referências não aponta para uma tabela (deslocamentos errados).");
+            problem = "A posição da tabela de referências (startxref) não foi encontrada.";
+        }
+        else if (!long.TryParse(starts[^1].Groups[1].Value, CultureInfo.InvariantCulture, out var start) || start <= 0 || start >= text.Length)
+        {
+            problem = "A posição da tabela de referências aponta para fora do arquivo.";
+        }
+        else if (IsTableAt(text, (int)start) || IsTableAt(text, (int)start + headerAt))
+        {
+            position = IsTableAt(text, (int)start) ? (int)start : (int)start + headerAt;
+        }
+        else
+        {
+            problem = "A posição da tabela de referências não aponta para uma tabela (deslocamentos errados).";
         }
 
+        if (position < 0)
+        {
+            // Procura a última tabela (clássica ou compactada) para conferir as entradas.
+            var classic = ClassicTablePattern().Matches(text);
+            var streams = XrefStreamPattern().Matches(text);
+            var lastClassic = classic.Count > 0 ? classic[^1].Index + (text[classic[^1].Index] is '\r' or '\n' ? 1 : 0) : -1;
+            var lastStream = -1;
+            if (streams.Count > 0)
+            {
+                var objectStart = text.LastIndexOf(" obj", streams[^1].Index, StringComparison.Ordinal);
+                if (objectStart > 0) lastStream = ObjectStart(text, objectStart);
+            }
+
+            position = Math.Max(lastClassic, lastStream);
+            if (position < 0) return (false, 0, 0, problem ?? "Nenhuma tabela de referências foi encontrada.");
+        }
+
+        var (entries, wrong, malformed) = string.CompareOrdinal(text, position, "xref", 0, 4) == 0
+            ? ClassicEntries(text, position, headerAt)
+            : StreamEntries(text, position, headerAt);
+        if (malformed is not null) return (false, entries, wrong, problem is null ? malformed : problem + " " + malformed);
+        if (wrong > 0)
+        {
+            var detail = $"{wrong} de {entries} entrada(s) da tabela de referências apontam para o lugar errado.";
+            return (false, entries, wrong, problem is null ? detail : problem + " " + detail);
+        }
+
+        return (problem is null, entries, 0, problem);
+    }
+
+    private static bool IsTableAt(string text, int at) =>
+        at >= 0 && at < text.Length - 4 && (string.CompareOrdinal(text, at, "xref", 0, 4) == 0 || ObjectHerePattern().Match(text, at).Success && IsXrefStream(text, at));
+
+    private static bool IsXrefStream(string text, int at)
+    {
+        var limit = Math.Min(text.Length - at, 2048);
+        var head = text.Substring(at, limit);
+        var stream = head.IndexOf("stream", StringComparison.Ordinal);
+        return XrefStreamPattern().IsMatch(stream > 0 ? head[..stream] : head);
+    }
+
+    /// <summary>Início do "N G obj" que termina em <paramref name="objKeyword"/>.</summary>
+    private static int ObjectStart(string text, int objKeyword)
+    {
+        var i = objKeyword;
+        var numbers = 0;
+        while (i > 0 && numbers < 2)
+        {
+            while (i > 0 && char.IsWhiteSpace(text[i - 1])) i--;
+            while (i > 0 && char.IsAsciiDigit(text[i - 1])) i--;
+            numbers++;
+        }
+
+        return i;
+    }
+
+    private static (int Entries, int Wrong, string? Malformed) ClassicEntries(string text, int position, int headerAt)
+    {
         var entries = 0;
         var wrong = 0;
         var reader = new StringReader(text[(position + 4)..Math.Min(text.Length, position + 4 + 20 * 2_000_000)]);
@@ -293,24 +365,148 @@ public sealed partial class PdfRepair
             var header = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (header.Length != 2 || !int.TryParse(header[0], CultureInfo.InvariantCulture, out var first) ||
                 !int.TryParse(header[1], CultureInfo.InvariantCulture, out var count))
-                return (false, entries, wrong, "A tabela de referências está malformada.");
+                return (entries, wrong, "A tabela de referências está malformada.");
             for (var i = 0; i < count; i++)
             {
                 var entry = reader.ReadLine();
-                if (entry is null) return (false, entries, wrong, "A tabela de referências termina antes do esperado.");
+                if (entry is null) return (entries, wrong, "A tabela de referências termina antes do esperado.");
                 var parts = entry.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length < 3) return (false, entries, wrong, "A tabela de referências está malformada.");
+                if (parts.Length < 3) return (entries, wrong, "A tabela de referências está malformada.");
                 if (parts[2] != "n") continue;
                 entries++;
-                if (!long.TryParse(parts[0], CultureInfo.InvariantCulture, out var offset)) { wrong++; continue; }
-                // Bytes antes do cabeçalho deslocam tudo; os dois jeitos são aceitos.
-                if (!Matches(text, offset, first + i) && !Matches(text, offset + headerAt, first + i)) wrong++;
+                if (!long.TryParse(parts[0], CultureInfo.InvariantCulture, out var offset) ||
+                    !Matches(text, offset, first + i) && !Matches(text, offset + headerAt, first + i)) wrong++;
             }
         }
 
-        if (wrong > 0)
-            return (false, entries, wrong, $"{wrong} de {entries} entrada(s) da tabela de referências apontam para o lugar errado.");
-        return (true, entries, 0, null);
+        return (entries, wrong, null);
+    }
+
+    /// <summary>Entradas de uma tabela compactada (fluxo /Type /XRef com /W, /Index e FlateDecode com preditor PNG).</summary>
+    private static (int Entries, int Wrong, string? Malformed) StreamEntries(string text, int position, int headerAt)
+    {
+        var streamAt = text.IndexOf("stream", position, StringComparison.Ordinal);
+        if (streamAt < 0) return (0, 0, "A tabela de referências compactada está incompleta.");
+        var dictionary = text[position..streamAt];
+        var dataStart = streamAt + 6;
+        if (dataStart < text.Length && text[dataStart] == '\r') dataStart++;
+        if (dataStart < text.Length && text[dataStart] == '\n') dataStart++;
+        var dataEnd = text.IndexOf("endstream", dataStart, StringComparison.Ordinal);
+        if (dataEnd < 0) return (0, 0, "A tabela de referências compactada está incompleta.");
+        var lengthMatch = Regex.Match(dictionary, @"/Length\s+(\d+)\b(?!\s+\d+\s+R)");
+        if (lengthMatch.Success && int.TryParse(lengthMatch.Groups[1].Value, CultureInfo.InvariantCulture, out var declared) && dataStart + declared <= text.Length)
+            dataEnd = dataStart + declared;
+
+        var widths = Regex.Match(dictionary, @"/W\s*\[\s*(\d+)\s+(\d+)\s+(\d+)\s*\]");
+        if (!widths.Success) return (0, 0, "A tabela de referências compactada está malformada.");
+        int w0 = int.Parse(widths.Groups[1].Value, CultureInfo.InvariantCulture), w1 = int.Parse(widths.Groups[2].Value, CultureInfo.InvariantCulture),
+            w2 = int.Parse(widths.Groups[3].Value, CultureInfo.InvariantCulture);
+        var rowSize = w0 + w1 + w2;
+        if (rowSize is <= 0 or > 32) return (0, 0, "A tabela de referências compactada está malformada.");
+
+        var sizeMatch = Regex.Match(dictionary, @"/Size\s+(\d+)");
+        var ranges = new List<(int First, int Count)>();
+        var index = Regex.Match(dictionary, @"/Index\s*\[([\d\s]*)\]");
+        if (index.Success)
+        {
+            var numbers = index.Groups[1].Value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Select(n => int.Parse(n, CultureInfo.InvariantCulture)).ToArray();
+            for (var i = 0; i + 1 < numbers.Length; i += 2) ranges.Add((numbers[i], numbers[i + 1]));
+        }
+        else if (sizeMatch.Success)
+        {
+            ranges.Add((0, int.Parse(sizeMatch.Groups[1].Value, CultureInfo.InvariantCulture)));
+        }
+
+        byte[] data;
+        try
+        {
+            var raw = Encoding.Latin1.GetBytes(text[dataStart..dataEnd]);
+            data = dictionary.Contains("/FlateDecode", StringComparison.Ordinal) ? Inflate(raw) : raw;
+        }
+        catch (InvalidDataException)
+        {
+            return (0, 0, "A tabela de referências compactada não pôde ser descompactada.");
+        }
+
+        var predictor = Regex.Match(dictionary, @"/Predictor\s+(\d+)");
+        if (predictor.Success && int.Parse(predictor.Groups[1].Value, CultureInfo.InvariantCulture) >= 10)
+        {
+            var columns = Regex.Match(dictionary, @"/Columns\s+(\d+)") is { Success: true } c ? int.Parse(c.Groups[1].Value, CultureInfo.InvariantCulture) : rowSize;
+            data = PngUp(data, columns);
+        }
+
+        var entries = 0;
+        var wrong = 0;
+        var row = 0;
+        foreach (var (first, count) in ranges)
+        {
+            for (var i = 0; i < count; i++, row++)
+            {
+                var at = row * rowSize;
+                if (at + rowSize > data.Length) return (entries, wrong, "A tabela de referências compactada termina antes do esperado.");
+                long Field(int offset, int width, long fallback)
+                {
+                    if (width == 0) return fallback;
+                    long value = 0;
+                    for (var k = 0; k < width; k++) value = value << 8 | data[at + offset + k];
+                    return value;
+                }
+
+                var type = Field(0, w0, 1);
+                if (type != 1) continue;
+                entries++;
+                var offsetValue = Field(w0, w1, 0);
+                if (!Matches(text, offsetValue, first + i) && !Matches(text, offsetValue + headerAt, first + i)) wrong++;
+            }
+        }
+
+        return (entries, wrong, null);
+    }
+
+    private static byte[] Inflate(byte[] raw)
+    {
+        using var input = new MemoryStream(raw);
+        using var zlib = new System.IO.Compression.ZLibStream(input, System.IO.Compression.CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        zlib.CopyTo(output);
+        return output.ToArray();
+    }
+
+    /// <summary>Desfaz o preditor PNG (filtros por linha: nenhum, sub, up, média, Paeth).</summary>
+    private static byte[] PngUp(byte[] data, int columns)
+    {
+        var stride = columns + 1;
+        var rows = data.Length / stride;
+        var result = new byte[rows * columns];
+        var previous = new byte[columns];
+        for (var r = 0; r < rows; r++)
+        {
+            var filter = data[r * stride];
+            for (var c = 0; c < columns; c++)
+            {
+                int x = data[r * stride + 1 + c], left = c > 0 ? result[r * columns + c - 1] : 0, up = previous[c], upLeft = c > 0 ? previous[c - 1] : 0;
+                var value = filter switch
+                {
+                    1 => x + left,
+                    2 => x + up,
+                    3 => x + (left + up) / 2,
+                    4 => x + Paeth(left, up, upLeft),
+                    _ => x,
+                };
+                result[r * columns + c] = (byte)value;
+            }
+
+            Array.Copy(result, r * columns, previous, 0, columns);
+        }
+
+        return result;
+    }
+
+    private static int Paeth(int a, int b, int c)
+    {
+        var p = a + b - c;
+        int pa = Math.Abs(p - a), pb = Math.Abs(p - b), pc = Math.Abs(p - c);
+        return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
     }
 
     private static bool Matches(string text, long at, int number)

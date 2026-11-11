@@ -34,8 +34,8 @@ internal sealed record InfoValues(
 /// </summary>
 internal static partial class DocumentInfoWriter
 {
-    [GeneratedRegex(@"trailer\s*<<(?<body>.*?)>>\s*startxref\s*(?<xref>\d+)\s*%%EOF\s*$", RegexOptions.Singleline)]
-    private static partial Regex TrailerPattern();
+    [GeneratedRegex(@"startxref\s+(?<xref>\d+)")]
+    private static partial Regex StartXrefPattern();
 
     [GeneratedRegex(@"/(?<key>Size|Root|Info)\s+(?<a>\d+)(?:\s+(?<b>\d+)\s+R)?")]
     private static partial Regex EntryPattern();
@@ -46,28 +46,56 @@ internal static partial class DocumentInfoWriter
     /// <summary>
     /// <paramref name="savedByPdfSharp"/> → <paramref name="output"/>: troca o dicionário de
     /// informações e regrava o arquivo com o PDFium (versão do cabeçalho opcional, ex.: 14 = 1.4).
+    /// O PDFium regrava primeiro o arquivo do PDFsharp (que pode usar tabela de referências
+    /// compactada) numa tabela clássica, onde a atualização incremental é acrescentada.
     /// </summary>
     public static void Apply(string savedByPdfSharp, InfoValues values, string output, int fileVersion = 0)
     {
-        var bytes = File.ReadAllBytes(savedByPdfSharp);
-        var tail = Encoding.Latin1.GetString(bytes, Math.Max(0, bytes.Length - 4096), Math.Min(bytes.Length, 4096));
-        var trailer = TrailerPattern().Match(tail);
-        if (!trailer.Success) throw new PdfEngineException("Estrutura final do arquivo inesperada (tabela de referências compactada).");
+        var classic = savedByPdfSharp + ".classic";
+        var patched = savedByPdfSharp + ".info";
+        try
+        {
+            PdfiumRenderer.SaveCopy(savedByPdfSharp, null, classic);
+            File.WriteAllBytes(patched, WithInfo(File.ReadAllBytes(classic), values));
+            PdfiumRenderer.SaveCopy(patched, null, output, fileVersion);
+        }
+        catch (PdfRenderException ex)
+        {
+            throw new PdfEngineException("O arquivo final não pôde ser gravado: " + ex.Message, ex);
+        }
+        finally
+        {
+            TryDelete(classic);
+            TryDelete(patched);
+        }
+    }
+
+    /// <summary>Acrescenta ao arquivo (tabela de referências clássica) uma revisão com o novo dicionário de informações.</summary>
+    private static byte[] WithInfo(byte[] bytes, InfoValues values)
+    {
+        var tailLength = Math.Min(bytes.Length, 8192);
+        var tail = Encoding.Latin1.GetString(bytes, bytes.Length - tailLength, tailLength);
+        var trailerAt = tail.LastIndexOf("trailer", StringComparison.Ordinal);
+        var starts = StartXrefPattern().Matches(tail);
+        if (trailerAt < 0 || starts.Count == 0 || starts[^1].Index < trailerAt)
+            throw new PdfEngineException("Estrutura final do arquivo inesperada (sem trailer).");
+        var body = tail[trailerAt..starts[^1].Index];
+        var previous = starts[^1].Groups["xref"].Value;
 
         int size = 0, rootNumber = 0, rootGeneration = 0, infoNumber = 0;
-        foreach (Match entry in EntryPattern().Matches(trailer.Groups["body"].Value))
+        foreach (Match entry in EntryPattern().Matches(body))
         {
             var a = int.Parse(entry.Groups["a"].Value, CultureInfo.InvariantCulture);
             switch (entry.Groups["key"].Value)
             {
                 case "Size": size = a; break;
-                case "Root": rootNumber = a; rootGeneration = int.Parse(entry.Groups["b"].Value, CultureInfo.InvariantCulture); break;
-                case "Info": infoNumber = a; break;
+                case "Root" when entry.Groups["b"].Success: rootNumber = a; rootGeneration = int.Parse(entry.Groups["b"].Value, CultureInfo.InvariantCulture); break;
+                case "Info" when entry.Groups["b"].Success: infoNumber = a; break;
             }
         }
 
         if (size == 0 || rootNumber == 0) throw new PdfEngineException("Não foi possível localizar a raiz do documento.");
-        var id = IdPattern().Match(trailer.Groups["body"].Value);
+        var id = IdPattern().Match(body);
         var number = infoNumber > 0 ? infoNumber : size;
         var newSize = infoNumber > 0 ? size : size + 1;
 
@@ -79,28 +107,9 @@ internal static partial class DocumentInfoWriter
         update.Append("xref\n0 1\n0000000000 65535 f\r\n");
         update.Append(CultureInfo.InvariantCulture, $"{number} 1\n{offset:D10} 00000 n\r\n");
         update.Append(CultureInfo.InvariantCulture,
-            $"trailer\n<< /Size {newSize} /Root {rootNumber} {rootGeneration} R /Info {number} 0 R /Prev {trailer.Groups["xref"].Value}{(id.Success ? " " + id.Value : string.Empty)} >>\n");
+            $"trailer\n<< /Size {newSize} /Root {rootNumber} {rootGeneration} R /Info {number} 0 R /Prev {previous}{(id.Success ? " " + id.Value : string.Empty)} >>\n");
         update.Append(CultureInfo.InvariantCulture, $"startxref\n{xref}\n%%EOF\n");
-
-        var patched = savedByPdfSharp + ".info";
-        try
-        {
-            using (var stream = new FileStream(patched, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                stream.Write(bytes);
-                stream.Write(Encoding.Latin1.GetBytes(update.ToString()));
-            }
-
-            PdfiumRenderer.SaveCopy(patched, null, output, fileVersion);
-        }
-        catch (PdfRenderException ex)
-        {
-            throw new PdfEngineException("O arquivo final não pôde ser gravado: " + ex.Message, ex);
-        }
-        finally
-        {
-            TryDelete(patched);
-        }
+        return [.. bytes, .. Encoding.Latin1.GetBytes(update.ToString())];
     }
 
     /// <summary>Lê o dicionário de informações de um arquivo pronto (para conferência).</summary>

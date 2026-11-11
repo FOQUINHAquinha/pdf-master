@@ -186,6 +186,16 @@ jobs:
             @{ name = 'tool-video';     wait = 15; args = @('--theme','dark','--tool','video-compress',"`"$s\Video.avi`"") },
             @{ name = 'tool-ocr';       args = @('--theme','dark','--tool','ocr',"`"$s\Escaneado.pdf`"") },
             @{ name = 'light-ocr';      args = @('--theme','light','--page','ocr') },
+            @{ name = 'run-pdfa';       wait = 40; args = @('--theme','light','--tool','pdfa','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"") },
+            @{ name = 'run-metadata';   args = @('--theme','light','--tool','metadata','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"") },
+            @{ name = 'run-repair';     args = @('--theme','light','--tool','repair','--output',"`"$out`"",'--run',"`"$s\Danificado.pdf`"") },
+            @{ name = 'run-compare';    wait = 15; args = @('--theme','light','--tool','compare','--output',"`"$out`"",'--run',"`"$s\Contrato v1.pdf`"","`"$s\Contrato v2.pdf`"") },
+            @{ name = 'tool-signature'; args = @('--theme','light','--tool','verify-signature',"`"$s\Assinado.pdf`"") },
+            @{ name = 'tool-security';  wait = 15; args = @('--theme','dark','--tool','security-info',"`"$a`"","`"$s\Assinado.pdf`"","`"$s\Protegido.pdf`"","`"$s\Danificado.pdf`"") },
+            @{ name = 'tool-protect';   args = @('--theme','light','--tool','protect',"`"$a`"") },
+            @{ name = 'tool-unlock';    args = @('--theme','light','--tool','unlock',"`"$s\Protegido.pdf`"") },
+            @{ name = 'tool-metadata';  args = @('--theme','dark','--tool','metadata',"`"$s\Contrato v2.pdf`"") },
+            @{ name = 'tool-pdfa';      args = @('--theme','light','--tool','pdfa',"`"$a`"") },
             @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
             @{ name = 'run-interleave'; args = @('--theme','light','--tool','interleave','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
             @{ name = 'run-split';      args = @('--theme','light','--tool','split','--output',"`"$out`"",'--run',"`"$a`"") },
@@ -220,7 +230,7 @@ jobs:
           # Resultado das execuções feitas pela interface (--run).
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
-          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf')
+          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf','Contrato v1_PDFA-2b.pdf','Contrato v1_metadados.pdf','Danificado_reparado.pdf')
           foreach ($name in $expected) {
             $file = Join-Path $out $name
             if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {

@@ -359,12 +359,24 @@ public sealed class PdfiumRenderer : IPdfRenderer
         {
             var count = Native.FPDF_GetPageCount(document);
             var broken = BrokenPages(document, count);
-            if (removeBrokenPages)
+            using var target = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
+            var source = document;
+            var created = IntPtr.Zero;
+            if (removeBrokenPages && broken.Count > 0)
             {
-                for (var i = broken.Count - 1; i >= 0; i--) Native.FPDFPage_Delete(document, broken[i]);
+                // Documento novo só com as páginas que carregam (as quebradas nem sempre podem ser excluídas da árvore original).
+                var good = Enumerable.Range(1, count).Where(p => !broken.Contains(p - 1)).ToList();
+                if (good.Count == 0) throw new PdfRenderException("Nenhuma página pôde ser recuperada.");
+                created = Native.FPDF_CreateNewDocument();
+                if (created == IntPtr.Zero || Native.FPDF_ImportPages(created, document, string.Join(",", good), 0) == 0)
+                {
+                    if (created != IntPtr.Zero) Native.FPDF_CloseDocument(created);
+                    throw new PdfRenderException("As páginas legíveis não puderam ser copiadas para o documento recuperado.");
+                }
+
+                source = created;
             }
 
-            using var target = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
             Native.WriteBlockCallback write = (_, data, size) =>
             {
                 try
@@ -380,9 +392,18 @@ public sealed class PdfiumRenderer : IPdfRenderer
                 }
             };
             var writer = new Native.FileWrite { Version = 1, WriteBlock = Marshal.GetFunctionPointerForDelegate(write) };
-            var ok = (fileVersion > 0
-                ? Native.FPDF_SaveWithVersion(document, ref writer, Native.NoIncremental, fileVersion)
-                : Native.FPDF_SaveAsCopy(document, ref writer, Native.NoIncremental)) != 0;
+            bool ok;
+            try
+            {
+                ok = (fileVersion > 0
+                    ? Native.FPDF_SaveWithVersion(source, ref writer, Native.NoIncremental, fileVersion)
+                    : Native.FPDF_SaveAsCopy(source, ref writer, Native.NoIncremental)) != 0;
+            }
+            finally
+            {
+                if (created != IntPtr.Zero) Native.FPDF_CloseDocument(created);
+            }
+
             GC.KeepAlive(write);
             if (!ok) throw new PdfRenderException("O PDFium não conseguiu regravar o documento.");
             return (count, (IReadOnlyList<int>)broken);
@@ -604,7 +625,10 @@ public sealed class PdfiumRenderer : IPdfRenderer
         public static extern int FPDF_SaveAsCopy(IntPtr document, ref FileWrite writer, uint flags);
 
         [DllImport(Library)]
-        public static extern void FPDFPage_Delete(IntPtr document, int pageIndex);
+        public static extern IntPtr FPDF_CreateNewDocument();
+
+        [DllImport(Library, CharSet = CharSet.Ansi, BestFitMapping = false)]
+        public static extern int FPDF_ImportPages(IntPtr destination, IntPtr source, [MarshalAs(UnmanagedType.LPStr)] string pageRange, int index);
 
         [DllImport(Library)]
         public static extern int FPDF_SaveWithVersion(IntPtr document, ref FileWrite writer, uint flags, int fileVersion);

@@ -464,17 +464,18 @@ public class RepairTests : IDisposable
         Assert.Equal(4, result.RecoveredPages);
         Assert.Empty(result.LostPages);
         var after = PdfRepair.Diagnose(result.File.Path);
+        Assert.Empty(after.Problems);
         Assert.Equal(DamageLevel.None, after.Level);
         Assert.Equal(expected, PdfTextExporter.ReadPages(result.File.Path));
     }
 
     [Fact]
-    public async Task A_file_cut_before_its_reference_table_is_recovered()
+    public async Task A_file_cut_at_the_end_is_recovered()
     {
         var source = Sample("cortado.pdf");
         var bytes = File.ReadAllBytes(source);
-        var xref = Encoding.Latin1.GetString(bytes).LastIndexOf("xref", StringComparison.Ordinal);
-        var damaged = _temp.File("cortado-danificado.pdf", bytes[..xref]);
+        var end = Encoding.Latin1.GetString(bytes).LastIndexOf("startxref", StringComparison.Ordinal);
+        var damaged = _temp.File("cortado-danificado.pdf", bytes[..end]);
 
         var report = PdfRepair.Diagnose(damaged);
         Assert.False(report.HasEndMarker);
@@ -482,7 +483,7 @@ public class RepairTests : IDisposable
 
         var result = await _repair.RepairAsync(damaged, null, Target);
         Assert.Equal(4, result.RecoveredPages);
-        Assert.True(PdfRepair.Diagnose(result.File.Path).Level == DamageLevel.None);
+        Assert.Empty(PdfRepair.Diagnose(result.File.Path).Problems);
         Assert.Equal(PdfTextExporter.ReadPages(source), PdfTextExporter.ReadPages(result.File.Path));
     }
 
@@ -717,5 +718,41 @@ public class PdfATests : IDisposable
         Assert.Equal(CheckStatus.Failed, validation.Checks.Single(c => c.Id == "fontes").Status);
         Assert.Equal(CheckStatus.Failed, validation.Checks.Single(c => c.Id == "cores").Status);
         Assert.StartsWith("NÃO conforme", validation.Verdict, StringComparison.Ordinal);
+    }
+}
+
+/// <summary>Documentos da Fase 6 para o teste de inicialização do programa (gerados só quando PDFMASTER_SMOKE_DIR existe).</summary>
+public class SecuritySmokeSamples
+{
+    [Fact]
+    public async Task Writes_phase_six_sample_documents()
+    {
+        var folder = Environment.GetEnvironmentVariable("PDFMASTER_SMOKE_DIR");
+        if (string.IsNullOrWhiteSpace(folder)) return;
+        Directory.CreateDirectory(folder);
+
+        SecuritySamples.Pages(Path.Combine(folder, "Contrato v1.pdf"),
+            ["CONTRATO DE COMPRA E VENDA", "O vendedor transfere o imovel ao comprador.", "Preco: R$ 300.000,00", "Pagamento em 10 parcelas."],
+            ["Clausula segunda: entrega das chaves em 30 dias.", "Clausula terceira: foro da comarca."]);
+        SecuritySamples.Pages(Path.Combine(folder, "Contrato v2.pdf"),
+            ["CONTRATO DE COMPRA E VENDA", "O vendedor transfere o imovel ao comprador.", "Preco: R$ 320.000,00", "Pagamento a vista."],
+            ["Anexo I: memorial descritivo do imovel."],
+            ["Clausula segunda: entrega das chaves em 45 dias.", "Clausula terceira: foro da comarca."]);
+
+        using (var certificate = SecuritySamples.SelfSigned("Signatário de Exemplo", DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1)))
+            File.WriteAllBytes(Path.Combine(folder, "Assinado.pdf"), SecuritySamples.Signed(certificate, DateTimeOffset.UtcNow));
+
+        var source = SecuritySamples.Pages(Path.Combine(folder, "fonte-danificado.pdf"), ["Documento que sera danificado"], ["Segunda pagina"]);
+        var bytes = File.ReadAllBytes(source);
+        var header = Array.IndexOf(bytes, (byte)'\n') + 1;
+        File.WriteAllBytes(Path.Combine(folder, "Danificado.pdf"), [.. bytes[..header], .. Encoding.ASCII.GetBytes("% bytes a mais deslocam a tabela\n"), .. bytes[header..]]);
+        File.Delete(source);
+
+        var temp = Path.Combine(folder, "protecao");
+        var produced = await new PdfProtection(new OutputPlanner(new OutputPathResolver())).ProtectAsync(
+            Path.Combine(folder, "Contrato v1.pdf"), new ProtectOptions(null, "dono1234", PdfPermissions.All with { Copy = false, Modify = false }),
+            new OutputTarget(temp, OverwritePolicy.Overwrite, SubfolderMode.None));
+        File.Move(produced.Path, Path.Combine(folder, "Protegido.pdf"), overwrite: true);
+        Directory.Delete(temp, recursive: true);
     }
 }
