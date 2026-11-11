@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 10/11/2026 · Versão 0.4.1
+Atualizado em 10/11/2026 · Versão 0.5.0
 
 ## Fases
 
@@ -10,9 +10,9 @@ Atualizado em 10/11/2026 · Versão 0.4.1
 | 2 — Visualizador e organização | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | **Concluída** |
 | 3 — Conversão e compressão | PDF ↔ imagens, Office → PDF, PDF → Word, compressão | **Concluída** |
 | 4 — OCR e digitalização | OCR, PDF pesquisável, extração de texto, digitalização, OCR em lote | **Concluída** (digitalização aguardando teste com scanner real) |
-| 5 — Editor | | Próxima |
+| 5 — Editor | Texto, imagens, anotações, assinaturas visuais, carimbos, marca d'água, cabeçalhos, rodapés, formulários | **Concluída** |
 | Extra — Compressão de vídeo | Qualquer formato → MP4 (H.264 + AAC) em 360p, com FFmpeg LGPL embutido | **Concluída** |
-| 6 — Segurança e ferramentas avançadas | | Pendente |
+| 6 — Segurança e ferramentas avançadas | | Próxima |
 | 7 — Automação | | Pendente |
 | 8 — Finalização | | Pendente |
 
@@ -26,6 +26,41 @@ Atualizado em 10/11/2026 · Versão 0.4.1
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Fase 5 — Editor
+
+| Funcionalidade | Estado | Testes |
+|---|---|---|
+| Área de edição: página central, miniaturas, zoom, navegação, barra de ferramentas, propriedades, histórico com desfazer/refazer | Concluído | Captura de tela; uso com o mouse: manual pendente |
+| Edições guardadas na posição exibida e convertidas na gravação, inclusive em páginas giradas (90°, 180°, 270°) e com CropBox | Concluído | Automático (pixels conferidos nas 4 rotações) |
+| **Inserir texto**: fonte (10 famílias do Windows, incorporadas), tamanho, cor, negrito, itálico, sublinhado, alinhamento, espaçamento entre linhas, posição livre | Concluído | Automático (texto extraído e posição conferida) |
+| **Editar texto existente** no próprio PDF, com a mesma fonte, quando a estrutura permite (fontes simples, trecho num comando de texto, caracteres presentes na fonte) | Concluído | Automático (Tj e TJ; posição mantida) |
+| Quando não dá para trocar no PDF: cobrir e escrever por cima, com aviso de que o layout muda e o texto antigo continua no arquivo | Concluído | Automático |
+| **Imagens**: inserir, mover, redimensionar, recortar, girar, transparência, excluir, substituir (PNG, JPG, BMP, TIFF, GIF) | Concluído | Automático (recorte, rotação e transparência conferidos nos pixels) |
+| **Anotações** com aparência própria: marca-texto, sublinhado, tachado (ajustados às linhas de texto), comentário, nota adesiva, caixa de texto, seta, linha, retângulo, círculo, desenho livre | Concluído | Automático (tipo, aparência e conteúdo de cada anotação) |
+| **Assinatura visual**: desenhar com o mouse, importar PNG/JPG, posicionar, redimensionar, modelos guardados localmente; aviso de que não é assinatura digital | Concluído | Biblioteca: automático; desenho com o mouse: manual pendente |
+| **Carimbos**: biblioteca local com CONFIDENCIAL, CÓPIA, ORIGINAL, DOCUMENTO ANALISADO, RECEBIDO e RASCUNHO; criar, editar, excluir, restaurar exemplos; data opcional | Concluído | Automático |
+| **Marca d'água** de texto ou imagem: transparência, rotação, 9 posições, tamanho, páginas escolhidas, por cima ou por baixo do conteúdo; vários PDFs | Concluído | Automático + execução pela interface |
+| **Cabeçalhos e rodapés**: esquerda/centro/direita, campos {arquivo}, {data}, {hora}, {pagina}, {total}, primeiro número, margens, páginas escolhidas; vários PDFs | Concluído | Automático + execução pela interface |
+| **Formulários**: criar campo de texto (uma ou várias linhas), caixa de seleção, botões de opção, lista suspensa, campo de data, botão (limpar ou imprimir) | Concluído | Automático (campos relidos com tipo, opções e valores) |
+| Preencher formulários existentes e gravar uma cópia preenchida (aparência refeita) | Concluído | Automático + execução pela interface |
+| Gravação sempre num novo arquivo (`nome_editado.pdf`); original nunca alterado | Concluído | Automático |
+| "Editar" no visualizador abre o documento no editor | Concluído | Manual pendente |
+
+### Limitações conhecidas da Fase 5
+
+| Item | Situação |
+|---|---|
+| Edição de texto existente | Só troca no próprio PDF quando a fonte é simples (WinAnsi/ASCII), o trecho está num único comando de texto e os caracteres novos existem na fonte. Fontes compostas (Unicode/CID), muito comuns em PDFs gerados pelo Word, caem na sobreposição — que **não apaga** o texto antigo (ele continua selecionável por baixo). Não use para ocultar dados: a tarja definitiva (redação) não existe ainda. |
+| Troca no próprio PDF | Se o texto novo for maior ou menor, o espaço até o trecho seguinte da linha muda; os ajustes de espaçamento (TJ) do trecho trocado são descartados. |
+| Imagens que já existiam no PDF | Não podem ser movidas, substituídas ou excluídas; as ferramentas de imagem valem para as imagens inseridas no editor. |
+| Anotações que já existiam no PDF | Aparecem na página, mas não podem ser editadas ou excluídas no editor. |
+| Prévia na tela | Os itens são desenhados pelo WPF sobre a página; o resultado gravado é feito pelo PDFsharp e pode diferir em detalhes (quebra de linha, espaçamento). |
+| Rotação de texto inserido | Não implementada (imagens e marca d'água giram). |
+| Campos de data e botão "Imprimir" | Dependem do leitor de PDF executar JavaScript (Adobe Reader e similares). O PDF Master não executa JavaScript. |
+| Formulários XFA | Ao preencher um formulário híbrido, a parte XFA é removida para que os valores apareçam em todos os leitores; formulários só XFA não são suportados. |
+| Fontes de anotações e campos | Caixas de texto e campos usam Helvetica (fonte padrão do PDF): caracteres fora do Latin-1 aparecem como "?" na aparência dos campos. |
+| PDFs protegidos por senha | Não abrem no editor (Fase 6). |
 
 ### Extra — Compressão de vídeo (pedido do autor, fora das 8 fases)
 
@@ -202,7 +237,7 @@ Atualizado em 10/11/2026 · Versão 0.4.1
 | Ícone próprio do aplicativo e logotipo definitivo | O ícone do `.exe` ainda é o padrão. |
 | Cache de miniaturas em disco | O cache atual é em memória; em disco será avaliado na Fase 8 (otimização). |
 
-### Fases 5 a 8
+### Fases 6 a 8
 
 As demais ferramentas estão **pendentes** e aparecem na interface como "Prevista para a Fase N",
 desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
@@ -275,4 +310,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.4.1 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.5.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

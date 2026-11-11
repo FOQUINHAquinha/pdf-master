@@ -1,5 +1,32 @@
 # Histórico de alterações
 
+## 0.5.0 — 11/11/2026 — Fase 5: Editor
+
+### Adicionado
+- **Editor de PDF**: página com camada de edição, miniaturas, zoom, 24 ferramentas, painel de
+  propriedades e histórico de alterações com desfazer/refazer. Grava sempre num novo arquivo.
+- **Texto**: inserir com as fontes do Windows (incorporadas ao PDF), tamanho, cor, negrito,
+  itálico, sublinhado, alinhamento e espaçamento; **editar texto existente** dentro do próprio PDF
+  quando a fonte permite, ou cobrir e reescrever com aviso claro quando não permite.
+- **Imagens**: inserir, mover, redimensionar, recortar, girar, transparência, substituir.
+- **Anotações** com aparência própria: marca-texto, sublinhado, tachado, comentário, nota adesiva,
+  caixa de texto, seta, linha, retângulo, círculo e desenho livre.
+- **Assinatura visual** (desenhada com o mouse ou importada) e **carimbos** (biblioteca local com
+  os seis exemplos da especificação), guardados neste computador.
+- **Marca d'água** e **cabeçalhos/rodapés** (com campos de página, total, data, hora e nome) em
+  vários PDFs de uma vez.
+- **Formulários**: criar campos (texto, várias linhas, caixa de seleção, opções, lista, data,
+  botão) e preencher formulários existentes.
+- Botão "Editar" no visualizador.
+- Testes com PDFs reais: texto extraído, pixels renderizados nas quatro rotações de página,
+  dicionários de anotações e campos relidos.
+
+### Alterado
+- O resolvedor de fontes do PDFsharp passou a ser único (PdfEngine), com 10 famílias do Windows.
+- A renderização passou a desenhar os campos de formulário (antes o visualizador mostrava os
+  campos vazios, porque o PDFium só os desenha com o ambiente de formulários ativado).
+- A compressão de vídeo continua disponível, como pedido.
+
 ## 0.4.1 — 10/11/2026 — Extra: compressão de vídeo e crédito do autor
 
 ### Adicionado

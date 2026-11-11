@@ -106,6 +106,8 @@ public sealed class PdfiumRenderer : IPdfRenderer
             Native.GetBlockCallback callback = reader.Read;
             IntPtr document;
             int pageCount;
+            var formInfo = IntPtr.Zero;
+            var form = IntPtr.Zero;
             lock (Gate)
             {
                 if (!_initialized)
@@ -128,6 +130,10 @@ public sealed class PdfiumRenderer : IPdfRenderer
                 }
 
                 pageCount = Native.FPDF_GetPageCount(document);
+
+                // Campos de formulário (widgets) só são desenhados pelo ambiente de formulários do PDFium.
+                formInfo = Native.CreateFormFillInfo();
+                form = Native.FPDFDOC_InitFormFillEnvironment(document, formInfo);
             }
 
             try
@@ -140,7 +146,7 @@ public sealed class PdfiumRenderer : IPdfRenderer
                     RenderedPage? rendered;
                     lock (Gate)
                     {
-                        rendered = RenderLocked(document, index, size);
+                        rendered = RenderLocked(document, form, index, size);
                     }
 
                     if (rendered is not null) onPage(index, rendered);
@@ -150,9 +156,11 @@ public sealed class PdfiumRenderer : IPdfRenderer
             {
                 lock (Gate)
                 {
+                    if (form != IntPtr.Zero) Native.FPDFDOC_ExitFormFillEnvironment(form);
                     Native.FPDF_CloseDocument(document);
                 }
 
+                if (formInfo != IntPtr.Zero) Marshal.FreeHGlobal(formInfo);
                 GC.KeepAlive(callback);
             }
         }
@@ -239,10 +247,11 @@ public sealed class PdfiumRenderer : IPdfRenderer
         }
     }
 
-    private static RenderedPage? RenderLocked(IntPtr document, int index, RenderSize size)
+    private static RenderedPage? RenderLocked(IntPtr document, IntPtr form, int index, RenderSize size)
     {
         var page = Native.FPDF_LoadPage(document, index);
         if (page == IntPtr.Zero) throw new PdfRenderException($"A página {index + 1} não pôde ser renderizada.");
+        if (form != IntPtr.Zero) Native.FORM_OnAfterLoadPage(page, form);
 
         try
         {
@@ -272,6 +281,7 @@ public sealed class PdfiumRenderer : IPdfRenderer
                 {
                     Native.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0xFFFFFFFF);
                     Native.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0, Native.RenderAnnotations);
+                    if (form != IntPtr.Zero) Native.FPDF_FFLDraw(form, bitmap, page, 0, 0, width, height, 0, Native.RenderAnnotations);
                 }
                 finally
                 {
@@ -289,6 +299,7 @@ public sealed class PdfiumRenderer : IPdfRenderer
         }
         finally
         {
+            if (form != IntPtr.Zero) Native.FORM_OnBeforeClosePage(page, form);
             Native.FPDF_ClosePage(page);
         }
     }
@@ -377,6 +388,35 @@ public sealed class PdfiumRenderer : IPdfRenderer
 
         [DllImport(Library)]
         public static extern void FPDFBitmap_Destroy(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFDOC_InitFormFillEnvironment(IntPtr document, IntPtr formInfo);
+
+        [DllImport(Library)]
+        public static extern void FPDFDOC_ExitFormFillEnvironment(IntPtr form);
+
+        [DllImport(Library)]
+        public static extern void FORM_OnAfterLoadPage(IntPtr page, IntPtr form);
+
+        [DllImport(Library)]
+        public static extern void FORM_OnBeforeClosePage(IntPtr page, IntPtr form);
+
+        [DllImport(Library)]
+        public static extern void FPDF_FFLDraw(IntPtr form, IntPtr bitmap, IntPtr page, int startX, int startY, int sizeX, int sizeY, int rotate, int flags);
+
+        /// <summary>
+        /// FPDF_FORMFILLINFO versão 1 sem nenhuma função de retorno: o suficiente para desenhar os
+        /// campos (o PDFium só chama as funções que estiverem preenchidas). Memória zerada e maior que
+        /// a estrutura; liberada depois de FPDFDOC_ExitFormFillEnvironment.
+        /// </summary>
+        public static IntPtr CreateFormFillInfo()
+        {
+            const int size = 1024;
+            var memory = Marshal.AllocHGlobal(size);
+            for (var offset = 0; offset < size; offset += 8) Marshal.WriteInt64(memory, offset, 0);
+            Marshal.WriteInt32(memory, 0, 1);
+            return memory;
+        }
 
         [DllImport(Library)]
         public static extern IntPtr FPDFText_LoadPage(IntPtr page);

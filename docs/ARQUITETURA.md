@@ -35,7 +35,7 @@ PDFMaster.OCR            OCR                                        (Fase 4)
 PDFMaster.Scanner        WIA (TWAIN não implementado)               (Fase 4)
 PDFMaster.Video          Compressão de vídeo com FFmpeg             (extra)
 PDFMaster.Video.Ffmpeg   Só recursos: FFmpeg LGPL comprimido        (extra)
-PDFMaster.Editor         Editor visual                              (Fase 5)
+PDFMaster.Editor         Editor: geometria, conteúdo, anotações, formulários (Fase 5)
 PDFMaster.Security       Senhas, permissões, assinaturas            (Fase 6)
 PDFMaster.Batch          Fila de tarefas e fluxos                   (Fase 7)
 PDFMaster.Tests          Testes unitários e de integração
@@ -103,6 +103,16 @@ Magick.NET nem SkiaSharp; o DOCX de texto corrido é gravado pelo próprio progr
 XML), então **não foi preciso** o Open XML SDK; a compressão é feita sobre o PDFsharp, sem
 Ghostscript nem qpdf.
 
+### Editor (Fase 5)
+
+Sem bibliotecas novas. O editor usa o PDFsharp (MIT) para desenhar texto com fontes incorporadas,
+imagens e formas em Form XObjects, que são colocados na página com uma matriz própria — assim as
+edições caem no lugar certo também em páginas giradas ou com CropBox. O objeto interno do XForm é
+obtido por reflexão (versão do PDFsharp fixada em 6.2.4; coberto por testes). Anotações e campos de
+formulário são escritos como dicionários do PDF com aparência (/AP) gerada pelo programa. A posição
+do texto existente é lida pelo PDFium (o mesmo que desenha a página). A troca de texto existente
+reescreve o conteúdo da página com o analisador de conteúdo do PDFsharp, só em casos seguros.
+
 ### Compressão de vídeo (extra, fora das 8 fases)
 
 | Finalidade | Escolha | Licença | Observação |
@@ -150,8 +160,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | 3 | Conversões e compressão | Entregue |
 | 4 | OCR e digitalização (scanner WIA aguardando teste com aparelho real) | Entregue |
 | extra | Compressão de vídeo para MP4 360p (FFmpeg) | Entregue (0.4.1) |
-| 5 | Editor | Próxima |
-| 6 | Segurança, PDF/A, comparação, reparo, assinaturas | |
+| 5 | Editor | Entregue |
+| 6 | Segurança, PDF/A, comparação, reparo, assinaturas | Próxima |
 | 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando | |
 | 8 | Testes gerais, otimização, instalador, documentação | |
 

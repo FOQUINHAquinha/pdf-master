@@ -5,7 +5,7 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 
 Criado por **Gustavo Farias Medeiros**.
 
-**Estado atual: Fases 1 a 4 concluídas.** Já funcionam:
+**Estado atual: Fases 1 a 5 concluídas.** Já funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
@@ -13,9 +13,11 @@ Criado por **Gustavo Farias Medeiros**.
 - compressão de PDF com perfis e comparação antes/depois;
 - OCR local (Tesseract) com PDF pesquisável, extração para TXT/Word e OCR em lote;
 - digitalização por scanner WIA ou a partir de imagens (o scanner ainda não foi testado com um aparelho real);
+- editor: inserir e editar texto, imagens, anotações, assinatura visual, carimbos, campos de
+  formulário; marca d'água, cabeçalhos e rodapés; preenchimento de formulários;
 - **extra:** compressão de vídeo — qualquer formato que o FFmpeg abra vira MP4 (H.264 + AAC) em 360p.
 
-Editor, segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
+Segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
 
 ### Modelos de idioma do OCR
 
@@ -87,6 +89,8 @@ PDFMaster.exe --tool pdf-to-image --output C:\Saida --run documento.pdf
 PDFMaster.exe --tool ocr --output C:\Saida --run escaneado.pdf
 PDFMaster.exe --tool scan --output C:\Saida --run pagina1.png pagina2.jpg
 PDFMaster.exe --tool video-compress --output C:\Saida --run ferias.mov
+PDFMaster.exe --tool watermark --output C:\Saida --run contrato.pdf
+PDFMaster.exe --tool edit-text contrato.pdf
 ```
 
 A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.

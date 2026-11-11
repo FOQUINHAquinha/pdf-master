@@ -132,7 +132,27 @@ public sealed class VideoCompressor
         }
         finally
         {
-            if (temp is not null) TryDelete(temp);
+            if (temp is not null) await DeleteAsync(temp).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Apaga o temporário. Logo depois de o FFmpeg ser encerrado, o Windows (ou o antivírus) ainda
+    /// pode segurar o arquivo por um instante; por isso há algumas novas tentativas.
+    /// </summary>
+    private static async Task DeleteAsync(string path)
+    {
+        for (var attempt = 0; attempt < 15; attempt++)
+        {
+            try
+            {
+                if (File.Exists(path)) File.Delete(path);
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                await Task.Delay(200).ConfigureAwait(false);
+            }
         }
     }
 
@@ -273,17 +293,5 @@ public sealed class VideoCompressor
         if (report.Contains("Protocol not on whitelist", StringComparison.Ordinal))
             return $"{name} tenta buscar conteúdo fora do computador (rede ou lista de reprodução) e não foi convertido.";
         return $"O FFmpeg não conseguiu converter {name}." + VideoProbe.Detail(report);
-    }
-
-    private static void TryDelete(string path)
-    {
-        try
-        {
-            if (File.Exists(path)) File.Delete(path);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // O temporário fica para trás; o erro original é o que importa.
-        }
     }
 }
