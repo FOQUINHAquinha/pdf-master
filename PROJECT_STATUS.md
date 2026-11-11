@@ -265,10 +265,13 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | Scanner — erros sem aparelho (nenhuma digitalização real) | 2 | Aprovado |
 | Vídeo — leitura do relatório do FFmpeg, tamanho de saída, argumentos | 19 | Aprovado |
 | Vídeo — compressão real (formatos, rotação, proporção, quadros, erros, cancelamento, FFmpeg escolhido) | 13 | Aprovado |
-| App — execução das ferramentas pela interface (`--run`) | 14 | Aprovado |
-| App — abertura das telas nos dois temas | 13 | Aprovado |
+| Editor — geometria de página e formatação do PDF | 6 | Aprovado |
+| Editor — texto, imagens, anotações, texto existente, marca d'água, cabeçalho/rodapé, formulários (pixels e conteúdo conferidos, 4 rotações) | 18 | Aprovado |
+| Editor — bibliotecas de carimbos e assinaturas, itens | 3 | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 17 | Aprovado |
+| App — abertura das telas nos dois temas | 18 | Aprovado |
 
-Total de testes automatizados: 231.
+Total de testes automatizados: 259.
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
