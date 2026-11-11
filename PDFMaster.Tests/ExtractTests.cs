@@ -157,8 +157,9 @@ public class GrayscaleTests : IDisposable
 
         using (var document = PdfReader.Open(pdf, PdfDocumentOpenMode.Modify))
         {
-            // CMYK (magenta puro) num stream separado, com espaço de cor por nome.
-            document.Pages[0].Contents.AppendContent().CreateStream("q 0 1 0 0 k 60 500 200 60 re f Q\nq /DeviceRGB cs 1 0.5 0 sc 300 500 100 60 re f Q\n"u8.ToArray());
+            // Página 2, sem desenho do PDFsharp: CMYK (magenta puro) e RGB por nome de espaço de cor.
+            var second = document.AddPage();
+            second.Contents.AppendContent().CreateStream("q 0 1 0 0 k 60 500 200 60 re f Q\nq /DeviceRGB cs 1 0.5 0 sc 300 500 100 60 re f Q\n"u8.ToArray());
             document.Save(pdf);
         }
 
@@ -193,9 +194,10 @@ public class GrayscaleTests : IDisposable
         Assert.True(blue.R == blue.G && blue.G == blue.B && Math.Abs(blue.R - 70) <= 3, $"azul virou {blue}");
         var green = Pixel(page, 350, 170);
         Assert.True(Math.Abs(green.R - green.G) <= 2 && Math.Abs(green.G - green.B) <= 2 && Math.Abs(green.R - 117) <= 4, $"verde virou {green}");
-        var magenta = Pixel(page, 160, 842 - 530);
+        var page2 = await new PDFMaster.Rendering.PdfiumRenderer().RenderPageAsync(result.File.Path, 1, PDFMaster.Rendering.RenderSize.Fit(595, 842));
+        var magenta = Pixel(page2, 160, 842 - 530);
         Assert.True(magenta.R == magenta.G && Math.Abs(magenta.R - 105) <= 3, $"magenta virou {magenta}");
-        var orange = Pixel(page, 350, 842 - 530);
+        var orange = Pixel(page2, 350, 842 - 530);
         Assert.True(orange.R == orange.G && orange.G == orange.B, $"laranja virou {orange}");
     }
 
@@ -219,6 +221,11 @@ public class GrayscaleTests : IDisposable
             domain.Elements.Add(new PdfInteger(0));
             domain.Elements.Add(new PdfInteger(1));
             function.Elements["/Domain"] = domain;
+            var c0 = new PdfArray(document);
+            c0.Elements.Add(new PdfReal(1));
+            c0.Elements.Add(new PdfReal(1));
+            c0.Elements.Add(new PdfReal(1));
+            function.Elements["/C0"] = c0;
             var c1 = new PdfArray(document);
             c1.Elements.Add(new PdfReal(1));
             c1.Elements.Add(new PdfReal(0));
