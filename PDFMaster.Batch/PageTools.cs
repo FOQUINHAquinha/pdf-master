@@ -192,40 +192,77 @@ public sealed class PageTools
             int columns = 2, rows = twoUp ? 1 : 2;
             const double margin = 18;
 
-            using var form = XPdfForm.FromFile(full);
-            using var outputDocument = new PdfDocument();
-            foreach (var side in slots)
+            // O PDFsharp já "endireita" as páginas com /Rotate ao importá-las como formulário, mas recorta
+            // o resultado pela caixa original. Por isso o desenho usa uma cópia temporária sem /Rotate e
+            // a rotação é aplicada aqui, do mesmo jeito que um leitor de PDF exibe a página.
+            var unrotated = full;
+            if (frames.Any(f => f.Rotation != 0))
             {
-                ct.ThrowIfCancellationRequested();
-                var page = outputDocument.AddPage();
-                page.Width = XUnit.FromPoint(sheetW);
-                page.Height = XUnit.FromPoint(sheetH);
-                using var gfx = XGraphics.FromPdfPage(page);
-                double cellW = (sheetW - 2 * margin) / columns, cellH = (sheetH - 2 * margin) / rows;
-                for (var k = 0; k < side.Length; k++)
-                {
-                    if (side[k] < 0) continue;
-                    var (w, h, rotation) = frames[side[k]];
-                    var turned = rotation is 90 or 270;
-                    double shownW = turned ? h : w, shownH = turned ? w : h;
-                    var scale = Math.Min((cellW - 8) / shownW, (cellH - 8) / shownH);
-                    double cx = margin + (k % columns + 0.5) * cellW, cy = margin + (k / columns + 0.5) * cellH;
-                    form.PageIndex = side[k];
-                    var state = gfx.Save();
-                    gfx.TranslateTransform(cx, cy);
-                    if (rotation != 0) gfx.RotateTransform(rotation);
-                    gfx.DrawImage(form, -w * scale / 2, -h * scale / 2, w * scale, h * scale);
-                    gfx.Restore(state);
-                }
+                unrotated = Path.Combine(Path.GetTempPath(), "PDFMaster", "nup-" + Guid.NewGuid().ToString("N") + ".pdf");
+                Directory.CreateDirectory(Path.GetDirectoryName(unrotated)!);
+                using var copy = Open(full, PdfDocumentOpenMode.Modify);
+                foreach (var page in copy.Pages) page.Elements.Remove("/Rotate");
+                copy.Save(unrotated);
             }
 
-            var sheets = outputDocument.PageCount;
-            var bytes = OutputPlanner.WriteAtomically(output, overwrite, outputDocument.Save);
-            var summary = booklet
-                ? $"Livreto com {sheets / 2} folha(s) ({sheets} lados) para imprimir frente e verso e dobrar ao meio."
-                : $"{count} página(s) em {sheets} folha(s), {perSheet} por folha.";
-            return new PageToolResult(new ProducedFile(output, bytes, sheets), summary, []);
+            try
+            {
+                return Compose(unrotated);
+            }
+            finally
+            {
+                if (!ReferenceEquals(unrotated, full)) TryDelete(unrotated);
+            }
+
+            PageToolResult Compose(string drawingSource)
+            {
+                using var form = XPdfForm.FromFile(drawingSource);
+                using var outputDocument = new PdfDocument();
+                foreach (var side in slots)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var page = outputDocument.AddPage();
+                    page.Width = XUnit.FromPoint(sheetW);
+                    page.Height = XUnit.FromPoint(sheetH);
+                    using var gfx = XGraphics.FromPdfPage(page);
+                    double cellW = (sheetW - 2 * margin) / columns, cellH = (sheetH - 2 * margin) / rows;
+                    for (var k = 0; k < side.Length; k++)
+                    {
+                        if (side[k] < 0) continue;
+                        var (w, h, rotation) = frames[side[k]];
+                        var turned = rotation is 90 or 270;
+                        double shownW = turned ? h : w, shownH = turned ? w : h;
+                        var scale = Math.Min((cellW - 8) / shownW, (cellH - 8) / shownH);
+                        double cx = margin + (k % columns + 0.5) * cellW, cy = margin + (k / columns + 0.5) * cellH;
+                        form.PageIndex = side[k];
+                        var state = gfx.Save();
+                        gfx.TranslateTransform(cx, cy);
+                        if (rotation != 0) gfx.RotateTransform(rotation);
+                        gfx.DrawImage(form, -w * scale / 2, -h * scale / 2, w * scale, h * scale);
+                        gfx.Restore(state);
+                    }
+                }
+
+                var sheets = outputDocument.PageCount;
+                var bytes = OutputPlanner.WriteAtomically(output, overwrite, outputDocument.Save);
+                var summary = booklet
+                    ? $"Livreto com {sheets / 2} folha(s) ({sheets} lados) para imprimir frente e verso e dobrar ao meio."
+                    : $"{count} página(s) em {sheets} folha(s), {perSheet} por folha.";
+                return new PageToolResult(new ProducedFile(output, bytes, sheets), summary, []);
+            }
         }, ct);
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Arquivo temporário: o sistema limpa depois.
+        }
     }
 
     private static PdfDocument Open(string path, PdfDocumentOpenMode mode)

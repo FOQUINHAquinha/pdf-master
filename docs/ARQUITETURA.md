@@ -38,7 +38,7 @@ PDFMaster.Video.Ffmpeg   Só recursos: FFmpeg LGPL comprimido        (extra)
 PDFMaster.Editor         Editor: geometria, conteúdo, anotações, formulários (Fase 5)
 PDFMaster.Security       Senhas, metadados, assinaturas, reparo, PDF/A (Fase 6)
 PDFMaster.Comparison     Comparação de PDFs e relatório             (Fase 6)
-PDFMaster.Batch          Fila de tarefas e fluxos                   (Fase 7)
+PDFMaster.Batch          Fluxos, fila, pastas monitoradas, Windows, CLI (Fase 7)
 PDFMaster.Tests          Testes unitários e de integração
 PDFMaster.Installer      Instalador                                 (Fase 8)
 ```
@@ -140,11 +140,29 @@ Nenhuma biblioteca nova foi necessária:
 | PDF/A | Código próprio sobre o PDFsharp; perfil sRGB do Windows; fontes do Windows como substitutas; validação interna + veraPDF externo opcional | MIT |
 | Comparação | Texto posicionado pelo PDFium (`FPDF_PageToDevice`), diferença de Myers, pixels renderizados pelo PDFium; imagens comparadas por SHA-256 | BSD |
 
+### Automação (Fase 7)
+
+Nenhuma biblioteca nova. `PDFMaster.Batch` reúne:
+
+| Peça | Como funciona |
+|---|---|
+| Fluxos (`BatchFlow`, `FlowStep`) | Registros imutáveis serializados em `fluxos.json` (System.Text.Json com discriminador `"etapa"`). Cada etapa chama o serviço já existente (OCR, compressão, editor, PDF/A, metadados, reparo, organizador) ou as ferramentas de página novas. O editor visual monta os campos de cada etapa a partir dos parâmetros do próprio registro. |
+| Execução (`FlowRunner`) | Cada etapa grava numa pasta temporária própria; só o resultado final é copiado para o destino (gravação atômica, nome livre reservado sob trava). O original nunca é tocado. Imagens, TXT, HTML e Office são convertidos para PDF antes da primeira etapa. |
+| Fila (`BatchQueue`) | Paralelismo limitado (configurável, padrão metade dos núcleos até 4), estados Aguardando/Processando/Pausado/Concluído/Falhou/Cancelado, pausa entre etapas, cancelamento por tarefa, repetição e reprocessamento só das falhas. |
+| Pastas monitoradas (`WatchService`) | `FileSystemWatcher` + varredura periódica (pega o que os eventos perdem), espera o arquivo parar de mudar e conseguir ser aberto, e registra o que já foi processado (caminho + tamanho + data) em `pastas-monitoradas-vistos.json`. |
+| Páginas (`PageTools`) | Inverter (lista de `PageInstruction`), páginas em branco (texto do PDFium + pixels escuros) e repetidas (hash da página renderizada + texto), recorte (`/CropBox`), n-up e livreto (`XPdfForm` do PDFsharp, com a rotação da página respeitada). |
+| Windows (`ShellIntegration`) | Só `HKCU` (sem administrador): verbos em `SystemFileAssociations\.pdf\shell`, ProgId `PDFMaster.Document`, `OpenWithProgids`, `Capabilities` e `RegisteredApplications`. O programa padrão é escolhido pelo usuário na tela do Windows. |
+| Menu de contexto com vários arquivos (`ContextCollector`) | O Explorador abre um processo por arquivo; o primeiro cria um pipe nomeado local (só do mesmo usuário), recebe os caminhos dos demais e abre uma janela só. |
+| Linha de comando (`CommandLine`) | Mesmo executável; com `--merge`, `--compress`, `--ocr`, `--split`, `--pdfa`, `--rotate`, `--to-image`, `--flow`, `--watch` roda sem janela, liga-se ao console de quem chamou e devolve códigos de saída. |
+
+O histórico (esquema SQLite versão 2) guarda também a ferramenta e os arquivos de entrada de cada
+operação, para o botão **Repetir**.
+
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
 |---|---|---|---|
-| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 7, junto com a extração de tabelas. |
+| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 8, junto com a extração de tabelas. |
 | OCR | Tesseract 5.2.0 (binding .NET de charlesw) + modelos `tessdata_fast` | Apache-2.0 | por/eng/spa incorporados na compilação (`tools/obter-modelos-ocr.ps1`) e extraídos para a pasta de dados; outros idiomas instalados pelo usuário. |
 | Scanner | WIA (COM do Windows) e NTwain | — / MIT | |
 | Instalador | Inno Setup | Licença própria, gratuita inclusive para uso comercial | |
@@ -172,8 +190,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | extra | Compressão de vídeo para MP4 360p (FFmpeg) | Entregue (0.4.1) |
 | 5 | Editor | Entregue |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | Entregue |
-| 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando; ferramentas extras do catálogo | Próxima |
-| 8 | Testes gerais, otimização, instalador, documentação | |
+| 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando; inverter, páginas em branco, recorte, livreto | Entregue |
+| 8 | Testes gerais, otimização, instalador, documentação; extras do catálogo (marcadores/links/anexos, PDF → Excel/PowerPoint, extrair conteúdo, preto e branco) | Próxima |
 
 ## 5. Dificuldades técnicas previstas
 
