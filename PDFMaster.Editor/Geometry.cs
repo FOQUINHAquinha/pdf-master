@@ -103,6 +103,20 @@ public sealed class PageFrame
     public Affine ViewToPdf { get; }
     public Affine PdfToView { get; }
 
+    /// <summary>Tamanho exibido (pontos) de cada página do arquivo.</summary>
+    public static IReadOnlyList<(double Width, double Height)> DisplaySizes(string path)
+    {
+        using var document = PdfSharp.Pdf.IO.PdfReader.Open(path, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+        var sizes = new List<(double, double)>();
+        for (var i = 0; i < document.PageCount; i++)
+        {
+            var frame = Of(document.Pages[i]);
+            sizes.Add((frame.Width, frame.Height));
+        }
+
+        return sizes;
+    }
+
     public static PageFrame Of(PdfPage page)
     {
         var box = Box(page, "/CropBox") ?? Box(page, "/MediaBox") ?? new[] { 0.0, 0, 612, 792 };

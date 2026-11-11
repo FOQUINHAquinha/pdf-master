@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using PdfSharp.Pdf;
+using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 
 namespace PDFMaster.Editor;
