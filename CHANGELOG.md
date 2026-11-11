@@ -1,5 +1,17 @@
 # Histórico de alterações
 
+## 0.7.1 — 11/11/2026 — Fase 8 (primeira parte)
+
+### Adicionado
+- Mesclar PDF aceita fotos e imagens junto com os PDFs (como no PDF24), com tamanho de página
+  escolhido para as imagens.
+- Instalador (Inno Setup) com escolha de pasta, atalhos, integração opcional com o Windows e
+  desinstalação completa; a versão portátil é testada no CI.
+- Extrair conteúdo: imagens, texto, anexos, fontes e metadados.
+- Converter para preto e branco mantendo o texto como texto, com conferência das páginas.
+- Limpeza de arquivos temporários (automática e em Configurações); comandos `--register-menu`,
+  `--register-openwith`, `--unregister-all` e `--clean-temp`.
+
 ## 0.7.0 — 11/11/2026 — Fase 7: Automação
 
 ### Adicionado

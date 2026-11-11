@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 11/11/2026 · Versão 0.7.0
+Atualizado em 11/11/2026 · Versão 0.7.1 (Fase 8 em andamento)
 
 ## Fases
 
@@ -14,7 +14,7 @@ Atualizado em 11/11/2026 · Versão 0.7.0
 | Extra — Compressão de vídeo | Qualquer formato → MP4 (H.264 + AAC) em 360p, com FFmpeg LGPL embutido | **Concluída** |
 | 6 — Segurança e ferramentas avançadas | Senhas, permissões, propriedades de segurança, metadados, PDF/A (conversão e validação), comparação, reparo, verificação de assinaturas | **Concluída** |
 | 7 — Automação | Lote, filas, fluxos, pasta monitorada, menu de contexto, linha de comando; inverter, páginas em branco, recorte, livreto | **Concluída** |
-| 8 — Finalização | Testes gerais, otimização, instalador, versão portátil, documentação; quatro ferramentas extras do catálogo | Próxima |
+| 8 — Finalização | Testes gerais, otimização, instalador, versão portátil, documentação; quatro ferramentas extras do catálogo | **Em andamento** (ver abaixo) |
 
 ## Como cada item foi verificado
 
@@ -26,6 +26,25 @@ Atualizado em 11/11/2026 · Versão 0.7.0
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Fase 8 — Finalização (em andamento)
+
+| Item | Estado | Testes |
+|---|---|---|
+| **Mesclar PDF aceita fotos** (JPG, PNG, BMP, TIFF de várias páginas, GIF) misturadas com PDFs, na ordem da lista; página da imagem do tamanho da foto, A4 ou Carta | Concluído | Execução pela interface no CI (2 PDFs + 2 fotos intercalados) + captura de tela |
+| **Instalador** (Inno Setup): escolha da pasta, atalho no menu Iniciar e opcional na área de trabalho, menu de contexto e "Abrir com" opcionais, desinstalação completa (programa, atalhos, registro, temporários) que pergunta antes de apagar configurações e histórico e nunca toca em documentos | Concluído | CI: instala em silêncio, confere arquivos, atalho, registro e o programa instalado; desinstala e confere a remoção; repete pedindo a remoção dos dados |
+| **Versão portátil** (pasta com `PDFMaster.exe` e `portable.flag`: dados na pasta `Data` ao lado) | Concluído | CI: executa a cópia portátil e confere que nada foi gravado em `%LOCALAPPDATA%` |
+| Limpeza de temporários (automática ao abrir, para sobras com mais de um dia; botão em Configurações › Privacidade; comando `--clean-temp`) | Concluído | Automático |
+| **Extrair conteúdo**: imagens (JPEG original; demais em PNG), texto por página, anexos (nomes saneados, nada fora da pasta), fontes incorporadas, metadados e XMP | Concluído | Automático (imagens conferidas por pixel, anexo com nome malicioso, fontes, metadados, pasta nova a cada extração) + execução pela interface |
+| **Converter para preto e branco** sem rasterizar (texto continua texto): cores RGB/CMYK do conteúdo, imagens RGB/CMYK/indexadas, degradês simples; conferência visual de cada página no fim | Concluído | Automático (cores e imagens conferidas por pixel; página com cor especial apontada) + execução pela interface |
+| Marcadores, links e anexos (editor) | Pendente | — |
+| PDF para Excel e PowerPoint | Pendente | — |
+| Padrões de conversão nas Configurações, cache de miniaturas em disco, revisão geral e documentação final | Pendente | — |
+
+Limitações conhecidas desta etapa: o instalador e o executável não são assinados digitalmente
+(o SmartScreen pode avisar); no preto e branco, cores especiais de gráfica (separação/DeviceN),
+degradês complexos, JPEG CMYK, JPEG 2000 e imagens embutidas no conteúdo ficam como estão e as
+páginas afetadas são informadas; na extração, transparências das imagens não vão para o PNG.
 
 ### Fase 7 — Automação
 

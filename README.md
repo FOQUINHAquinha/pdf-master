@@ -5,7 +5,7 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 
 Criado por **Gustavo Farias Medeiros**.
 
-**Estado atual: Fases 1 a 7 concluídas.** Já funcionam:
+**Estado atual: Fases 1 a 7 concluídas; Fase 8 em andamento.** Já funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
@@ -28,8 +28,18 @@ Criado por **Gustavo Farias Medeiros**.
   por folha e livreto;
 - **extra:** compressão de vídeo — qualquer formato que o FFmpeg abra vira MP4 (H.264 + AAC) em 360p.
 
-Quatro ferramentas extras do catálogo (marcadores/links/anexos, PDF → Excel/PowerPoint, extrair
-conteúdo e preto e branco) aparecem no programa como "Prevista para a Fase 8".
+- mesclar PDFs e fotos num só documento; extrair conteúdo (imagens, texto, anexos, fontes,
+  metadados); converter para preto e branco mantendo o texto;
+- instalador e versão portátil.
+
+Marcadores/links/anexos e PDF → Excel/PowerPoint aparecem no programa como "Prevista para a Fase 8".
+
+### Instalação
+
+Baixe `PDFMaster-Setup-<versão>.exe` (artefato `PDFMaster-instalador-win-x64` do GitHub Actions).
+Por padrão instala só para o seu usuário, sem pedir administrador. Para usar sem instalar, baixe o
+artefato `PDFMaster-portatil-win-x64`: os dados ficam na pasta `Data` ao lado do executável.
+Instalação silenciosa: `PDFMaster-Setup-<versão>.exe /VERYSILENT /TASKS="contextmenu,openwith"`.
 
 ### Modelos de idioma do OCR
 
