@@ -178,7 +178,9 @@ public sealed class PdfEditor
                 {
                     foreach (var overlay in overlays)
                     {
-                        var cover = overlay.Run.Rect.Inflate(1);
+                        // A caixa lida do PDF é justa aos desenhos das letras: cobre também acentos e partes que descem.
+                        var r0 = overlay.Run.Rect;
+                        var cover = new ViewRect(r0.X - 1, r0.Y - r0.Height * 0.3, r0.Width + 2, r0.Height * 1.6);
                         gfx.DrawRectangle(XBrushes.White, cover.X, cover.Y, cover.Width, cover.Height);
                         var style = overlay.Style;
                         var top = overlay.Run.Rect.Y + (overlay.Run.Rect.Height - Drawing.Font(style).GetHeight()) / 2;

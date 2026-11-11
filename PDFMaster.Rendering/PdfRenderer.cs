@@ -5,6 +5,12 @@ namespace PDFMaster.Rendering;
 /// <summary>Página renderizada: pixels BGRA de 32 bits, opacos, sobre fundo branco.</summary>
 public sealed record RenderedPage(int Width, int Height, byte[] Bgra);
 
+/// <summary>Caractere de uma página com a caixa no espaço de usuário do PDF (pontos, y para cima).</summary>
+public readonly record struct PdfChar(char Value, double Left, double Right, double Bottom, double Top, double FontSize)
+{
+    public bool HasBox => Right > Left && Top > Bottom;
+}
+
 /// <summary>Como dimensionar a renderização.</summary>
 public readonly record struct RenderSize
 {
@@ -152,6 +158,87 @@ public sealed class PdfiumRenderer : IPdfRenderer
         }
     }, ct);
 
+    /// <summary>
+    /// Caracteres de uma página com a caixa de cada um no espaço de usuário do PDF (sem a rotação de
+    /// exibição). Espaços e quebras de linha inferidos pelo PDFium vêm como caracteres de espaço.
+    /// </summary>
+    public static IReadOnlyList<PdfChar> ReadChars(string path, int pageIndex)
+    {
+        FileStream stream;
+        try
+        {
+            stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.RandomAccess);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            throw new PdfRenderException($"Não foi possível abrir \"{Path.GetFileName(path)}\": {ex.Message}", ex);
+        }
+
+        using (stream)
+        {
+            if (stream.Length == 0 || stream.Length > uint.MaxValue) return [];
+            var reader = new BlockReader(stream);
+            Native.GetBlockCallback callback = reader.Read;
+            lock (Gate)
+            {
+                if (!_initialized)
+                {
+                    Native.FPDF_InitLibrary();
+                    _initialized = true;
+                }
+
+                var access = new Native.FileAccess
+                {
+                    FileLength = (uint)stream.Length,
+                    GetBlock = Marshal.GetFunctionPointerForDelegate(callback),
+                    Param = IntPtr.Zero,
+                };
+                var document = Native.FPDF_LoadCustomDocument(ref access, null);
+                if (document == IntPtr.Zero)
+                    throw new PdfRenderException($"\"{Path.GetFileName(path)}\" não pôde ser lido. O arquivo pode estar protegido por senha ou danificado.");
+                try
+                {
+                    if (pageIndex < 0 || pageIndex >= Native.FPDF_GetPageCount(document)) return [];
+                    var page = Native.FPDF_LoadPage(document, pageIndex);
+                    if (page == IntPtr.Zero) return [];
+                    try
+                    {
+                        var text = Native.FPDFText_LoadPage(page);
+                        if (text == IntPtr.Zero) return [];
+                        try
+                        {
+                            var count = Native.FPDFText_CountChars(text);
+                            var chars = new List<PdfChar>(Math.Max(0, count));
+                            for (var i = 0; i < count; i++)
+                            {
+                                var code = Native.FPDFText_GetUnicode(text, i);
+                                var c = code is > 0 and < 0x10000 ? (char)code : ' ';
+                                if (Native.FPDFText_GetCharBox(text, i, out var left, out var right, out var bottom, out var top) == 0)
+                                    left = right = bottom = top = 0;
+                                chars.Add(new PdfChar(c, left, right, bottom, top, Native.FPDFText_GetFontSize(text, i)));
+                            }
+
+                            return chars;
+                        }
+                        finally
+                        {
+                            Native.FPDFText_ClosePage(text);
+                        }
+                    }
+                    finally
+                    {
+                        Native.FPDF_ClosePage(page);
+                    }
+                }
+                finally
+                {
+                    Native.FPDF_CloseDocument(document);
+                    GC.KeepAlive(callback);
+                }
+            }
+        }
+    }
+
     private static RenderedPage? RenderLocked(IntPtr document, int index, RenderSize size)
     {
         var page = Native.FPDF_LoadPage(document, index);
@@ -290,5 +377,23 @@ public sealed class PdfiumRenderer : IPdfRenderer
 
         [DllImport(Library)]
         public static extern void FPDFBitmap_Destroy(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFText_LoadPage(IntPtr page);
+
+        [DllImport(Library)]
+        public static extern void FPDFText_ClosePage(IntPtr textPage);
+
+        [DllImport(Library)]
+        public static extern int FPDFText_CountChars(IntPtr textPage);
+
+        [DllImport(Library)]
+        public static extern uint FPDFText_GetUnicode(IntPtr textPage, int index);
+
+        [DllImport(Library)]
+        public static extern double FPDFText_GetFontSize(IntPtr textPage, int index);
+
+        [DllImport(Library)]
+        public static extern int FPDFText_GetCharBox(IntPtr textPage, int index, out double left, out double right, out double bottom, out double top);
     }
 }

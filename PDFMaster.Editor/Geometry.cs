@@ -134,10 +134,11 @@ public sealed class PageFrame
 
     private static double[]? Box(PdfPage page, string key)
     {
-        var array = page.Elements.GetArray(key);
-        if (array is null || array.Elements.Count != 4) return null;
-        var values = new double[4];
-        for (var i = 0; i < 4; i++) values[i] = array.Elements.GetReal(i);
+        // O PDFsharp guarda as caixas como PdfArray (lidas do arquivo) ou como PdfRectangle (depois de
+        // acessadas pelas propriedades da página); GetRectangle aceita as duas formas.
+        if (!page.Elements.ContainsKey(key)) return null;
+        var rect = page.Elements.GetRectangle(key);
+        double[] values = [rect.X1, rect.Y1, rect.X2, rect.Y2];
         return values[2] - values[0] == 0 || values[3] - values[1] == 0 ? null : values;
     }
 
