@@ -108,13 +108,18 @@ public sealed partial class PdfRepair
             var present = new HashSet<int>();
             var skeleton = Skeleton(text);
             foreach (Match m in ObjectPattern().Matches(skeleton)) present.Add(int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
-            var referenced = new HashSet<int>();
-            foreach (Match m in ReferencePattern().Matches(skeleton)) referenced.Add(int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
-            referenced.ExceptWith(present);
-            referenced.Remove(0);
+            var referenced = new Dictionary<int, int>();
+            foreach (Match m in ReferencePattern().Matches(skeleton)) referenced.TryAdd(int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), m.Index);
+            var absent = referenced.Where(r => r.Key != 0 && !present.Contains(r.Key)).OrderBy(r => r.Key).ToList();
             inFile = present.Count;
-            missing = referenced.Count;
-            if (missing > 0) problems.Add($"{missing} objeto(s) referenciado(s) não existe(m) no arquivo (conteúdo perdido).");
+            missing = absent.Count;
+            if (missing > 0)
+            {
+                var first = absent[0];
+                var context = skeleton[Math.Max(0, first.Value - 30)..Math.Min(skeleton.Length, first.Value + 12)].ReplaceLineEndings(" ");
+                problems.Add($"{missing} objeto(s) referenciado(s) não existe(m) no arquivo (conteúdo perdido): " +
+                             string.Join(", ", absent.Take(8).Select(a => a.Key)) + $" (ex.: \"…{context}…\").");
+            }
         }
 
         ct.ThrowIfCancellationRequested();
@@ -130,7 +135,7 @@ public sealed partial class PdfRepair
         {
             strict = false;
             if (ex is not PdfReaderException || !ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase))
-                problems.Add("Um leitor rigoroso não consegue abrir o arquivo: " + ex.Message);
+                problems.Add($"Um leitor rigoroso não consegue abrir o arquivo ({ex.GetType().Name}): {ex.Message}");
         }
 
         ct.ThrowIfCancellationRequested();

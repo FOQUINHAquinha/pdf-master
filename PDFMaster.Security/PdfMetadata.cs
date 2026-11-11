@@ -80,7 +80,7 @@ public sealed class PdfMetadata
         return Run(source, "_metadados", target, reserved, ct, values, document =>
         {
             var declared = XmpBytes(document) is { } old ? Xmp.ReadPdfAId(old).Part : 0;
-            SetXmp(document, Xmp.Build(values, declared, Guid.NewGuid().ToString()));
+            return Xmp.Build(values, declared, Guid.NewGuid().ToString());
         });
     }
 
@@ -90,10 +90,12 @@ public sealed class PdfMetadata
         {
             document.Internals.Catalog.Elements.Remove("/Metadata");
             foreach (var page in document.Pages) page.Elements.Remove("/Metadata");
+            return null;
         });
 
+    /// <param name="change">Altera o documento e devolve o novo XMP (null = remover o XMP).</param>
     private Task<ProducedFile> Run(string source, string suffix, OutputTarget target, ISet<string>? reserved, CancellationToken ct,
-        InfoValues values, Action<PdfDocument> change)
+        InfoValues values, Func<PdfDocument, byte[]?> change)
     {
         var full = Path.GetFullPath(source);
         var (output, overwrite) = _planner.Resolve(Path.GetFileNameWithoutExtension(full) + suffix + ".pdf", target, OperationName, [full], reserved);
@@ -101,7 +103,7 @@ public sealed class PdfMetadata
         {
             using var document = PdfProtection.Open(full, null);
             DisableAutomaticXmp(document);
-            change(document);
+            var xmp = change(document);
             ct.ThrowIfCancellationRequested();
             var pages = document.PageCount;
             var bytes = OutputPlanner.WriteAtomically(output, overwrite, temp =>
@@ -111,7 +113,7 @@ public sealed class PdfMetadata
                 {
                     document.Save(stage);
                     ct.ThrowIfCancellationRequested();
-                    DocumentInfoWriter.Apply(stage, values, temp);
+                    DocumentInfoWriter.Apply(stage, values, temp, xmp: xmp, removeXmp: xmp is null);
                 }
                 finally
                 {
@@ -133,11 +135,28 @@ public sealed class PdfMetadata
         document.Internals.Catalog.Elements.SetReference("/Metadata", metadata);
     }
 
-    /// <summary>Desliga a geração automática de XMP do PDFsharp, quando a versão dele a tiver.</summary>
+    /// <summary>
+    /// Tenta desligar a geração automática de XMP do PDFsharp. Mesmo que não consiga, o bloco final é
+    /// sempre substituído na etapa de gravação (<see cref="DocumentInfoWriter.Apply"/>).
+    /// </summary>
     internal static void DisableAutomaticXmp(PdfDocument document)
     {
         var options = document.Options;
         var property = options.GetType().GetProperty("ManualXmpGeneration", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         if (property is { CanWrite: true } && property.PropertyType == typeof(bool)) property.SetValue(options, true);
+    }
+
+    /// <summary>
+    /// Impede o PDFsharp de acrescentar grupos de transparência às páginas na gravação (ele o faz
+    /// para páginas desenhadas com XGraphics, mesmo sem transparência de fato).
+    /// </summary>
+    internal static void DisableAutomaticTransparencyGroups(PdfDocument document)
+    {
+        document.Options.ColorMode = PdfColorMode.Undefined;
+        foreach (var page in document.Pages)
+        {
+            var property = page.GetType().GetProperty("TransparencyUsed", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property is { CanWrite: true } && property.PropertyType == typeof(bool)) property.SetValue(page, false);
+        }
     }
 }

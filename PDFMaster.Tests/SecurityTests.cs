@@ -464,7 +464,7 @@ public class RepairTests : IDisposable
         Assert.Equal(4, result.RecoveredPages);
         Assert.Empty(result.LostPages);
         var after = PdfRepair.Diagnose(result.File.Path);
-        Assert.Empty(after.Problems);
+        Assert.True(after.Problems.Count == 0, string.Join(" | ", after.Problems));
         Assert.Equal(DamageLevel.None, after.Level);
         Assert.Equal(expected, PdfTextExporter.ReadPages(result.File.Path));
     }
@@ -483,7 +483,8 @@ public class RepairTests : IDisposable
 
         var result = await _repair.RepairAsync(damaged, null, Target);
         Assert.Equal(4, result.RecoveredPages);
-        Assert.Empty(PdfRepair.Diagnose(result.File.Path).Problems);
+        var problems = PdfRepair.Diagnose(result.File.Path).Problems;
+        Assert.True(problems.Count == 0, string.Join(" | ", problems));
         Assert.Equal(PdfTextExporter.ReadPages(source), PdfTextExporter.ReadPages(result.File.Path));
     }
 

@@ -60,7 +60,9 @@ public sealed class PdfAConverter
                 $"PDF Master {version?.Major ?? 0}.{version?.Minor ?? 0}.{version?.Build ?? 0}",
                 InfoValues.TruncateLocal(original.Created) ?? now, now);
             SetOutputIntent(document, srgb, changes, blockers);
-            PdfMetadata.SetXmp(document, Xmp.Build(values, (int)level, Guid.NewGuid().ToString()));
+            var xmp = Xmp.Build(values, (int)level, Guid.NewGuid().ToString());
+            PdfMetadata.SetXmp(document, xmp);
+            if (level == PdfALevel.A1b) PdfMetadata.DisableAutomaticTransparencyGroups(document);
             document.Version = level == PdfALevel.A1b ? 14 : 17;
 
             // Verificação antes de salvar: o que sobrou não tem conserto automático.
@@ -84,7 +86,7 @@ public sealed class PdfAConverter
                 {
                     document.Save(stage);
                     ct.ThrowIfCancellationRequested();
-                    DocumentInfoWriter.Apply(stage, values, temp, level == PdfALevel.A1b ? 14 : 17);
+                    DocumentInfoWriter.Apply(stage, values, temp, level == PdfALevel.A1b ? 14 : 17, xmp);
                 }
                 finally
                 {

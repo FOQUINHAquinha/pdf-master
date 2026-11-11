@@ -45,18 +45,52 @@ internal static partial class DocumentInfoWriter
 
     /// <summary>
     /// <paramref name="savedByPdfSharp"/> → <paramref name="output"/>: troca o dicionário de
-    /// informações e regrava o arquivo com o PDFium (versão do cabeçalho opcional, ex.: 14 = 1.4).
-    /// O PDFium regrava primeiro o arquivo do PDFsharp (que pode usar tabela de referências
-    /// compactada) numa tabela clássica, onde a atualização incremental é acrescentada.
+    /// informações (e o bloco XMP, quando pedido) e regrava o arquivo com o PDFium (versão do cabeçalho
+    /// opcional, ex.: 14 = 1.4). O PDFsharp grava a tabela de referências compactada e gera o próprio
+    /// XMP; por isso o PDFium regrava primeiro numa tabela clássica, onde a atualização incremental é
+    /// acrescentada, e depois numa única revisão final.
     /// </summary>
-    public static void Apply(string savedByPdfSharp, InfoValues values, string output, int fileVersion = 0)
+    /// <param name="xmp">Novo bloco XMP; null mantém o que houver.</param>
+    /// <param name="removeXmp">Retira o bloco XMP do catálogo.</param>
+    public static void Apply(string savedByPdfSharp, InfoValues values, string output, int fileVersion = 0, byte[]? xmp = null, bool removeXmp = false)
     {
         var classic = savedByPdfSharp + ".classic";
         var patched = savedByPdfSharp + ".info";
         try
         {
             PdfiumRenderer.SaveCopy(savedByPdfSharp, null, classic);
-            File.WriteAllBytes(patched, WithInfo(File.ReadAllBytes(classic), values));
+            var bytes = File.ReadAllBytes(classic);
+            var trailer = ReadTrailer(bytes);
+            var next = trailer.Size;
+            var objects = new List<(int Number, int Generation, byte[] Body)>();
+            var info = trailer.InfoNumber > 0 ? (trailer.InfoNumber, trailer.InfoGeneration) : (next++, 0);
+            objects.Add((info.Item1, info.Item2, Encoding.Latin1.GetBytes(Dictionary(values))));
+
+            if (xmp is not null || removeXmp)
+            {
+                var catalog = ObjectText(bytes, trailer.RootNumber, trailer.RootGeneration)
+                              ?? throw new PdfEngineException("O catálogo do documento não foi encontrado.");
+                var current = MetadataReference().Match(catalog);
+                if (removeXmp)
+                {
+                    if (current.Success) objects.Add((trailer.RootNumber, trailer.RootGeneration, Encoding.Latin1.GetBytes(catalog.Remove(current.Index, current.Length))));
+                }
+                else if (current.Success)
+                {
+                    objects.Add((int.Parse(current.Groups[1].Value, CultureInfo.InvariantCulture), int.Parse(current.Groups[2].Value, CultureInfo.InvariantCulture), MetadataStream(xmp!)));
+                }
+                else
+                {
+                    var number = next++;
+                    objects.Add((number, 0, MetadataStream(xmp!)));
+                    var open = catalog.IndexOf("<<", StringComparison.Ordinal);
+                    if (open < 0) throw new PdfEngineException("O catálogo do documento está malformado.");
+                    objects.Add((trailer.RootNumber, trailer.RootGeneration,
+                        Encoding.Latin1.GetBytes(catalog.Insert(open + 2, string.Create(CultureInfo.InvariantCulture, $" /Metadata {number} 0 R ")))));
+                }
+            }
+
+            File.WriteAllBytes(patched, Append(bytes, trailer, objects, info.Item1, info.Item2));
             PdfiumRenderer.SaveCopy(patched, null, output, fileVersion);
         }
         catch (PdfRenderException ex)
@@ -70,8 +104,17 @@ internal static partial class DocumentInfoWriter
         }
     }
 
-    /// <summary>Acrescenta ao arquivo (tabela de referências clássica) uma revisão com o novo dicionário de informações.</summary>
-    private static byte[] WithInfo(byte[] bytes, InfoValues values)
+    [GeneratedRegex(@"/Metadata\s+(\d+)\s+(\d+)\s+R")]
+    private static partial Regex MetadataReference();
+
+    private static byte[] MetadataStream(byte[] xmp) =>
+        [.. Encoding.ASCII.GetBytes(string.Create(CultureInfo.InvariantCulture, $"<< /Type /Metadata /Subtype /XML /Length {xmp.Length} >>\nstream\n")),
+         .. xmp, .. "\nendstream"u8.ToArray()];
+
+    /// <summary>Dados do último trailer de um arquivo com tabela de referências clássica.</summary>
+    internal sealed record TrailerInfo(int Size, int RootNumber, int RootGeneration, int InfoNumber, int InfoGeneration, string? Id, string Prev);
+
+    internal static TrailerInfo ReadTrailer(byte[] bytes)
     {
         var tailLength = Math.Min(bytes.Length, 8192);
         var tail = Encoding.Latin1.GetString(bytes, bytes.Length - tailLength, tailLength);
@@ -80,36 +123,61 @@ internal static partial class DocumentInfoWriter
         if (trailerAt < 0 || starts.Count == 0 || starts[^1].Index < trailerAt)
             throw new PdfEngineException("Estrutura final do arquivo inesperada (sem trailer).");
         var body = tail[trailerAt..starts[^1].Index];
-        var previous = starts[^1].Groups["xref"].Value;
 
-        int size = 0, rootNumber = 0, rootGeneration = 0, infoNumber = 0;
+        int size = 0, rootNumber = 0, rootGeneration = 0, infoNumber = 0, infoGeneration = 0;
         foreach (Match entry in EntryPattern().Matches(body))
         {
             var a = int.Parse(entry.Groups["a"].Value, CultureInfo.InvariantCulture);
+            var b = entry.Groups["b"].Success ? int.Parse(entry.Groups["b"].Value, CultureInfo.InvariantCulture) : 0;
             switch (entry.Groups["key"].Value)
             {
                 case "Size": size = a; break;
-                case "Root" when entry.Groups["b"].Success: rootNumber = a; rootGeneration = int.Parse(entry.Groups["b"].Value, CultureInfo.InvariantCulture); break;
-                case "Info" when entry.Groups["b"].Success: infoNumber = a; break;
+                case "Root" when entry.Groups["b"].Success: (rootNumber, rootGeneration) = (a, b); break;
+                case "Info" when entry.Groups["b"].Success: (infoNumber, infoGeneration) = (a, b); break;
             }
         }
 
         if (size == 0 || rootNumber == 0) throw new PdfEngineException("Não foi possível localizar a raiz do documento.");
         var id = IdPattern().Match(body);
-        var number = infoNumber > 0 ? infoNumber : size;
-        var newSize = infoNumber > 0 ? size : size + 1;
+        return new TrailerInfo(size, rootNumber, rootGeneration, infoNumber, infoGeneration, id.Success ? id.Value : null, starts[^1].Groups["xref"].Value);
+    }
 
-        var update = new StringBuilder();
-        update.Append('\n');
-        var offset = bytes.LongLength + 1;
-        update.Append(CultureInfo.InvariantCulture, $"{number} 0 obj\n{Dictionary(values)}\nendobj\n");
-        var xref = bytes.LongLength + Encoding.Latin1.GetByteCount(update.ToString());
-        update.Append("xref\n0 1\n0000000000 65535 f\r\n");
-        update.Append(CultureInfo.InvariantCulture, $"{number} 1\n{offset:D10} 00000 n\r\n");
-        update.Append(CultureInfo.InvariantCulture,
-            $"trailer\n<< /Size {newSize} /Root {rootNumber} {rootGeneration} R /Info {number} 0 R /Prev {previous}{(id.Success ? " " + id.Value : string.Empty)} >>\n");
-        update.Append(CultureInfo.InvariantCulture, $"startxref\n{xref}\n%%EOF\n");
-        return [.. bytes, .. Encoding.Latin1.GetBytes(update.ToString())];
+    /// <summary>Texto de um objeto sem fluxo (entre "obj" e "endobj"), localizado pela tabela clássica do arquivo.</summary>
+    internal static string? ObjectText(byte[] bytes, int number, int generation)
+    {
+        var text = Encoding.Latin1.GetString(bytes);
+        var header = new Regex($@"(?<![\d]){number}\s+{generation}\s+obj\b");
+        var matches = header.Matches(text);
+        if (matches.Count == 0) return null;
+        var start = matches[^1].Index + matches[^1].Length;
+        var end = text.IndexOf("endobj", start, StringComparison.Ordinal);
+        return end < 0 ? null : text[start..end].Trim();
+    }
+
+    /// <summary>Acrescenta uma revisão (atualização incremental) com os objetos dados.</summary>
+    internal static byte[] Append(byte[] bytes, TrailerInfo trailer, IReadOnlyList<(int Number, int Generation, byte[] Body)> objects, int infoNumber, int infoGeneration)
+    {
+        using var update = new MemoryStream();
+        void Write(string s) => update.Write(Encoding.Latin1.GetBytes(s));
+        Write("\n");
+        var offsets = new List<(int Number, int Generation, long Offset)>();
+        foreach (var (number, generation, body) in objects)
+        {
+            offsets.Add((number, generation, bytes.LongLength + update.Position));
+            Write(string.Create(CultureInfo.InvariantCulture, $"{number} {generation} obj\n"));
+            update.Write(body);
+            Write("\nendobj\n");
+        }
+
+        var xref = bytes.LongLength + update.Position;
+        Write("xref\n0 1\n0000000000 65535 f\r\n");
+        foreach (var (number, generation, offset) in offsets.OrderBy(o => o.Number))
+            Write(string.Create(CultureInfo.InvariantCulture, $"{number} 1\n{offset:D10} {generation:D5} n\r\n"));
+        var size = Math.Max(trailer.Size, objects.Max(o => o.Number) + 1);
+        Write(string.Create(CultureInfo.InvariantCulture,
+            $"trailer\n<< /Size {size} /Root {trailer.RootNumber} {trailer.RootGeneration} R /Info {infoNumber} {infoGeneration} R /Prev {trailer.Prev}{(trailer.Id is { } id ? " " + id : string.Empty)} >>\n"));
+        Write(string.Create(CultureInfo.InvariantCulture, $"startxref\n{xref}\n%%EOF\n"));
+        return [.. bytes, .. update.ToArray()];
     }
 
     /// <summary>Lê o dicionário de informações de um arquivo pronto (para conferência).</summary>
