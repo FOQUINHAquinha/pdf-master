@@ -55,7 +55,7 @@ Atualizado em 10/11/2026 · Versão 0.4.1
 | HDR (10 bits) | Convertido para 8 bits sem mapeamento de tons: as cores podem ficar mais apagadas. |
 | Legendas, capítulos, faixas extras de áudio | Não são levadas: só a primeira faixa de vídeo e a primeira de áudio. |
 | Desempenho | Um vídeo por vez, sem aceleração por placa de vídeo. O FFmpeg roda com prioridade baixa para não travar o computador. |
-| Versão do FFmpeg | O CI baixa a compilação mais recente do ramo 9.0 de BtbN; a versão exata e o SHA-256 ficam em `ORIGEM.txt`, ao lado do executável extraído. |
+| Versão do FFmpeg | O CI baixa a compilação mais recente do ramo 9.0 de BtbN (na última execução: n9.0.2, com o codificador OpenH264); a versão exata e o SHA-256 ficam em `ORIGEM.txt`, ao lado do executável extraído. |
 
 ### Fase 4 — OCR e digitalização
 
@@ -228,12 +228,12 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | OCR — imagem, geometria e camada de texto | 9 | Aprovado |
 | OCR — reconhecimento real (PDF pesquisável, orientação, inclinação, TXT/DOCX, idiomas, erros) | 9 | Aprovado |
 | Scanner — erros sem aparelho (nenhuma digitalização real) | 2 | Aprovado |
-| Vídeo — leitura do relatório do FFmpeg, tamanho de saída, argumentos | 18 | A conferir no CI |
-| Vídeo — compressão real (formatos, rotação, proporção, quadros, erros, cancelamento, FFmpeg escolhido) | 12 | A conferir no CI |
-| App — execução das ferramentas pela interface (`--run`) | 13 | Aprovado |
+| Vídeo — leitura do relatório do FFmpeg, tamanho de saída, argumentos | 19 | Aprovado |
+| Vídeo — compressão real (formatos, rotação, proporção, quadros, erros, cancelamento, FFmpeg escolhido) | 13 | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 14 | Aprovado |
 | App — abertura das telas nos dois temas | 13 | Aprovado |
 
-Total de testes automatizados: 196.
+Total de testes automatizados: 231.
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 

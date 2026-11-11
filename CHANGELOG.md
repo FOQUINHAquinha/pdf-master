@@ -18,7 +18,7 @@
   compressão pelo executável publicado.
 
 ### Alterado
-- O executável ficou cerca de 50 MB maior por causa do FFmpeg embutido.
+- O executável passou de cerca de 82 MB para 139 MB por causa do FFmpeg embutido.
 
 ## 0.4.0 — 10/11/2026 — Fase 4: OCR e digitalização
 

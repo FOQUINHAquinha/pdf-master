@@ -28,7 +28,7 @@ idiomas instalados. O executável gerado pelo GitHub Actions já vem com os trê
 
 A aba "Comprimir vídeo" usa o [FFmpeg](https://ffmpeg.org) na variante **LGPL** compilada por
 [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), executado como programa separado.
-O executável gerado pelo GitHub Actions já o traz embutido (por isso ficou cerca de 50 MB maior);
+O executável gerado pelo GitHub Actions já o traz embutido (por isso passou de cerca de 82 MB para 139 MB);
 na primeira utilização ele é extraído para a pasta de dados (`video-runtime`), com a licença.
 Para compilar no seu computador com o FFmpeg embutido, rode `tools/obter-ffmpeg.ps1`. Sem ele, a
 aba procura um FFmpeg instalado (PATH, winget, Chocolatey, Scoop) ou deixa você indicar o
