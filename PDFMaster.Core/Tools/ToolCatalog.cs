@@ -51,6 +51,8 @@ public sealed class ToolCatalog
         "protect", "unlock", "security-info", "metadata", "verify-signature", "repair", "pdfa", "compare",
         // Fase 7
         "batch", "watch-folder", "reverse", "blank-duplicates", "crop", "booklet",
+        // Fase 8
+        "extract-content",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -150,7 +152,7 @@ public sealed class ToolCatalog
             "txt para pdf", "html para pdf", "página web para pdf");
         T("pdfa", "Converter e validar PDF/A", "Converte para PDF/A-1b, 2b ou 3b e gera relatório de validação.", ToolCategory.Convert, 6, Shield,
             "pdf a", "arquivamento", "longo prazo", "pdfa");
-        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, tabelas, anexos, fontes e metadados.", ToolCategory.Convert, 8, Folder,
+        T("extract-content", "Extrair conteúdo", "Extrai imagens, texto, anexos, fontes e metadados.", ToolCategory.Convert, 8, Folder,
             "extrair imagens", "extrair tabelas", "extrair anexos", "listar fontes");
 
         // ----- Comprimir -----

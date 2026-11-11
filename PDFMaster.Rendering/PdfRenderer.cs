@@ -573,6 +573,92 @@ public sealed class PdfiumRenderer : IPdfRenderer
         }
     }
 
+    /// <summary>
+    /// Imagem incorporada numa página. <see cref="Jpeg"/> traz os bytes originais quando a imagem está
+    /// guardada como JPEG; caso contrário <see cref="Pixels"/> traz a imagem decodificada pelo PDFium
+    /// (formato <see cref="Format"/>: 1 cinza, 2 BGR, 3 BGRx, 4 BGRA), sem a máscara de transparência.
+    /// </summary>
+    public sealed record EmbeddedImage(int PageIndex, int Width, int Height, byte[]? Jpeg, byte[]? Pixels, int Stride, int Format);
+
+    /// <summary>Percorre as imagens incorporadas de todas as páginas (inclusive dentro de formulários XObject).</summary>
+    public static int ExtractImages(string path, string? password, Action<EmbeddedImage> found, CancellationToken ct = default)
+    {
+        var (result, error) = WithDocument(path, password, document =>
+        {
+            var total = 0;
+            var count = Native.FPDF_GetPageCount(document);
+            for (var p = 0; p < count; p++)
+            {
+                ct.ThrowIfCancellationRequested();
+                var page = Native.FPDF_LoadPage(document, p);
+                if (page == IntPtr.Zero) continue;
+                try
+                {
+                    var objects = Native.FPDFPage_CountObjects(page);
+                    for (var i = 0; i < objects; i++) total += Visit(Native.FPDFPage_GetObject(page, i), p, found, 0);
+                }
+                finally
+                {
+                    Native.FPDF_ClosePage(page);
+                }
+            }
+
+            return (int?)total;
+        });
+        if (result is null) throw new PdfRenderException(error == 4 ? "O documento está protegido por senha." : "O PDF não pôde ser lido.");
+        return result.Value;
+    }
+
+    private static int Visit(IntPtr obj, int page, Action<EmbeddedImage> found, int depth)
+    {
+        if (obj == IntPtr.Zero || depth > 16) return 0;
+        var type = Native.FPDFPageObj_GetType(obj);
+        if (type == 5)
+        {
+            var sum = 0;
+            var children = Native.FPDFFormObj_CountObjects(obj);
+            for (var i = 0; i < children; i++) sum += Visit(Native.FPDFFormObj_GetObject(obj, (uint)i), page, found, depth + 1);
+            return sum;
+        }
+
+        if (type != 3) return 0;
+        if (Native.FPDFImageObj_GetImageFilterCount(obj) == 1)
+        {
+            var length = Native.FPDFImageObj_GetImageFilter(obj, 0, null, 0);
+            var name = new byte[length];
+            Native.FPDFImageObj_GetImageFilter(obj, 0, name, length);
+            if (System.Text.Encoding.ASCII.GetString(name).TrimEnd('\0') == "DCTDecode")
+            {
+                var size = Native.FPDFImageObj_GetImageDataRaw(obj, null, 0);
+                if (size > 0)
+                {
+                    var data = new byte[size];
+                    Native.FPDFImageObj_GetImageDataRaw(obj, data, size);
+                    found(new EmbeddedImage(page, 0, 0, data, null, 0, 0));
+                    return 1;
+                }
+            }
+        }
+
+        var bitmap = Native.FPDFImageObj_GetBitmap(obj);
+        if (bitmap == IntPtr.Zero) return 0;
+        try
+        {
+            int width = Native.FPDFBitmap_GetWidth(bitmap), height = Native.FPDFBitmap_GetHeight(bitmap), stride = Native.FPDFBitmap_GetStride(bitmap);
+            var format = Native.FPDFBitmap_GetFormat(bitmap);
+            var buffer = Native.FPDFBitmap_GetBuffer(bitmap);
+            if (width <= 0 || height <= 0 || buffer == IntPtr.Zero || format is < 1 or > 4) return 0;
+            var pixels = new byte[stride * height];
+            Marshal.Copy(buffer, pixels, 0, pixels.Length);
+            found(new EmbeddedImage(page, width, height, null, pixels, stride, format));
+            return 1;
+        }
+        finally
+        {
+            Native.FPDFBitmap_Destroy(bitmap);
+        }
+    }
+
     private static class Native
     {
         private const string Library = "pdfium";
@@ -593,6 +679,49 @@ public sealed class PdfiumRenderer : IPdfRenderer
 
         [DllImport(Library)]
         public static extern void FPDF_InitLibrary();
+
+        [DllImport(Library)]
+        public static extern int FPDFPage_CountObjects(IntPtr page);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFPage_GetObject(IntPtr page, int index);
+
+        [DllImport(Library)]
+        public static extern int FPDFPageObj_GetType(IntPtr obj);
+
+        [DllImport(Library)]
+        public static extern int FPDFFormObj_CountObjects(IntPtr form);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFFormObj_GetObject(IntPtr form, uint index);
+
+        [DllImport(Library)]
+        public static extern int FPDFImageObj_GetImageFilterCount(IntPtr image);
+
+        [DllImport(Library)]
+        public static extern uint FPDFImageObj_GetImageFilter(IntPtr image, int index, byte[]? buffer, uint length);
+
+        [DllImport(Library)]
+        public static extern uint FPDFImageObj_GetImageDataRaw(IntPtr image, byte[]? buffer, uint length);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFImageObj_GetBitmap(IntPtr image);
+
+        [DllImport(Library)]
+        public static extern int FPDFBitmap_GetWidth(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern int FPDFBitmap_GetHeight(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern int FPDFBitmap_GetStride(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern int FPDFBitmap_GetFormat(IntPtr bitmap);
+
+        [DllImport(Library)]
+        public static extern IntPtr FPDFBitmap_GetBuffer(IntPtr bitmap);
+
 
         [DllImport(Library, CharSet = CharSet.Ansi, BestFitMapping = false)]
         public static extern IntPtr FPDF_LoadCustomDocument(ref FileAccess access, [MarshalAs(UnmanagedType.LPUTF8Str)] string? password);

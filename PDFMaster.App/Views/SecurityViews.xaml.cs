@@ -118,3 +118,12 @@ public partial class PageToolView : UserControl
         ToolDrop.Attach(this);
     }
 }
+
+public partial class ExtractContentView : UserControl
+{
+    public ExtractContentView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
