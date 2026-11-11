@@ -1,5 +1,39 @@
 # Histórico de alterações
 
+## 0.7.0 — 11/11/2026 — Fase 7: Automação
+
+### Adicionado
+- **Fila de tarefas**: arquivos e pastas (PDF, imagens, TXT, HTML, Office) entram na fila com um
+  fluxo; colunas de nome, operação, estado, progresso, tamanho original e final, destino, tempo e
+  erro; estados Aguardando, Processando, Pausado, Concluído, Falhou e Cancelado; Iniciar, Pausar
+  (ao fim da etapa atual), Retomar, Cancelar tudo, Repetir, Remover, Cancelar e Abrir por tarefa,
+  Reprocessar somente com erro e Limpar concluídas; tarefas simultâneas configuráveis.
+- **Fluxos encadeados** com editor visual: OCR, comprimir, numerar páginas, marca d'água, girar,
+  excluir páginas, inverter ordem, remover páginas em branco, recortar margens, várias páginas por
+  folha/livreto, remover metadados, reparar e PDF/A, em qualquer ordem e com as opções de cada
+  etapa; quatro fluxos de exemplo (entre eles OCR → comprimir → numerar → PDF/A).
+- **Monitorar pasta**: opcional, configurável e pausável; cada documento que chega é processado
+  uma vez, depois de terminar de ser copiado; contadores e registro de atividade.
+- **Linha de comando sem janela**: `--merge`, `--compress`, `--ocr`, `--split`, `--pdfa`,
+  `--rotate`, `--to-image`, `--flow`, `--watch`, `--list-flows`, `--help`, `--version`, com
+  `--output`, `--overwrite`, `--log` e códigos de saída.
+- **Integração com o Windows** (só para o usuário, sem administrador): itens no menu de contexto
+  dos PDFs (Abrir, Mesclar selecionados, Comprimir, Converter para imagem, Extrair páginas,
+  Proteger), com vários arquivos reunidos numa só janela; registro em "Abrir com"; atalho para a
+  tela de aplicativos padrão.
+- Ferramentas de página: **inverter ordem**, **páginas em branco e repetidas**, **recortar
+  margens**, **2 ou 4 páginas por folha e livreto**.
+- **Repetir operação** no histórico (abre a ferramenta com os mesmos arquivos de entrada).
+- Configurações: perfil de compressão padrão, idiomas e resolução padrão do OCR, tarefas
+  simultâneas da fila, integração com o Windows.
+
+### Alterado
+- Histórico: esquema do banco na versão 2 (ferramenta e arquivos de entrada de cada operação);
+  bancos da versão 1 são atualizados automaticamente.
+- Tarefas da fila e das pastas monitoradas são registradas no histórico.
+- Marcadores/links/anexos, PDF → Excel/PowerPoint, extrair conteúdo e preto e branco foram
+  replanejados para a Fase 8 (continuam desabilitados).
+
 ## 0.6.0 — 11/11/2026 — Fase 6: Segurança e ferramentas avançadas
 
 ### Adicionado

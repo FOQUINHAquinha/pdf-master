@@ -19,7 +19,8 @@ public static class HeadlessConsole
         TextWriter console;
         if (Console.IsOutputRedirected)
         {
-            console = Console.Out;
+            // Saída redirecionada (scripts, agendador): sempre UTF-8, para acentos e setas chegarem intactos.
+            console = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };
         }
         else
         {

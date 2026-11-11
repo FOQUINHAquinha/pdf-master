@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 11/11/2026 · Versão 0.6.0
+Atualizado em 11/11/2026 · Versão 0.7.0
 
 ## Fases
 
@@ -13,8 +13,8 @@ Atualizado em 11/11/2026 · Versão 0.6.0
 | 5 — Editor | Texto, imagens, anotações, assinaturas visuais, carimbos, marca d'água, cabeçalhos, rodapés, formulários | **Concluída** |
 | Extra — Compressão de vídeo | Qualquer formato → MP4 (H.264 + AAC) em 360p, com FFmpeg LGPL embutido | **Concluída** |
 | 6 — Segurança e ferramentas avançadas | Senhas, permissões, propriedades de segurança, metadados, PDF/A (conversão e validação), comparação, reparo, verificação de assinaturas | **Concluída** |
-| 7 — Automação | Lote, filas, fluxos, pasta monitorada, menu de contexto, linha de comando (e as ferramentas extras replanejadas, ver abaixo) | Próxima |
-| 8 — Finalização | | Pendente |
+| 7 — Automação | Lote, filas, fluxos, pasta monitorada, menu de contexto, linha de comando; inverter, páginas em branco, recorte, livreto | **Concluída** |
+| 8 — Finalização | Testes gerais, otimização, instalador, versão portátil, documentação; quatro ferramentas extras do catálogo | Próxima |
 
 ## Como cada item foi verificado
 
@@ -26,6 +26,46 @@ Atualizado em 11/11/2026 · Versão 0.6.0
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Fase 7 — Automação
+
+| Funcionalidade | Estado | Testes |
+|---|---|---|
+| **Fila de tarefas**: arquivos e pastas (PDF, imagens, TXT, HTML, Office) com o fluxo escolhido; colunas nome, operação, estado, progresso, tamanho original e final, destino, tempo e erro | Concluído | Automático + execução pela interface (2 documentos pelo fluxo OCR → comprimir → numerar → PDF/A, ambos aprovados pelo veraPDF) + captura de tela |
+| Estados Aguardando, Processando, Pausado, Concluído, Falhou, Cancelado; Iniciar, Pausar (ao fim da etapa atual), Retomar, Cancelar (tarefa e tudo), Repetir, Remover, Reprocessar somente com erro, Limpar concluídas | Concluído | Automático (falha, correção e reprocessamento só da falha; pausa segura as tarefas; cancelamento; repetição; remoção). Botões da tela: manual pendente |
+| Controle de simultaneidade (1 a 8 tarefas; automático = metade dos núcleos, até 4) | Concluído | Automático (2 em paralelo) |
+| **Fluxos encadeados** com editor visual (lista de fluxos, etapas em ordem, opções de cada etapa, sufixo do nome), salvos em `fluxos.json` | Concluído | Automático (todas as 13 etapas salvas e relidas; fluxo de 5 etapas conferido página a página; TXT importado e comprimido). Editor: manual pendente |
+| **Monitorar pasta**: opcional, configurável, pausável; processa cada arquivo uma vez, só depois de terminar de ser copiado; contadores e atividade | Concluído | Automático (arquivo novo processado uma vez, existentes ignorados, nada entra pausado, retoma) + execução real no CI (pasta configurada antes de abrir o programa) + captura de tela |
+| **Linha de comando sem janela**: `--merge`, `--compress`, `--ocr`, `--split`, `--pdfa`, `--rotate`, `--to-image`, `--flow`, `--watch`, `--list-flows`, `--help`, `--version`, `--output`, `--overwrite`, `--log`, códigos de saída 0/1/2/3 | Concluído | Automático (análise dos parâmetros, execução, recusa de sobrescrever, sucesso parcial) + execução do programa publicado no CI |
+| **Menu de contexto** (Abrir, Mesclar selecionados, Comprimir, Converter para imagem, Extrair páginas, Proteger), vários arquivos numa só janela | Concluído | Automático (registro gravado e removido numa chave de teste; três processos reunidos numa lista) + execução no CI (dois processos `--context merge` → uma janela). Clique no Explorador: manual pendente |
+| **Abrir com** e associação de arquivo (ProgId, `OpenWithProgids`, `RegisteredApplications`) e atalho para os aplicativos padrão do Windows | Concluído | Automático (chaves de teste). Escolha como padrão: manual pendente (feita pelo usuário no Windows) |
+| **Inverter ordem das páginas** | Concluído | Automático + execução pela interface |
+| **Páginas em branco e repetidas** | Concluído | Automático (brancas e repetidas detectadas; documento sem brancas não gera arquivo) + execução pela interface |
+| **Recortar margens** (CropBox; o conteúdo não é apagado) | Concluído | Automático (tamanho exibido conferido pelo PDFium; margens maiores que a página recusadas) + execução pela interface |
+| **2 ou 4 páginas por folha e livreto** (ordem de dobra, páginas completadas até múltiplo de 4) | Concluído | Automático (ordem do livreto pelo texto de cada lado; páginas com /Rotate desenhadas na posição certa, conferido por pixels) + execução pela interface |
+| **Repetir operação** no histórico (mesma ferramenta, mesmos arquivos de entrada) | Concluído | Automático (gravação e leitura; atualização de banco antigo). Botão: manual pendente |
+| Padrões nas Configurações: compressão, idiomas e resolução do OCR, tarefas simultâneas | Concluído | Captura de tela; efeito ao abrir as telas: manual pendente |
+| Tarefas da fila e das pastas monitoradas no histórico | Concluído | Manual pendente |
+
+### Limitações conhecidas da Fase 7
+
+| Item | Situação |
+|---|---|
+| Pastas monitoradas | Funcionam só com o programa aberto ou com `PDFMaster.exe --watch` (não há serviço do Windows nem início automático com o sistema). |
+| Menu de contexto | No Windows 11 os itens ficam em "Mostrar mais opções" (o menu compacto exige um pacote MSIX assinado). |
+| Programa padrão para PDF | O Windows não deixa um programa se tornar padrão sozinho; o PDF Master abre a tela de aplicativos padrão para a pessoa escolher. |
+| Linha de comando | O programa é de janela: no `cmd`, o prompt volta antes do fim; use `start /wait` (ou `Start-Process -Wait`) para esperar e ler o código de saída. |
+| Pausar | Uma tarefa em andamento para no fim da etapa atual (uma etapa de OCR longa termina antes de pausar); Cancelar interrompe na hora. |
+| Repetir operação | Reabre a ferramenta com os mesmos arquivos; as opções escolhidas na época não são guardadas. Operações registradas antes da 0.7 não têm os arquivos e não podem ser repetidas. |
+| Páginas em branco | Página com pouquíssimo conteúdo (até 0,1% de pixels escuros e sem texto) conta como branca: confira o resultado. Repetidas = idênticas na imagem renderizada e no texto. |
+| Recortar | Só reduz a área visível (CropBox); não altera o tamanho do papel nem apaga o conteúdo de fora. |
+
+### Ferramentas do catálogo replanejadas para a Fase 8
+
+Marcadores/links/anexos, PDF para Excel e PowerPoint, extrair conteúdo e converter para preto e
+branco **não foram implementadas** nesta fase e aparecem como "Prevista para a Fase 8", sem botão
+ativo. As demais ferramentas extras que estavam na Fase 7 (inverter, páginas em branco, recortar,
+livreto) foram entregues.
 
 ### Fase 6 — Segurança e ferramentas avançadas
 
@@ -72,15 +112,6 @@ fora do que foi testado podem ser recusados pela verificação — e então o ar
 | Reparo | A recuperação é a da reconstrução do PDFium: conteúdo cujos bytes se perderam não volta. Na cópia de um documento com páginas quebradas, marcadores e formulários do documento não são levados. |
 | Comparação | O texto é comparado na ordem de leitura do PDFium; documentos sem texto (digitalizados) são comparados só pela aparência — use o OCR antes. Mudanças só de formatação aparecem como diferença visual. PDFs protegidos por senha de abertura precisam ser desprotegidos antes. |
 | Propriedades de segurança | Documentos com senha de abertura são identificados, mas o conteúdo só é analisado com a senha (em "Remover proteção"). |
-
-### Ferramentas do catálogo replanejadas para a Fase 7
-
-A especificação lista na Fase 6 apenas senhas, permissões, metadados, PDF/A, comparação, reparo e
-verificação de assinaturas — todas entregues. As ferramentas extras que o catálogo do programa
-tinha marcado como Fase 6 (recortar páginas, páginas em branco e duplicadas, livreto e várias
-páginas por folha, inverter ordem, marcadores/links/anexos, PDF para Excel e PowerPoint, extrair
-conteúdo e converter para preto e branco) **não foram implementadas** e passaram a aparecer como
-"Prevista para a Fase 7". Nenhuma delas tem botão ativo.
 
 ### Fase 5 — Editor
 
@@ -285,17 +316,15 @@ conteúdo e converter para preto e branco) **não foram implementadas** e passar
 
 | Item | Motivo |
 |---|---|
-| "Repetir operação" no histórico | Depende do sistema de tarefas (Fase 7). |
-| Padrões de conversão e compressão na tela de Configurações | Adiados para a Fase 7, junto com as configurações de desempenho; hoje cada tela usa padrões fixos. |
-| Configurações de OCR e desempenho | Adiadas para a Fase 7, com os demais padrões. |
+| Padrões de conversão (formato de imagem, DPI etc.) nas Configurações | Compressão, OCR e desempenho entraram na Fase 7; os de conversão continuam fixos em cada tela. |
 | Idioma da interface | Somente português por enquanto. |
 | Ícone próprio do aplicativo e logotipo definitivo | O ícone do `.exe` ainda é o padrão. |
 | Cache de miniaturas em disco | O cache atual é em memória; em disco será avaliado na Fase 8 (otimização). |
 
-### Fases 7 e 8
+### Fase 8
 
-As demais ferramentas estão **pendentes** e aparecem na interface como "Prevista para a Fase 7",
-desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
+Quatro ferramentas do catálogo estão **pendentes** e aparecem na interface como "Prevista para a
+Fase 8", desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 
 ## Testes realizados
 
@@ -305,7 +334,7 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | Core — nomes de saída e segurança de caminhos | 20 | Aprovado |
 | Core — configurações, formatação, tipos de arquivo | 20 | Aprovado |
 | Core — intervalos de páginas, divisão, intercalação, nomes | 34 | Aprovado |
-| Storage — SQLite | 6 | Aprovado |
+| Storage — SQLite (inclusive atualização do esquema 1 → 2) | 7 | Aprovado |
 | Infrastructure — inspeção, varredura e cópia de arquivos | 17 | Aprovado |
 | PdfEngine — motor (leitura, montagem, rotação, marcadores, erros, cancelamento) | 11 | Aprovado |
 | PdfEngine — organizador (mesclar, intercalar, dividir, salvar arranjo) | 10 | Aprovado |
@@ -330,10 +359,13 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | Security — PDF/A (conversão nos 3 níveis validada pelo veraPDF, recusas, validação) | 11 | Aprovado |
 | Comparison — comparação de PDFs e relatório | 6 | Aprovado |
 | Amostras para o teste de inicialização (Fase 6) | 1 | Aprovado |
-| App — execução das ferramentas pela interface (`--run`) | 21 | Aprovado |
-| App — abertura das telas nos dois temas | 25 | Aprovado |
+| Batch — fluxos, ferramentas de página, fila, pastas monitoradas, menu de contexto, linha de comando | 17 | Aprovado |
+| Amostras para o teste de inicialização (Fase 7) | 1 | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 26 | Aprovado |
+| App — linha de comando sem janela (códigos de saída e arquivos gerados), `--watch`, menu de contexto | 17 | Aprovado |
+| App — abertura das telas nos dois temas | 28 | Aprovado |
 
-Total de testes automatizados: 294 (mais as 46 execuções do programa publicado no CI).
+Total de testes automatizados: 313 (mais 54 execuções da interface do programa publicado no CI, 15 comandos da linha de comando, uma execução de `--watch`, a pasta monitorada com o programa aberto e o menu de contexto com dois processos).
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
@@ -377,4 +409,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.6.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.7.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

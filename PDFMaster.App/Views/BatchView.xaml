@@ -186,7 +186,7 @@
                                                            Foreground="{DynamicResource Brush.Text}" />
                                                 <TextBlock Text="{Binding Origin}" Style="{StaticResource Secondary}" FontSize="11.5" TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding Operation}" Style="{StaticResource Body}" TextTrimming="CharacterEllipsis"
+                                            <TextBlock Grid.Column="1" Text="{Binding Operation}" Style="{StaticResource Body}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding Operation}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                             <TextBlock Grid.Column="2" x:Name="State" Text="{Binding StateText}" Style="{StaticResource Body}" VerticalAlignment="Center" />
                                             <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,0,10,0">
@@ -196,7 +196,7 @@
                                             </StackPanel>
                                             <TextBlock Grid.Column="4" Text="{Binding OriginalSize}" Style="{StaticResource Body}" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="5" Text="{Binding FinalSize}" Style="{StaticResource Body}" VerticalAlignment="Center" />
-                                            <TextBlock Grid.Column="6" Text="{Binding Destination}" Style="{StaticResource Secondary}" TextTrimming="CharacterEllipsis"
+                                            <TextBlock Grid.Column="6" Text="{Binding Destination}" Style="{StaticResource Secondary}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding Destination}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                             <TextBlock Grid.Column="7" Text="{Binding ElapsedText}" Style="{StaticResource Body}" VerticalAlignment="Center" />
                                             <StackPanel Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
