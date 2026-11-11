@@ -327,7 +327,7 @@ public class BatchTests : IDisposable
         watch.Pause();
         Numbered(Path.Combine("entrada", "durante-pausa.pdf"), 1);
         await Task.Delay(2500);
-        Assert.Empty(_services.Queue.Jobs.Where(j => j.FileName == "durante-pausa.pdf"));
+        Assert.DoesNotContain(_services.Queue.Jobs, j => j.FileName == "durante-pausa.pdf");
         watch.Resume();
         var later = Path.Combine(output, "durante-pausa_inverter.pdf");
         deadline = DateTime.UtcNow.AddSeconds(40);
