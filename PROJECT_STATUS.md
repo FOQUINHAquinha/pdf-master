@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 10/11/2026 · Versão 0.4.0
+Atualizado em 10/11/2026 · Versão 0.4.1
 
 ## Fases
 
@@ -11,6 +11,7 @@ Atualizado em 10/11/2026 · Versão 0.4.0
 | 3 — Conversão e compressão | PDF ↔ imagens, Office → PDF, PDF → Word, compressão | **Concluída** |
 | 4 — OCR e digitalização | OCR, PDF pesquisável, extração de texto, digitalização, OCR em lote | **Concluída** (digitalização aguardando teste com scanner real) |
 | 5 — Editor | | Próxima |
+| Extra — Compressão de vídeo | Qualquer formato → MP4 (H.264 + AAC) em 360p, com FFmpeg LGPL embutido | **Concluída** |
 | 6 — Segurança e ferramentas avançadas | | Pendente |
 | 7 — Automação | | Pendente |
 | 8 — Finalização | | Pendente |
@@ -25,6 +26,36 @@ Atualizado em 10/11/2026 · Versão 0.4.0
   conferido por uma pessoa.
 
 ## Funcionalidades
+
+### Extra — Compressão de vídeo (pedido do autor, fora das 8 fases)
+
+| Funcionalidade | Estado | Testes |
+|---|---|---|
+| Aba "Comprimir vídeo" no menu lateral; pesquisa por "reduzir vídeo", "mp4", "360p" etc. | Concluído | Automático (catálogo e pesquisa) + captura de tela |
+| Aceita qualquer formato que o FFmpeg abra | Concluído | Automático: AVI (MPEG-4 + AC-3), MPG (MPEG-2), WMV, MOV (MJPEG + PCM), FLV, MKV (FFV1 + FLAC), 3GP (H.263), MP4 |
+| Saída MP4 com H.264 + AAC, lado menor com 360 pixels, proporção mantida, dimensões pares | Concluído | Automático (codec, tamanho e áudio conferidos no arquivo gerado) |
+| Vídeo vertical, vídeo de celular com rotação, pixels não quadrados (DVD) | Concluído | Automático |
+| Vídeos menores que 360p não são ampliados; no máximo 30 quadros por segundo | Concluído | Automático |
+| Índice no início do arquivo (reprodução antes do download completo) | Concluído | Automático (ordem dos blocos do MP4 conferida) |
+| Recusa clara de áudio puro, imagem e arquivo que não é vídeo, sem deixar arquivos | Concluído | Automático |
+| Nomes com acentos, espaços e símbolos; nomes de saída nunca colidem | Concluído | Automático |
+| Fila de vários vídeos com progresso, velocidade, tempo restante e falha isolada por vídeo | Concluído | Um vídeo: execução pela interface; vários: manual pendente |
+| Cancelamento: o FFmpeg é encerrado e nada fica na pasta de destino | Concluído | Automático |
+| FFmpeg LGPL embutido, extraído na primeira utilização e conferido por SHA-256 | Concluído | Automático + execução pela interface |
+| "Localizar ffmpeg.exe…" (outro FFmpeg) e "Usar o FFmpeg incluído" | Concluído | Validação: automático; botões: manual pendente |
+| Crédito do autor (rodapé, Configurações → Sobre, propriedades do .exe) | Concluído | Captura de tela |
+
+### Limitações conhecidas da compressão de vídeo
+
+| Item | Situação |
+|---|---|
+| Codificador H.264 | A variante LGPL não tem a libx264; usa o OpenH264 (ou o do Windows). Para o mesmo tamanho, a qualidade é um pouco inferior à da libx264. Quem tiver um FFmpeg com libx264 pode indicá-lo em "Localizar ffmpeg.exe…", e ele passa a ser usado. |
+| Qualidade fixa | 360p, cerca de 700 kbit/s de vídeo e 96 kbit/s de áudio estéreo; não há opções de qualidade na tela (foi o pedido). |
+| Vídeo que já é pequeno | Pode ficar maior que o original; a tela avisa ("ficou x% maior"), e o arquivo é gravado mesmo assim porque o objetivo também é padronizar em MP4 360p. |
+| HDR (10 bits) | Convertido para 8 bits sem mapeamento de tons: as cores podem ficar mais apagadas. |
+| Legendas, capítulos, faixas extras de áudio | Não são levadas: só a primeira faixa de vídeo e a primeira de áudio. |
+| Desempenho | Um vídeo por vez, sem aceleração por placa de vídeo. O FFmpeg roda com prioridade baixa para não travar o computador. |
+| Versão do FFmpeg | O CI baixa a compilação mais recente do ramo 9.0 de BtbN; a versão exata e o SHA-256 ficam em `ORIGEM.txt`, ao lado do executável extraído. |
 
 ### Fase 4 — OCR e digitalização
 
@@ -197,6 +228,8 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | OCR — imagem, geometria e camada de texto | 9 | Aprovado |
 | OCR — reconhecimento real (PDF pesquisável, orientação, inclinação, TXT/DOCX, idiomas, erros) | 9 | Aprovado |
 | Scanner — erros sem aparelho (nenhuma digitalização real) | 2 | Aprovado |
+| Vídeo — leitura do relatório do FFmpeg, tamanho de saída, argumentos | 18 | A conferir no CI |
+| Vídeo — compressão real (formatos, rotação, proporção, quadros, erros, cancelamento, FFmpeg escolhido) | 12 | A conferir no CI |
 | App — execução das ferramentas pela interface (`--run`) | 13 | Aprovado |
 | App — abertura das telas nos dois temas | 13 | Aprovado |
 
@@ -218,6 +251,7 @@ Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke
 | PdfPig | 0.1.14 | Apache-2.0 |
 | Tesseract (wrapper .NET de charlesw, com Tesseract 5.2 e Leptonica nativos) | 5.2.0 | Apache-2.0 |
 | Modelos tessdata_fast: por, eng, spa (baixados na compilação, incorporados ao programa) | — | Apache-2.0 |
+| FFmpeg, compilação estática LGPL de BtbN/FFmpeg-Builds, ramo 9.0 (baixado na compilação, incorporado; executado como processo separado) | 9.0.x | LGPL-2.1 |
 | WIA (componente do Windows, usado por COM; nada é distribuído) | — | — |
 | LibreOffice (opcional, instalado pelo usuário; não distribuído) | — | MPL-2.0 |
 | CommunityToolkit.Mvvm | 8.4.0 | MIT |
@@ -241,4 +275,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.4.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.4.1 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

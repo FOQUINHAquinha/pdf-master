@@ -33,6 +33,8 @@ PDFMaster.Conversion     Conversões                                 (Fase 3)
 PDFMaster.Compression    Compressão e otimização                    (Fase 3)
 PDFMaster.OCR            OCR                                        (Fase 4)
 PDFMaster.Scanner        WIA (TWAIN não implementado)               (Fase 4)
+PDFMaster.Video          Compressão de vídeo com FFmpeg             (extra)
+PDFMaster.Video.Ffmpeg   Só recursos: FFmpeg LGPL comprimido        (extra)
 PDFMaster.Editor         Editor visual                              (Fase 5)
 PDFMaster.Security       Senhas, permissões, assinaturas            (Fase 6)
 PDFMaster.Batch          Fila de tarefas e fluxos                   (Fase 7)
@@ -101,6 +103,19 @@ Magick.NET nem SkiaSharp; o DOCX de texto corrido é gravado pelo próprio progr
 XML), então **não foi preciso** o Open XML SDK; a compressão é feita sobre o PDFsharp, sem
 Ghostscript nem qpdf.
 
+### Compressão de vídeo (extra, fora das 8 fases)
+
+| Finalidade | Escolha | Licença | Observação |
+|---|---|---|---|
+| Ler qualquer formato de vídeo e gravar MP4 (H.264 + AAC) | FFmpeg, compilação estática **LGPL** de BtbN/FFmpeg-Builds (ramo 9.0), baixada na compilação por `tools/obter-ffmpeg.ps1` | LGPL 2.1 | Executado como processo separado (sem ligação com o código do programa). Embutido gzip num assembly só de recursos, extraído na primeira utilização para `video-runtime` e conferido por SHA-256; a licença vai junto. A variante GPL (libx264) **não** é usada; o codificador H.264 é o OpenH264 (BSD) ou o do Windows (Media Foundation), escolhido conforme o que o executável tiver. |
+
+Avaliado e descartado: a variante GPL do FFmpeg (melhor codificador, libx264, mas obrigações da GPL
+sobre o binário distribuído) e o Media Foundation direto (sem FFmpeg), que não abre vários formatos
+(FLV, MKV com VP9/AV1 sem extensões da Store, AVI com Xvid etc.). Segurança: só o protocolo `file`
+é permitido na leitura, então um vídeo com lista de reprodução embutida não acessa a rede. H.264 e
+AAC são formatos com patentes em alguns países; o programa não cobra nem distribui codificadores
+comerciais.
+
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
@@ -134,6 +149,7 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | 2 | Visualizador, miniaturas, mesclar, dividir, extrair, girar, reordenar, excluir, intercalar | Entregue |
 | 3 | Conversões e compressão | Entregue |
 | 4 | OCR e digitalização (scanner WIA aguardando teste com aparelho real) | Entregue |
+| extra | Compressão de vídeo para MP4 360p (FFmpeg) | Entregue (0.4.1) |
 | 5 | Editor | Próxima |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | |
 | 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando | |

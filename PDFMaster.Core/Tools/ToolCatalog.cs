@@ -32,6 +32,7 @@ public sealed class ToolCatalog
     private const string Repair = "";
     private const string Add = "";
     private const string View = "\uE8A5";
+    private const string VideoGlyph = "\uE714";
 
     /// <summary>
     /// Ferramentas implementadas e aprovadas nos testes. Só estas podem ser abertas na interface.
@@ -44,6 +45,8 @@ public sealed class ToolCatalog
         "pdf-to-image", "image-to-pdf", "office-to-pdf", "text-html-to-pdf", "pdf-to-word", "pdf-to-text", "compress",
         // Fase 4
         "ocr", "ocr-batch", "scan",
+        // Extra (fora das 8 fases, pedido do autor)
+        "video-compress",
     };
 
     public IReadOnlyList<ToolDefinition> All { get; } = Build();
@@ -63,6 +66,7 @@ public sealed class ToolCatalog
         ToolCategory.Ocr => "OCR e digitalização",
         ToolCategory.Compare => "Comparar documentos",
         ToolCategory.Batch => "Processamento em lote",
+        ToolCategory.Video => "Comprimir vídeo",
         _ => category.ToString(),
     };
 
@@ -176,6 +180,10 @@ public sealed class ToolCatalog
             "processar vários arquivos", "em massa", "fluxo", "automação", "sequência de operações");
         T("watch-folder", "Monitorar pasta", "Executa uma operação automaticamente quando um PDF chega a uma pasta.", ToolCategory.Batch, 7, Folder,
             "pasta monitorada", "pasta de entrada", "automático", "hot folder");
+
+        // ----- Vídeo -----
+        T("video-compress", "Comprimir vídeo", "Converte vídeos de qualquer formato para MP4 em 360p, bem menores, para enviar e guardar.", ToolCategory.Video, 4, VideoGlyph,
+            "reduzir vídeo", "diminuir vídeo", "converter vídeo", "mp4", "360p", "vídeo grande", "whatsapp", "compactar vídeo", "ffmpeg");
 
         return list;
     }

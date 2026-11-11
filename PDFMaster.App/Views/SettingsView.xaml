@@ -127,6 +127,19 @@
                 </StackPanel>
             </Border>
 
+            <!-- Sobre -->
+            <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                <StackPanel>
+                    <TextBlock Text="Sobre" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{Binding AboutTitle}" Style="{StaticResource Body}" FontWeight="SemiBold" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding AuthorText}" Style="{StaticResource Body}" Margin="0,2,0,0" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="Componentes de terceiros: PDFsharp (MIT), PDFium (BSD-3-Clause/Apache-2.0), PdfPig (Apache-2.0), Tesseract e modelos tessdata (Apache-2.0), SQLite (domínio público), CommunityToolkit.Mvvm e bibliotecas .NET (MIT), Serilog (Apache-2.0). O LibreOffice (MPL-2.0) é usado somente se estiver instalado no computador." />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="A compressão de vídeo usa o FFmpeg (ffmpeg.org) na variante LGPL 2.1, compilado por BtbN/FFmpeg-Builds e executado como programa separado. A licença acompanha o executável extraído na pasta de dados (video-runtime); o código-fonte está disponível em ffmpeg.org e github.com/BtbN/FFmpeg-Builds." />
+                </StackPanel>
+            </Border>
+
             <TextBlock Style="{StaticResource Secondary}" Margin="2,14,0,0"
                        Text="As configurações de conversão, OCR, compressão e desempenho entram nesta tela junto com as respectivas ferramentas (Fases 3, 4 e 7), para que nenhuma opção apareça aqui sem efeito real." />
         </StackPanel>

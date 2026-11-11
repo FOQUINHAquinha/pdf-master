@@ -16,6 +16,7 @@
     <ProjectReference Include="..\PDFMaster.Compression\PDFMaster.Compression.csproj" />
     <ProjectReference Include="..\PDFMaster.OCR\PDFMaster.OCR.csproj" />
     <ProjectReference Include="..\PDFMaster.Scanner\PDFMaster.Scanner.csproj" />
+    <ProjectReference Include="..\PDFMaster.Video\PDFMaster.Video.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

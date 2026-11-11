@@ -1,5 +1,25 @@
 # Histórico de alterações
 
+## 0.4.1 — 10/11/2026 — Extra: compressão de vídeo e crédito do autor
+
+### Adicionado
+- **Comprimir vídeo** (aba própria no menu lateral): qualquer formato que o FFmpeg abra (MP4, MOV,
+  AVI, MKV, WEBM, WMV, FLV, MPG, 3GP, GIF animado e outros) vira MP4 com H.264 + AAC em 360p —
+  lado menor com 360 pixels, proporção, orientação de celular e pixels não quadrados respeitados,
+  sem ampliar vídeos menores, no máximo 30 quadros por segundo e índice no início do arquivo.
+  Fila de vários vídeos, progresso por vídeo com velocidade e tempo restante, cancelamento sem
+  deixar arquivo parcial, original nunca alterado (`nome_360p.mp4`).
+- FFmpeg LGPL embutido (extraído na primeira utilização e conferido por SHA-256), com a opção
+  "Localizar ffmpeg.exe…" para usar outro FFmpeg instalado.
+- Crédito "Criado por Gustavo Farias Medeiros" no rodapé do menu lateral, na nova seção "Sobre"
+  das Configurações (com os componentes de terceiros e suas licenças) e nas propriedades do
+  executável (empresa, autor e direitos autorais).
+- Testes com vídeos reais em vários formatos, gerados pelo próprio FFmpeg; o CI executa a
+  compressão pelo executável publicado.
+
+### Alterado
+- O executável ficou cerca de 50 MB maior por causa do FFmpeg embutido.
+
 ## 0.4.0 — 10/11/2026 — Fase 4: OCR e digitalização
 
 ### Adicionado

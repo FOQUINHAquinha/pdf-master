@@ -56,6 +56,7 @@ public sealed partial class MainViewModel : ObservableObject
             new NavItem("edit", "Editar PDF", "", ToolCategory.Edit),
             new NavItem("convert", "Converter PDF", "", ToolCategory.Convert),
             new NavItem("compress", "Comprimir PDF", "", ToolCategory.Compress),
+            new NavItem("video", "Comprimir vídeo", "\uE714", ToolCategory.Video),
             new NavItem("security", "Segurança", "", ToolCategory.Security),
             new NavItem("ocr", "OCR e digitalização", "", ToolCategory.Ocr),
             new NavItem("compare", "Comparar documentos", "", ToolCategory.Compare),
@@ -75,6 +76,9 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<NavItem> NavItems { get; }
     public NotificationCenter Notifications { get; }
     public string VersionText { get; }
+
+    /// <summary>Crédito do autor, mostrado discretamente no rodapé do menu lateral.</summary>
+    public string AuthorText => AppInfo.Credit;
 
     [ObservableProperty]
     private NavItem? _selectedNav;
@@ -156,6 +160,9 @@ public sealed partial class MainViewModel : ObservableObject
             case "settings":
                 _settingsPage.Reload();
                 return _settingsPage;
+            case "video":
+                // A aba de vídeo tem uma só ferramenta: abre direto a tela de compressão.
+                return GetToolViewModel("video-compress");
             default:
                 var category = item.Category ?? ToolCategory.Organize;
                 var tools = _catalog.ByCategory(category);
@@ -211,7 +218,8 @@ public sealed partial class MainViewModel : ObservableObject
 
             CurrentPage = viewModel;
 
-            IReadOnlyList<string> input = files is { Count: > 0 } ? files : viewModel.IsEmpty ? _home.OpenPdfPaths : [];
+            IReadOnlyList<string> input = files is { Count: > 0 } ? files
+                : viewModel.IsEmpty && viewModel.AcceptsOpenPdfs ? _home.OpenPdfPaths : [];
             if (input.Count > 0) await viewModel.AddFilesAsync(input);
             return viewModel;
         }
@@ -234,6 +242,7 @@ public sealed partial class MainViewModel : ObservableObject
             "compress" => "compress",
             "ocr" or "ocr-batch" => "ocr",
             "scan" => "scan",
+            "video-compress" => "video",
             "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
             _ => "pages",
         };
@@ -247,6 +256,7 @@ public sealed partial class MainViewModel : ObservableObject
                 "compress" => new CompressViewModel(_toolContext),
                 "ocr" => new OcrViewModel(_toolContext),
                 "scan" => new ScanViewModel(_toolContext),
+                "video" => new VideoViewModel(_toolContext),
                 "pdf-to-image" => new ConvertViewModel(_toolContext, ConversionKind.PdfToImage),
                 "image-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.ImageToPdf),
                 "office-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.OfficeToPdf),
@@ -264,12 +274,18 @@ public sealed partial class MainViewModel : ObservableObject
         return viewModel;
     }
 
-    private void CloseTool() => CurrentPage = CreatePage(SelectedNav ?? _lastNav ?? NavItems[0]);
+    private void CloseTool()
+    {
+        var nav = SelectedNav ?? _lastNav ?? NavItems[0];
+        // A aba de vídeo é a própria ferramenta: "voltar" leva para o início.
+        if (nav.Key == "video") Navigate("home");
+        else CurrentPage = CreatePage(nav);
+    }
 
     /// <summary>Clique em um item do menu que já estava selecionado: volta da ferramenta para a lista.</summary>
     public void RefreshCurrentNav()
     {
-        if (SelectedNav is not null && CurrentPage is ToolViewModelBase) CurrentPage = CreatePage(SelectedNav);
+        if (SelectedNav is not null && SelectedNav.Key != "video" && CurrentPage is ToolViewModelBase) CurrentPage = CreatePage(SelectedNav);
     }
 
     [RelayCommand]

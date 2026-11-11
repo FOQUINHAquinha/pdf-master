@@ -3,9 +3,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <Product>PDF Master</Product>
-    <Company>PDF Master</Company>
+    <Company>Gustavo Farias Medeiros</Company>
+    <Authors>Gustavo Farias Medeiros</Authors>
+    <Copyright>© 2026 Gustavo Farias Medeiros</Copyright>
     <NeutralLanguage>pt-BR</NeutralLanguage>
     <SatelliteResourceLanguages>pt-BR</SatelliteResourceLanguages>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>

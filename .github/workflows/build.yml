@@ -30,6 +30,14 @@ jobs:
           New-Item -ItemType Directory -Force ci-out | Out-Null
           ./tools/obter-modelos-ocr.ps1 2>&1 | Tee-Object ci-out/ocr-modelos.log
 
+      # FFmpeg (variante LGPL de BtbN/FFmpeg-Builds): incorporado ao programa para a compressão de vídeo.
+      - name: Baixar o FFmpeg
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-out | Out-Null
+          ./tools/obter-ffmpeg.ps1 2>&1 | Tee-Object ci-out/ffmpeg.log
+          if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit 1 }
+
       - name: Compilar
         shell: pwsh
         run: |
@@ -51,6 +59,7 @@ jobs:
         env:
           PDFMASTER_REQUIRE_LIBREOFFICE: '1'
           PDFMASTER_REQUIRE_OCR: '1'
+          PDFMASTER_REQUIRE_FFMPEG: '1'
         run: |
           dotnet test PDFMaster.Tests/PDFMaster.Tests.csproj -c Release --no-build -nologo --logger "console;verbosity=normal" 2>&1 | Tee-Object ci-out/test.log
           "test exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Append -Encoding utf8
@@ -117,6 +126,8 @@ jobs:
             @{ name = 'run-compress';   wait = 20; args = @('--theme','light','--tool','compress','--output',"`"$out`"",'--run',"`"$s\Digitalizado.pdf`"") },
             @{ name = 'run-ocr';        wait = 60; args = @('--theme','light','--tool','ocr','--output',"`"$out`"",'--run',"`"$s\Escaneado.pdf`"") },
             @{ name = 'run-scan';       wait = 15; args = @('--theme','light','--tool','scan','--output',"`"$out`"",'--run',"`"$s\Foto.png`"","`"$s\Recibo.jpg`"") },
+            @{ name = 'run-video';      wait = 45; args = @('--theme','light','--tool','video-compress','--output',"`"$out`"",'--run',"`"$s\Video.avi`"") },
+            @{ name = 'tool-video';     wait = 15; args = @('--theme','dark','--tool','video-compress',"`"$s\Video.avi`"") },
             @{ name = 'tool-ocr';       args = @('--theme','dark','--tool','ocr',"`"$s\Escaneado.pdf`"") },
             @{ name = 'light-ocr';      args = @('--theme','light','--page','ocr') },
             @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
@@ -153,7 +164,7 @@ jobs:
           # Resultado das execuções feitas pela interface (--run).
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
-          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf')
+          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4')
           foreach ($name in $expected) {
             $file = Join-Path $out $name
             if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {

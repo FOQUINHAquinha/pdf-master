@@ -6,3 +6,5 @@ publish/
 ci-out/
 TestResults/
 PDFMaster.OCR/tessdata/*.traineddata
+PDFMaster.Video.Ffmpeg/runtime/*
+!PDFMaster.Video.Ffmpeg/runtime/LEIA-ME.md

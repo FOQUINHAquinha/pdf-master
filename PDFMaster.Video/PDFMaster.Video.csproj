@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
+    <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
+    <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
+    <!-- Só recursos (o FFmpeg comprimido). É carregado pelo nome, apenas quando precisa ser extraído. -->
+    <ProjectReference Include="..\PDFMaster.Video.Ffmpeg\PDFMaster.Video.Ffmpeg.csproj" />
+  </ItemGroup>
+</Project>

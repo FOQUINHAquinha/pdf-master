@@ -54,6 +54,7 @@ public sealed class SettingsService
         if (v.TryGetValue("overwritePolicy", out var op) && Enum.TryParse<OverwritePolicy>(op, out var opv)) s.OverwritePolicy = opv;
         if (v.TryGetValue("subfolderMode", out var sm) && Enum.TryParse<SubfolderMode>(sm, out var smv)) s.SubfolderMode = smv;
         if (v.TryGetValue("historyEnabled", out var he) && bool.TryParse(he, out var heb)) s.HistoryEnabled = heb;
+        if (v.TryGetValue("ffmpegPath", out var fp) && fp.Length > 0) s.FfmpegPath = fp;
         return s;
     }
 
@@ -67,5 +68,6 @@ public sealed class SettingsService
         ["overwritePolicy"] = s.OverwritePolicy.ToString(),
         ["subfolderMode"] = s.SubfolderMode.ToString(),
         ["historyEnabled"] = s.HistoryEnabled.ToString(),
+        ["ffmpegPath"] = s.FfmpegPath ?? string.Empty,
     };
 }

@@ -12,6 +12,7 @@ public enum ToolCategory
     Ocr,
     Compare,
     Batch,
+    Video,
 }
 
 /// <summary>Descrição de uma ferramenta do catálogo.</summary>
@@ -129,6 +130,9 @@ public sealed class AppSettings
     public OverwritePolicy OverwritePolicy { get; set; } = OverwritePolicy.AutoRename;
     public SubfolderMode SubfolderMode { get; set; } = SubfolderMode.None;
     public bool HistoryEnabled { get; set; } = true;
+
+    /// <summary>ffmpeg.exe escolhido pelo usuário; null usa o que vem com o programa.</summary>
+    public string? FfmpegPath { get; set; }
 
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }

@@ -81,6 +81,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<Choice<OverwritePolicy>> OverwritePolicies { get; }
     public IReadOnlyList<Choice<SubfolderMode>> SubfolderModes { get; }
     public string DataDirectory { get; }
+    public string AboutTitle => $"PDF Master {AppInfo.Version}";
+    public string AuthorText => AppInfo.Credit + ".";
     public string LogsDirectory { get; }
     public bool IsPortable { get; }
 

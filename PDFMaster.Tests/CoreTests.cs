@@ -57,14 +57,14 @@ public class ToolSearchTests
         Assert.Equal(all.Count, all.Select(t => t.Id).Distinct().Count());
         Assert.All(all, t => Assert.InRange(t.PlannedPhase, 2, 7));
 
-        // Somente as ferramentas das Fases 2 a 4 estão implementadas.
+        // Somente as ferramentas das Fases 2 a 4 (e a compressão de vídeo, extra) estão implementadas.
         var available = all.Where(t => t.IsAvailable).Select(t => t.Id).OrderBy(id => id, StringComparer.Ordinal).ToArray();
         Assert.Equal(
             new[]
             {
                 "compress", "delete-pages", "extract-pages", "image-to-pdf", "insert-pages", "interleave", "merge",
                 "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "reorder", "rotate",
-                "scan", "split", "text-html-to-pdf", "view",
+                "scan", "split", "text-html-to-pdf", "video-compress", "view",
             },
             available);
         Assert.All(all.Where(t => t.IsAvailable), t => Assert.InRange(t.PlannedPhase, 2, 4));
@@ -78,6 +78,8 @@ public class ToolSearchTests
     [InlineData("intercalar", "interleave")]
     [InlineData("girar", "rotate")]
     [InlineData("excluir páginas", "delete-pages")]
+    [InlineData("reduzir vídeo", "video-compress")]
+    [InlineData("converter video", "video-compress")]
     public void Finds_phase_two_tools(string query, string expectedId)
     {
         Assert.Equal(expectedId, _search.Search(query)[0].Id);
@@ -237,6 +239,7 @@ public class SettingsAndFormattingTests
             OverwritePolicy = OverwritePolicy.Skip,
             SubfolderMode = SubfolderMode.ByDate,
             HistoryEnabled = false,
+            FfmpegPath = @"C:\FFmpeg\bin\ffmpeg.exe",
         };
 
         var restored = SettingsService.FromDictionary(SettingsService.ToDictionary(original));
@@ -249,6 +252,8 @@ public class SettingsAndFormattingTests
         Assert.Equal(original.OverwritePolicy, restored.OverwritePolicy);
         Assert.Equal(original.SubfolderMode, restored.SubfolderMode);
         Assert.Equal(original.HistoryEnabled, restored.HistoryEnabled);
+        Assert.Equal(original.FfmpegPath, restored.FfmpegPath);
+        Assert.Null(SettingsService.FromDictionary(SettingsService.ToDictionary(new AppSettings())).FfmpegPath);
     }
 
     [Fact]

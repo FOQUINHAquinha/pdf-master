@@ -91,6 +91,15 @@ public partial class OcrView : UserControl
     }
 }
 
+public partial class VideoView : UserControl
+{
+    public VideoView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
 public partial class ScanView : UserControl
 {
     public ScanView()

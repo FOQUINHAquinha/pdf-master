@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Assembly só de recursos: o ffmpeg.exe (variante LGPL, compilação BtbN) comprimido com gzip,
+    o manifesto (versão e SHA-256) e a licença. Fica separado do PDFMaster.Video para que os
+    ~50 MB só sejam lidos quando o FFmpeg precisa ser extraído para a pasta de dados.
+    Os arquivos não ficam no repositório: veja runtime/LEIA-ME.md.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="runtime\ffmpeg.exe.gz" LogicalName="ffmpeg.exe.gz" Condition="Exists('runtime\ffmpeg.exe.gz')" />
+    <EmbeddedResource Include="runtime\ffmpeg.manifest.txt" LogicalName="ffmpeg.manifest.txt" Condition="Exists('runtime\ffmpeg.manifest.txt')" />
+    <EmbeddedResource Include="runtime\LICENSE.txt" LogicalName="ffmpeg.LICENSE.txt" Condition="Exists('runtime\LICENSE.txt')" />
+  </ItemGroup>
+</Project>

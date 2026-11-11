@@ -16,6 +16,7 @@ using PDFMaster.OCR;
 using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
 using PDFMaster.Scanner;
+using PDFMaster.Video;
 
 namespace PDFMaster.App.ViewModels;
 
@@ -33,7 +34,11 @@ public sealed record ToolContext(
     NotificationCenter Notifications,
     ILoggerFactory LoggerFactory,
     ConversionToolkit Conversion,
-    OcrToolkit Ocr);
+    OcrToolkit Ocr,
+    VideoToolkit Video);
+
+/// <summary>Compressão de vídeo (FFmpeg).</summary>
+public sealed record VideoToolkit(FfmpegRuntime Runtime, VideoCompressor Compressor);
 
 /// <summary>Serviços de OCR e digitalização (Fase 4).</summary>
 public sealed record OcrToolkit(OcrRuntime Runtime, OcrService Service, WiaScanner Scanner);
@@ -109,6 +114,9 @@ public abstract partial class ToolViewModelBase : ObservableObject
 
     /// <summary>Verdadeiro quando a tela ainda não tem nenhum documento carregado.</summary>
     public abstract bool IsEmpty { get; }
+
+    /// <summary>Se a tela recebe os PDFs abertos na página inicial ao ser aberta sem arquivos.</summary>
+    public virtual bool AcceptsOpenPdfs => true;
 
     /// <summary>
     /// Executa a ação principal da tela (o botão de destaque), se ela estiver habilitada.
@@ -233,7 +241,8 @@ public abstract partial class ToolViewModelBase : ObservableObject
         string inputName,
         string busyText,
         Func<IProgress<double>, CancellationToken, Task<IReadOnlyList<ProducedFile>>> work,
-        Func<string?>? extraMessage = null)
+        Func<string?>? extraMessage = null,
+        Func<ProducedFile, string>? describe = null)
     {
         if (IsBusy) return false;
 
@@ -259,6 +268,8 @@ public abstract partial class ToolViewModelBase : ObservableObject
         var started = DateTime.UtcNow;
         var watch = Stopwatch.StartNew();
         var progress = new Progress<double>(value => ProgressValue = Math.Clamp(value, 0, 1) * 100);
+        string Describe(ProducedFile file) =>
+            describe?.Invoke(file) ?? $"{file.PageCount} página(s), {FileSizeFormatter.Format(file.Bytes)}";
 
         try
         {
@@ -270,14 +281,14 @@ public abstract partial class ToolViewModelBase : ObservableObject
                 foreach (var file in files)
                 {
                     await Context.History.AddAsync(new HistoryRecord(0, inputName, operation, started,
-                        $"{Path.GetFileName(file.Path)} — {file.PageCount} página(s), {FileSizeFormatter.Format(file.Bytes)}",
+                        $"{Path.GetFileName(file.Path)} — {Describe(file)}",
                         file.Path, watch.Elapsed, OperationStatus.Completed));
                 }
             }
 
             var first = files[0];
             var message = files.Count == 1
-                ? $"{Path.GetFileName(first.Path)}\n{first.PageCount} página(s), {FileSizeFormatter.Format(first.Bytes)}"
+                ? $"{Path.GetFileName(first.Path)}\n{Describe(first)}"
                 : $"{files.Count} arquivos gerados ({FileSizeFormatter.Format(files.Sum(f => f.Bytes))}) em\n{Path.GetDirectoryName(first.Path)}";
 
             if (extraMessage?.Invoke() is { Length: > 0 } extra) message += "\n" + extra;
@@ -293,7 +304,7 @@ public abstract partial class ToolViewModelBase : ObservableObject
             Context.Notifications.Show(NotificationKind.Info, $"{operation}: cancelado", "Nenhum arquivo incompleto foi deixado na pasta de destino.");
             return false;
         }
-        catch (Exception ex) when (ex is PdfEngineException or PageRangeException or PdfRenderException
+        catch (Exception ex) when (ex is PdfEngineException or PageRangeException or PdfRenderException or VideoException
                                        or IOException or UnauthorizedAccessException)
         {
             await RecordFailureAsync(inputName, operation, started, watch.Elapsed, ex.Message, OperationStatus.Failed);

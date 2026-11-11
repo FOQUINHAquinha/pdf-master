@@ -21,6 +21,9 @@
         <DataTemplate DataType="{x:Type vm:ScanViewModel}">
             <views:ScanView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VideoViewModel}">
+            <views:VideoView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ConvertViewModel}">
             <views:ConvertView />
         </DataTemplate>
@@ -200,9 +203,14 @@
         <!-- ===== Menu lateral ===== -->
         <Border Grid.Row="1" Background="{DynamicResource Brush.Sidebar}">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Bottom" Margin="20,10,16,16" FontSize="11.5" TextWrapping="Wrap"
-                           Foreground="{DynamicResource Brush.SidebarTextMuted}"
-                           Text="Processamento 100% local. Sem conta, sem anúncios, sem envio de arquivos." />
+                <StackPanel DockPanel.Dock="Bottom" Margin="20,10,16,16">
+                    <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Brush.SidebarTextMuted}"
+                               Text="Processamento 100% local. Sem conta, sem anúncios, sem envio de arquivos." />
+                    <TextBlock x:Name="AuthorCredit" Margin="0,8,0,0" FontSize="11.5" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Brush.SidebarTextMuted}"
+                               Text="{Binding AuthorText}" />
+                </StackPanel>
                 <ListBox ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav, Mode=TwoWay}"
                          Margin="0,10,0,0" Background="Transparent" BorderThickness="0"
                          PreviewMouseLeftButtonUp="OnNavClick">

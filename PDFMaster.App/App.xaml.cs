@@ -8,6 +8,7 @@ using PDFMaster.App.Services;
 using PDFMaster.App.ViewModels;
 using PDFMaster.Compression;
 using PDFMaster.Conversion;
+using PDFMaster.Video;
 using PDFMaster.Core;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Settings;
@@ -86,7 +87,12 @@ public partial class App : Application
                 provider.GetRequiredService<NotificationCenter>(),
                 provider.GetRequiredService<ILoggerFactory>(),
                 provider.GetRequiredService<ConversionToolkit>(),
-                provider.GetRequiredService<OcrToolkit>()));
+                provider.GetRequiredService<OcrToolkit>(),
+                provider.GetRequiredService<VideoToolkit>()));
+
+            services.AddSingleton(new FfmpegRuntime(paths.DataDirectory));
+            services.AddSingleton<VideoCompressor>();
+            services.AddSingleton<VideoToolkit>();
 
             services.AddSingleton(new OcrRuntime(paths.DataDirectory));
             services.AddSingleton<OcrService>();
@@ -128,6 +134,9 @@ public partial class App : Application
             _services.GetRequiredService<SqliteDatabase>().Initialize();
             var settings = _services.GetRequiredService<SettingsService>();
             await settings.LoadAsync();
+            var ffmpeg = _services.GetRequiredService<FfmpegRuntime>();
+            ffmpeg.CustomPath = settings.Current.FfmpegPath;
+            settings.Changed += (_, _) => ffmpeg.CustomPath = settings.Current.FfmpegPath;
 
             var options = StartupOptions.Parse(e.Args);
             if (options.Theme is { } requestedTheme && requestedTheme != settings.Current.Theme)

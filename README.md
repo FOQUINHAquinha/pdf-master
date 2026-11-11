@@ -3,14 +3,17 @@
 Suíte de ferramentas PDF para Windows 10 e 11, gratuita, sem conta, sem anúncios e com
 processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-**Estado atual: Fases 1 a 3 concluídas.** Já funcionam:
+Criado por **Gustavo Farias Medeiros**.
+
+**Estado atual: Fases 1 a 4 concluídas.** Já funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
   LibreOffice instalado, Word/Excel/PowerPoint/HTML → PDF;
 - compressão de PDF com perfis e comparação antes/depois;
 - OCR local (Tesseract) com PDF pesquisável, extração para TXT/Word e OCR em lote;
-- digitalização por scanner WIA ou a partir de imagens (o scanner ainda não foi testado com um aparelho real).
+- digitalização por scanner WIA ou a partir de imagens (o scanner ainda não foi testado com um aparelho real);
+- **extra:** compressão de vídeo — qualquer formato que o FFmpeg abra vira MP4 (H.264 + AAC) em 360p.
 
 Editor, segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
 
@@ -20,6 +23,16 @@ Antes de compilar no seu computador, rode `tools/obter-modelos-ocr.ps1`: ele bai
 de português, inglês e espanhol (tessdata_fast, Apache-2.0) para `PDFMaster.OCR/tessdata`, de onde
 são incorporados ao programa. Sem eles o programa compila, mas a tela de OCR avisa que não há
 idiomas instalados. O executável gerado pelo GitHub Actions já vem com os três.
+
+### FFmpeg (compressão de vídeo)
+
+A aba "Comprimir vídeo" usa o [FFmpeg](https://ffmpeg.org) na variante **LGPL** compilada por
+[BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), executado como programa separado.
+O executável gerado pelo GitHub Actions já o traz embutido (por isso ficou cerca de 50 MB maior);
+na primeira utilização ele é extraído para a pasta de dados (`video-runtime`), com a licença.
+Para compilar no seu computador com o FFmpeg embutido, rode `tools/obter-ffmpeg.ps1`. Sem ele, a
+aba procura um FFmpeg instalado (PATH, winget, Chocolatey, Scoop) ou deixa você indicar o
+`ffmpeg.exe`; a variável `PDFMASTER_FFMPEG` também pode apontar para ele.
 
 ### LibreOffice (opcional)
 
@@ -57,7 +70,7 @@ PDFMaster.exe [--theme light|dark] [--page <seção>] [--tool <ferramenta>] [--o
 | Parâmetro | Efeito |
 |---|---|
 | `--theme light` / `--theme dark` | Define e salva o tema. |
-| `--page <seção>` | Abre direto numa seção: `home`, `organize`, `edit`, `convert`, `compress`, `security`, `ocr`, `compare`, `batch`, `history`, `settings`. |
+| `--page <seção>` | Abre direto numa seção: `home`, `organize`, `edit`, `convert`, `compress`, `security`, `ocr`, `video`, `compare`, `batch`, `history`, `settings`. |
 | `--tool <ferramenta>` | Abre uma ferramenta com os arquivos informados: `view`, `merge`, `interleave`, `split`, `reorder`, `rotate`, `delete-pages`, `insert-pages`, `extract-pages`, `pdf-to-image`, `image-to-pdf`, `office-to-pdf`, `text-html-to-pdf`, `pdf-to-word`, `pdf-to-text`, `compress`. |
 | `--output <pasta>` | Define a pasta de destino da ferramenta aberta com `--tool`. |
 | `--run` | Executa a ação principal da ferramenta com as opções padrão (a janela continua aberta para mostrar o resultado). |
@@ -73,6 +86,7 @@ PDFMaster.exe --tool compress --output C:\Saida --run digitalizado.pdf
 PDFMaster.exe --tool pdf-to-image --output C:\Saida --run documento.pdf
 PDFMaster.exe --tool ocr --output C:\Saida --run escaneado.pdf
 PDFMaster.exe --tool scan --output C:\Saida --run pagina1.png pagina2.jpg
+PDFMaster.exe --tool video-compress --output C:\Saida --run ferias.mov
 ```
 
 A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo terminal) entra na Fase 7.
