@@ -1,5 +1,40 @@
 # Histórico de alterações
 
+## 0.6.0 — 11/11/2026 — Fase 6: Segurança e ferramentas avançadas
+
+### Adicionado
+- **Proteger com senha**: senha de abertura e de proprietário, criptografia AES de 256 bits e
+  permissões (imprimir, imprimir em alta qualidade, copiar, alterar, comentar, preencher
+  formulários, montar páginas, acessibilidade), em vários PDFs de uma vez. As senhas nunca são
+  gravadas.
+- **Remover proteção** com a senha de proprietário informada e confirmação de autorização.
+- **Propriedades de segurança**: identifica documentos protegidos, criptografia, permissões,
+  integridade estrutural, assinaturas digitais e PDF/A declarado, em vários PDFs.
+- **Metadados**: ver, editar (título, autor, assunto, palavras-chave, criador, produtor, datas) e
+  remover, com o bloco XMP regravado de acordo.
+- **Verificar assinaturas digitais** com validação criptográfica real (PKCS#7/CMS e carimbo do
+  tempo RFC 3161): integridade, alterações posteriores, certificado, emissor, validade, cadeia;
+  pasta de raízes confiáveis adicionais (preparação para ICP-Brasil, sem alegar conformidade);
+  relatório em TXT.
+- **Reparar PDF**: diagnóstico da estrutura (inclusive tabelas de referências compactadas),
+  reconstrução, cópia com as páginas legíveis e relatório do que foi recuperado e perdido.
+- **PDF/A-1b, 2b e 3b**: conversão (fontes incorporadas com substitutas do Windows de mesmas
+  medidas, perfil sRGB, XMP, remoção do que o nível proíbe, lista de mudanças) e validação com
+  relatório; com o veraPDF instalado, cada arquivo só é salvo se ele aprovar. As conversões dos
+  testes foram aprovadas pelo veraPDF 1.30.4 nos três níveis.
+- **Comparar PDFs** lado a lado: texto acrescentado, removido e alterado com destaque na página,
+  páginas inseridas e removidas, imagens e diferenças visuais, navegação e relatório em HTML.
+- Testes com PDFs assinados (escritos byte a byte com certificados gerados no teste), protegidos,
+  danificados e com recursos proibidos no PDF/A; o CI instala o veraPDF para validar as conversões.
+
+### Alterado
+- Mensagens de "chega na Fase 6" (PDF protegido ou danificado) agora indicam "Remover proteção" e
+  "Reparar PDF".
+- As ferramentas extras que o catálogo marcava como Fase 6 (recortar, páginas em branco, livreto,
+  inverter ordem, marcadores/anexos, PDF para Excel/PowerPoint, extrair conteúdo, preto e branco)
+  foram replanejadas para a Fase 7 — não fazem parte da Fase 6 da especificação.
+- A compressão de vídeo continua disponível, como pedido.
+
 ## 0.5.0 — 11/11/2026 — Fase 5: Editor
 
 ### Adicionado

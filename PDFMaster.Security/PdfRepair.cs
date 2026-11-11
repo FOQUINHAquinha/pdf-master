@@ -135,7 +135,7 @@ public sealed partial class PdfRepair
         {
             strict = false;
             if (ex is not PdfReaderException || !ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase))
-                problems.Add($"Um leitor rigoroso não consegue abrir o arquivo ({ex.GetType().Name}): {ex.Message}");
+                problems.Add($"Leitores rigorosos (inclusive as demais ferramentas deste programa) não conseguem abrir o arquivo. Detalhe técnico: {ex.Message}");
         }
 
         ct.ThrowIfCancellationRequested();

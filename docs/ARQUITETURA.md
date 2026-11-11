@@ -36,7 +36,8 @@ PDFMaster.Scanner        WIA (TWAIN não implementado)               (Fase 4)
 PDFMaster.Video          Compressão de vídeo com FFmpeg             (extra)
 PDFMaster.Video.Ffmpeg   Só recursos: FFmpeg LGPL comprimido        (extra)
 PDFMaster.Editor         Editor: geometria, conteúdo, anotações, formulários (Fase 5)
-PDFMaster.Security       Senhas, permissões, assinaturas            (Fase 6)
+PDFMaster.Security       Senhas, metadados, assinaturas, reparo, PDF/A (Fase 6)
+PDFMaster.Comparison     Comparação de PDFs e relatório             (Fase 6)
 PDFMaster.Batch          Fila de tarefas e fluxos                   (Fase 7)
 PDFMaster.Tests          Testes unitários e de integração
 PDFMaster.Installer      Instalador                                 (Fase 8)
@@ -126,16 +127,25 @@ sobre o binário distribuído) e o Media Foundation direto (sem FFmpeg), que nã
 AAC são formatos com patentes em alguns países; o programa não cobra nem distribui codificadores
 comerciais.
 
+### Segurança e ferramentas avançadas (Fase 6)
+
+Nenhuma biblioteca nova foi necessária:
+
+| Finalidade | Implementação | Licença |
+|---|---|---|
+| Senhas, permissões | PDFsharp 6 (AES de 256 bits); inspeção e conferência pelo PDFium | MIT / BSD |
+| Metadados e XMP | PDFsharp para o conteúdo; o dicionário de informações e o XMP finais são gravados numa revisão incremental e o PDFium regrava tudo numa única revisão (o PDFsharp sempre acrescenta o próprio nome em "Produtor" e gera o próprio XMP) | MIT / BSD |
+| Assinaturas digitais | `System.Security.Cryptography.Pkcs` (SignedCms, Rfc3161TimestampToken) e `X509Chain` do .NET — em vez do BouncyCastle previsto | MIT |
+| Reparo | Reconstrução da tabela de referências pelo PDFium (`FPDF_SaveAsCopy`, `FPDF_ImportPages`) e diagnóstico próprio (tabelas clássicas e compactadas) — em vez do qpdf previsto | BSD |
+| PDF/A | Código próprio sobre o PDFsharp; perfil sRGB do Windows; fontes do Windows como substitutas; validação interna + veraPDF externo opcional | MIT |
+| Comparação | Texto posicionado pelo PDFium (`FPDF_PageToDevice`), diferença de Myers, pixels renderizados pelo PDFium; imagens comparadas por SHA-256 | BSD |
+
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
 |---|---|---|---|
-| Senhas, permissões e metadados | PDFsharp 6 (já em uso) | MIT | Fase 6. |
-| Comparação de documentos | PdfPig (já em uso) | Apache-2.0 | Fase 6. |
-| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 6, junto com a extração de tabelas. |
+| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 7, junto com a extração de tabelas. |
 | OCR | Tesseract 5.2.0 (binding .NET de charlesw) + modelos `tessdata_fast` | Apache-2.0 | por/eng/spa incorporados na compilação (`tools/obter-modelos-ocr.ps1`) e extraídos para a pasta de dados; outros idiomas instalados pelo usuário. |
-| Otimização estrutural, reparo | qpdf | Apache-2.0 | Alternativa permissiva ao Ghostscript. |
-| Assinaturas digitais | BouncyCastle | MIT | Validação criptográfica real (CMS/PAdES). |
 | Scanner | WIA (COM do Windows) e NTwain | — / MIT | |
 | Instalador | Inno Setup | Licença própria, gratuita inclusive para uso comercial | |
 
@@ -146,7 +156,7 @@ comerciais.
 | **iText** | AGPL: distribuir o programa obrigaria a abrir todo o código sob AGPL, ou comprar licença comercial. | **Não usar.** |
 | **Ghostscript** | AGPL (ou comercial). Mesmo chamado como processo externo, embuti-lo no instalador traz obrigações da AGPL. | **Não embutir.** Usar qpdf + recompressão própria de imagens. Se a qualidade de compressão não bastar, oferecer Ghostscript como componente opcional que o usuário instala por conta própria, com aviso claro. |
 | **QuestPDF** | Licença "Community": gratuita só abaixo de um limite de faturamento anual. | **Evitar.** A geração de PDF necessária (texto/HTML → PDF, relatórios) é coberta por PDFsharp/MigraDoc (MIT). |
-| **veraPDF** (validação PDF/A) | GPL/MPL, em Java. | Usar apenas como ferramenta externa opcional. Sem validador, o programa **não** declara conformidade PDF/A (regra 16). |
+| **veraPDF** (validação PDF/A) | GPL/MPL, em Java. | Usado apenas como ferramenta externa opcional, instalada pelo usuário (e pelo CI, para validar os testes). Sem ele, o programa **não** declara conformidade PDF/A (regra 16): diz "aprovado na verificação interna". |
 
 ## 4. Plano de implementação
 
@@ -161,8 +171,8 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | 4 | OCR e digitalização (scanner WIA aguardando teste com aparelho real) | Entregue |
 | extra | Compressão de vídeo para MP4 360p (FFmpeg) | Entregue (0.4.1) |
 | 5 | Editor | Entregue |
-| 6 | Segurança, PDF/A, comparação, reparo, assinaturas | Próxima |
-| 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando | |
+| 6 | Segurança, PDF/A, comparação, reparo, assinaturas | Entregue |
+| 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando; ferramentas extras do catálogo | Próxima |
 | 8 | Testes gerais, otimização, instalador, documentação | |
 
 ## 5. Dificuldades técnicas previstas
@@ -178,14 +188,15 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 4. **Compressão sem Ghostscript.** Reamostrar e recomprimir imagens dentro do PDF exige código
    próprio sobre PDFsharp/PdfPig. Os perfis mais fortes podem render menos que os do PDF24.
 5. **PDF/A.** Converter exige incorporar fontes, perfil de cor e metadados XMP; validar exige
-   validador externo. Sem validação, o resultado será rotulado "convertido, não validado".
-6. **Assinaturas digitais e ICP-Brasil.** Validação criptográfica e de cadeia é viável com
-   BouncyCastle; conformidade ICP-Brasil só será alegada após testes específicos com certificados reais.
+   validador externo. Resolvido na Fase 6: sem o veraPDF o resultado é rotulado "aprovado na
+   verificação interna", nunca "conforme".
+6. **Assinaturas digitais e ICP-Brasil.** Validação criptográfica e de cadeia feita com as APIs do
+   .NET; conformidade ICP-Brasil só será alegada após testes específicos com certificados reais.
 7. **TWAIN.** Drivers variam muito e muitos são 32 bits; WIA é mais estável e será o caminho padrão.
 8. **Documentos grandes.** Renderização sob demanda, cache de miniaturas em disco e limite de
    concorrência configurável são requisitos desde a Fase 2.
-9. **Reparo de PDF.** Reconstrução de xref é possível (qpdf); recuperação de objetos danificados é
-   parcial por natureza e o relatório dirá o que foi perdido.
+9. **Reparo de PDF.** Reconstrução de xref feita pelo PDFium; recuperação de objetos danificados é
+   parcial por natureza e o relatório diz o que foi perdido.
 
 ## 6. Estratégia de testes
 

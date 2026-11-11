@@ -133,7 +133,7 @@ public sealed partial class ProtectViewModel : FileListViewModel
     private string _ownerConfirm = string.Empty;
 
     public ProtectViewModel(ToolContext context)
-        : base(context, "Proteger com senha", "Senha de abertura e restrições de impressão, cópia e edição, com criptografia AES. Os originais não são alterados.", single: false) =>
+        : base(context, "Proteger com senha", "Senha de abertura e restrições de impressão, cópia e edição, com criptografia AES de 256 bits. Os originais não são alterados.", single: false) =>
         Refresh();
 
     public override string EmptyHint => "Arraste para cá os PDFs que serão protegidos";
@@ -369,7 +369,9 @@ public sealed partial class SecurityInfoViewModel : FileListViewModel
                 _ => "Estrutura com problemas: " + string.Join(" ", structure.Problems.Take(3)) + " Use \"Reparar PDF\".",
             });
             problem = structure.Damaged;
-            if (report.Opened && !report.PasswordRequired)
+            if (report.Opened && !report.PasswordRequired && !structure.StrictReaderOpens)
+                lines.Add("Assinaturas e metadados: analise a cópia gerada por \"Reparar PDF\".");
+            else if (report.Opened && !report.PasswordRequired)
             {
                 var signatures = SignatureVerifier.Count(path);
                 lines.Add(signatures == 0 ? "Sem assinaturas digitais." : $"{signatures} assinatura(s) digital(is): confira em \"Verificar assinaturas digitais\".");

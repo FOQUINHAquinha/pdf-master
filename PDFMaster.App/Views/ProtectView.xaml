@@ -59,7 +59,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Senha de proprietário (libera as restrições)" Style="{StaticResource Label}" />
+                            <TextBlock Text="Senha de proprietário" Style="{StaticResource Label}" />
                             <PasswordBox Tag="owner" PasswordChanged="OnPasswordChanged" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
@@ -68,7 +68,7 @@
                         </StackPanel>
                     </Grid>
                     <TextBlock Style="{StaticResource Secondary}" Margin="0,10,0,0"
-                               Text="Criptografia AES. As senhas ficam só na memória enquanto a tela está aberta: o programa não as grava. Sem a senha de abertura, ninguém consegue abrir o documento — guarde-a." />
+                               Text="Criptografia AES de 256 bits. A senha de proprietário libera as restrições e permite remover a proteção. As senhas ficam só na memória enquanto a tela está aberta: o programa não as grava. Sem a senha de abertura, ninguém consegue abrir o documento — guarde-a." />
                 </StackPanel>
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Quem abrir sem a senha de proprietário pode:" Style="{StaticResource Label}" Margin="0,0,0,3" />

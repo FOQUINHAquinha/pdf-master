@@ -5,7 +5,7 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 
 Criado por **Gustavo Farias Medeiros**.
 
-**Estado atual: Fases 1 a 5 concluídas.** Já funcionam:
+**Estado atual: Fases 1 a 6 concluídas.** Já funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
@@ -15,9 +15,16 @@ Criado por **Gustavo Farias Medeiros**.
 - digitalização por scanner WIA ou a partir de imagens (o scanner ainda não foi testado com um aparelho real);
 - editor: inserir e editar texto, imagens, anotações, assinatura visual, carimbos, campos de
   formulário; marca d'água, cabeçalhos e rodapés; preenchimento de formulários;
+- segurança: proteger com senha (AES de 256 bits) e permissões, remover proteção com a senha,
+  propriedades de segurança, metadados (ver, editar, remover), verificação criptográfica de
+  assinaturas digitais e reparo de PDFs danificados;
+- PDF/A-1b, 2b e 3b: conversão e validação, com relatório (a conformidade só é afirmada quando o
+  validador veraPDF, opcional, confirma);
+- comparação de dois PDFs lado a lado (texto, páginas, imagens e diferenças visuais) com relatório;
 - **extra:** compressão de vídeo — qualquer formato que o FFmpeg abra vira MP4 (H.264 + AAC) em 360p.
 
-Segurança e automação aparecem no programa como "Prevista" e chegam nas próximas fases.
+Automação (lote, pasta monitorada, menu de contexto) e algumas ferramentas extras aparecem no
+programa como "Prevista para a Fase 7".
 
 ### Modelos de idioma do OCR
 
@@ -42,6 +49,21 @@ As conversões de documentos do Office e de HTML para PDF, e a opção "manter a
 para Word, usam o [LibreOffice](https://www.libreoffice.org) instalado no computador. O PDF Master
 não o inclui, não o baixa e funciona sem ele — só essas conversões ficam indisponíveis, e a tela
 avisa. Para apontar uma instalação fora do local padrão, defina a variável `PDFMASTER_SOFFICE`.
+
+### veraPDF (opcional, validação PDF/A)
+
+A ferramenta "Converter e validar PDF/A" sempre faz uma verificação interna dos principais
+requisitos, mas só afirma conformidade quando o [veraPDF](https://verapdf.org) (gratuito,
+GPLv3+/MPLv2+, requer Java) confirma. O PDF Master não o inclui nem o baixa: instale-o em
+`C:\veraPDF` (ou `Arquivos de Programas\veraPDF`) ou aponte a variável `PDFMASTER_VERAPDF` para o
+`verapdf.bat`. Quando ele está presente, cada arquivo convertido só é salvo se for aprovado.
+
+### Certificados raiz adicionais (assinaturas digitais)
+
+A verificação de assinaturas usa as raízes confiáveis do Windows. Para confiar em outras (por
+exemplo, as da ICP-Brasil), coloque os certificados `.cer`/`.crt` na pasta
+`Certificados confiáveis`, dentro da pasta de dados (o botão "Pasta de raízes confiáveis…" abre
+essa pasta). A validação completa ICP-Brasil (revogação, políticas) ainda não é feita.
 
 ## Baixar o executável
 
@@ -102,7 +124,7 @@ A execução sem janela (`--merge`, `--compress`, `--ocr`, `--split` em modo ter
 - Variável de ambiente `PDFMASTER_DATA_DIR`: usa a pasta indicada.
 
 O banco guarda configurações, histórico e arquivos recentes — nunca o conteúdo dos documentos.
-O programa não usa a rede. (O LibreOffice, quando usado para converter HTML, pode buscar imagens
+O programa não usa a rede (a verificação de assinaturas não consulta revogação na internet). (O LibreOffice, quando usado para converter HTML, pode buscar imagens
 que a própria página referencia na internet.)
 
 ## Documentação
