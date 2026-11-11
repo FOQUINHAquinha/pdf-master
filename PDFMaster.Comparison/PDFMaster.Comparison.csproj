@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PDFMaster.Domain\PDFMaster.Domain.csproj" />
+    <ProjectReference Include="..\PDFMaster.Core\PDFMaster.Core.csproj" />
+    <ProjectReference Include="..\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj" />
+    <ProjectReference Include="..\PDFMaster.Rendering\PDFMaster.Rendering.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PDFsharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PDFMaster.Tests" />
+  </ItemGroup>
+</Project>

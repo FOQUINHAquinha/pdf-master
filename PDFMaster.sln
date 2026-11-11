@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFMaster.Video", "PDFMaste
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFMaster.Video.Ffmpeg", "PDFMaster.Video.Ffmpeg\PDFMaster.Video.Ffmpeg.csproj", "{94C998A6-EAD0-4B05-B3B6-B0B2557DF2AD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFMaster.Comparison", "PDFMaster.Comparison\PDFMaster.Comparison.csproj", "{3C1D5E27-6B0A-4F43-9E6B-2D9A1C7F5B10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{8492F977-0CD9-5E7E-BA6B-C58AE69A6860}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8492F977-0CD9-5E7E-BA6B-C58AE69A6860}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8492F977-0CD9-5E7E-BA6B-C58AE69A6860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C1D5E27-6B0A-4F43-9E6B-2D9A1C7F5B10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C1D5E27-6B0A-4F43-9E6B-2D9A1C7F5B10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C1D5E27-6B0A-4F43-9E6B-2D9A1C7F5B10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C1D5E27-6B0A-4F43-9E6B-2D9A1C7F5B10}.Release|Any CPU.Build.0 = Release|Any CPU
 		{79E37284-1995-52AE-B033-83382610D00E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79E37284-1995-52AE-B033-83382610D00E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79E37284-1995-52AE-B033-83382610D00E}.Release|Any CPU.ActiveCfg = Release|Any CPU

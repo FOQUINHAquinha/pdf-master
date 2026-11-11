@@ -3,7 +3,7 @@ using PDFMaster.Domain;
 namespace PDFMaster.PdfEngine;
 
 /// <summary>Erro de leitura ou gravação de PDF com mensagem pronta para mostrar ao usuário.</summary>
-public sealed class PdfEngineException : Exception
+public class PdfEngineException : Exception
 {
     public PdfEngineException(string message, Exception? inner = null) : base(message, inner)
     {

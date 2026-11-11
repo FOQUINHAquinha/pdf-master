@@ -54,6 +54,54 @@ jobs:
           choco install libreoffice-fresh -y --no-progress 2>&1 | Select-Object -Last 15 | Tee-Object ci-out/libreoffice.log
           "soffice: $(Test-Path 'C:\Program Files\LibreOffice\program\soffice.com')" | Out-File ci-out/libreoffice.log -Append -Encoding utf8
 
+      # veraPDF (validador PDF/A de referência; GPLv3+/MPLv2+): usado só aqui, para confirmar as conversões
+      # PDF/A nos testes. Não é distribuído com o programa. Se a instalação falhar, os testes seguem sem ele.
+      - name: Instalar veraPDF (validador PDF/A, só para os testes)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $log = 'ci-out/verapdf.log'
+          New-Item -ItemType Directory -Force ci-out | Out-Null
+          $zip = Join-Path $env:RUNNER_TEMP 'verapdf.zip'
+          $ok = $false
+          foreach ($url in @('https://software.verapdf.org/rel/verapdf-installer.zip', 'https://software.verapdf.org/releases/verapdf-installer.zip', 'http://downloads.verapdf.org/rel/verapdf-installer.zip')) {
+            try { Invoke-WebRequest $url -OutFile $zip -MaximumRedirection 5; "baixado: $url" | Out-File $log -Append; $ok = $true; break }
+            catch { "falhou: $url $_" | Out-File $log -Append }
+          }
+          if (-not $ok) { exit 0 }
+          $dir = Join-Path $env:RUNNER_TEMP 'verapdf-inst'
+          Expand-Archive $zip -DestinationPath $dir -Force
+          $jar = Get-ChildItem $dir -Recurse -Filter '*.jar' | Where-Object { $_.Name -like '*installer*' } | Select-Object -First 1
+          "jar: $($jar.FullName)" | Out-File $log -Append
+          $xml = @(
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>',
+            '<AutomatedInstallation langpack="eng">',
+            '  <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>',
+            '  <com.izforge.izpack.panels.target.TargetPanel id="install_dir"><installpath>C:\veraPDF</installpath></com.izforge.izpack.panels.target.TargetPanel>',
+            '  <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">',
+            '    <pack index="0" name="veraPDF GUI" selected="true"/>',
+            '    <pack index="1" name="veraPDF Batch files" selected="true"/>',
+            '    <pack index="2" name="veraPDF Validation model" selected="false"/>',
+            '    <pack index="3" name="veraPDF Documentation" selected="false"/>',
+            '    <pack index="4" name="veraPDF Sample Plugins" selected="false"/>',
+            '  </com.izforge.izpack.panels.packs.PacksPanel>',
+            '  <com.izforge.izpack.panels.install.InstallPanel id="install"/>',
+            '  <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>',
+            '</AutomatedInstallation>')
+          $auto = Join-Path $env:RUNNER_TEMP 'auto-install.xml'
+          $xml | Out-File $auto -Encoding utf8
+          $java = Join-Path $env:JAVA_HOME_17_X64 'bin\java.exe'
+          "java: $java $(Test-Path $java)" | Out-File $log -Append
+          & $java -jar $jar.FullName $auto 2>&1 | Out-File $log -Append
+          $bat = 'C:\veraPDF\verapdf.bat'
+          "instalado: $(Test-Path $bat)" | Out-File $log -Append
+          if (Test-Path $bat) {
+            $env:JAVA_HOME = $env:JAVA_HOME_17_X64
+            & $bat --version 2>&1 | Out-File $log -Append
+            "PDFMASTER_REQUIRE_VERAPDF=1" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            "JAVA_HOME=$env:JAVA_HOME_17_X64" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          }
+
       - name: Testar
         shell: pwsh
         env:

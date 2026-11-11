@@ -5,6 +5,22 @@ namespace PDFMaster.Rendering;
 /// <summary>Página renderizada: pixels BGRA de 32 bits, opacos, sobre fundo branco.</summary>
 public sealed record RenderedPage(int Width, int Height, byte[] Bgra);
 
+/// <param name="SecurityRevision">-1 = sem criptografia; 2/3 = RC4; 4 = RC4 ou AES-128; 5/6 = AES-256.</param>
+/// <param name="Permissions">Bits /P do PDF (todos ligados quando aberto com a senha de proprietário).</param>
+/// <param name="FileVersion">Versão do PDF ×10 (ex.: 17 = 1.7).</param>
+/// <param name="Error">Código do PDFium quando não abriu (2 arquivo, 3 formato, 4 senha, 5 segurança).</param>
+public sealed record PdfiumInspection(bool Opened, bool PasswordRequired, int SecurityRevision, uint Permissions, int PageCount,
+    int FileVersion, int Error, IReadOnlyList<int> BrokenPages)
+{
+    public bool Encrypted => SecurityRevision >= 0 || PasswordRequired;
+}
+
+/// <summary>Caractere com a caixa na página exibida (pontos, origem no canto superior esquerdo, y para baixo).</summary>
+public readonly record struct DisplayChar(char Value, double X, double Y, double Width, double Height);
+
+/// <summary>Texto de uma página exibida: tamanho exibido (com rotação e CropBox) e caracteres posicionados.</summary>
+public sealed record DisplayPageText(double Width, double Height, IReadOnlyList<DisplayChar> Chars);
+
 /// <summary>Caractere de uma página com a caixa no espaço de usuário do PDF (pontos, y para cima).</summary>
 public readonly record struct PdfChar(char Value, double Left, double Right, double Bottom, double Top, double FontSize)
 {
@@ -247,6 +263,207 @@ public sealed class PdfiumRenderer : IPdfRenderer
         }
     }
 
+    /// <summary>
+    /// Abre o documento com o PDFium (que reconstrói a tabela de referências de arquivos danificados)
+    /// e executa <paramref name="action"/> dentro da trava. Devolve null e o código de erro do PDFium
+    /// quando o arquivo não abre (4 = senha necessária ou incorreta).
+    /// </summary>
+    private static (T? Result, uint Error) WithDocument<T>(string path, string? password, Func<IntPtr, T> action)
+    {
+        FileStream stream;
+        try
+        {
+            stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.RandomAccess);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            throw new PdfRenderException($"Não foi possível abrir \"{Path.GetFileName(path)}\": {ex.Message}", ex);
+        }
+
+        using (stream)
+        {
+            if (stream.Length == 0 || stream.Length > uint.MaxValue) return (default, 3);
+            var reader = new BlockReader(stream);
+            Native.GetBlockCallback callback = reader.Read;
+            lock (Gate)
+            {
+                if (!_initialized)
+                {
+                    Native.FPDF_InitLibrary();
+                    _initialized = true;
+                }
+
+                var access = new Native.FileAccess
+                {
+                    FileLength = (uint)stream.Length,
+                    GetBlock = Marshal.GetFunctionPointerForDelegate(callback),
+                    Param = IntPtr.Zero,
+                };
+                var document = Native.FPDF_LoadCustomDocument(ref access, password);
+                if (document == IntPtr.Zero) return (default, Native.FPDF_GetLastError());
+                try
+                {
+                    return (action(document), 0);
+                }
+                finally
+                {
+                    Native.FPDF_CloseDocument(document);
+                    GC.KeepAlive(callback);
+                }
+            }
+        }
+    }
+
+    /// <summary>Páginas que o PDFium não consegue carregar (índices a partir de 0).</summary>
+    private static List<int> BrokenPages(IntPtr document, int count)
+    {
+        var broken = new List<int>();
+        for (var i = 0; i < count; i++)
+        {
+            var page = Native.FPDF_LoadPage(document, i);
+            if (page == IntPtr.Zero)
+            {
+                broken.Add(i);
+                continue;
+            }
+
+            if (Native.FPDF_GetPageWidthF(page) <= 0 || Native.FPDF_GetPageHeightF(page) <= 0) broken.Add(i);
+            Native.FPDF_ClosePage(page);
+        }
+
+        return broken;
+    }
+
+    /// <summary>Informações de proteção e integridade lidas pelo PDFium.</summary>
+    public static PdfiumInspection Inspect(string path, string? password = null, bool checkPages = false)
+    {
+        var (result, error) = WithDocument(path, password, document =>
+        {
+            var count = Native.FPDF_GetPageCount(document);
+            var version = Native.FPDF_GetFileVersion(document, out var v) != 0 ? v : 0;
+            return new PdfiumInspection(true, false, Native.FPDF_GetSecurityHandlerRevision(document), Native.FPDF_GetDocPermissions(document),
+                count, version, 0, checkPages ? BrokenPages(document, count) : []);
+        });
+        return result ?? new PdfiumInspection(false, error == 4, -1, 0, 0, 0, (int)error, []);
+    }
+
+    /// <summary>
+    /// Regrava o documento como o PDFium o entendeu (tabela de referências nova, sem atualizações
+    /// incrementais). Usado no reparo de arquivos danificados. Devolve as páginas que não carregaram.
+    /// </summary>
+    /// <param name="removeBrokenPages">Retira da cópia as páginas que não carregam.</param>
+    public static (int PageCount, IReadOnlyList<int> BrokenPages) SaveCopy(string path, string? password, string output, int fileVersion = 0,
+        bool removeBrokenPages = false)
+    {
+        var (result, error) = WithDocument(path, password, document =>
+        {
+            var count = Native.FPDF_GetPageCount(document);
+            var broken = BrokenPages(document, count);
+            if (removeBrokenPages)
+            {
+                for (var i = broken.Count - 1; i >= 0; i--) Native.FPDFPage_Delete(document, broken[i]);
+            }
+
+            using var target = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
+            Native.WriteBlockCallback write = (_, data, size) =>
+            {
+                try
+                {
+                    var buffer = new byte[size];
+                    Marshal.Copy(data, buffer, 0, (int)size);
+                    target.Write(buffer, 0, buffer.Length);
+                    return 1;
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
+            };
+            var writer = new Native.FileWrite { Version = 1, WriteBlock = Marshal.GetFunctionPointerForDelegate(write) };
+            var ok = (fileVersion > 0
+                ? Native.FPDF_SaveWithVersion(document, ref writer, Native.NoIncremental, fileVersion)
+                : Native.FPDF_SaveAsCopy(document, ref writer, Native.NoIncremental)) != 0;
+            GC.KeepAlive(write);
+            if (!ok) throw new PdfRenderException("O PDFium não conseguiu regravar o documento.");
+            return (count, (IReadOnlyList<int>)broken);
+        });
+        if (error != 0) throw new PdfRenderException(error == 4 ? "O documento está protegido por senha." : "O PDFium também não conseguiu abrir o arquivo.");
+        return result;
+    }
+
+    /// <summary>
+    /// Texto de todas as páginas com a posição de cada caractere na página exibida, calculada pelo
+    /// próprio PDFium (mesma rotação e recorte da renderização). Páginas que não carregam vêm vazias.
+    /// </summary>
+    public static IReadOnlyList<DisplayPageText> ReadDisplayText(string path, CancellationToken ct = default)
+    {
+        // Escala do "dispositivo" virtual: 10 unidades por ponto (precisão de 0,1 pt nas conversões inteiras).
+        const int k = 10;
+        var (result, error) = WithDocument(path, null, document =>
+        {
+            var pages = new List<DisplayPageText>();
+            var count = Native.FPDF_GetPageCount(document);
+            for (var p = 0; p < count; p++)
+            {
+                ct.ThrowIfCancellationRequested();
+                var page = Native.FPDF_LoadPage(document, p);
+                if (page == IntPtr.Zero)
+                {
+                    pages.Add(new DisplayPageText(0, 0, []));
+                    continue;
+                }
+
+                try
+                {
+                    double width = Native.FPDF_GetPageWidthF(page), height = Native.FPDF_GetPageHeightF(page);
+                    int sx = (int)Math.Round(width * k), sy = (int)Math.Round(height * k);
+                    var chars = new List<DisplayChar>();
+                    var text = Native.FPDFText_LoadPage(page);
+                    if (text != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            var n = Native.FPDFText_CountChars(text);
+                            for (var i = 0; i < n; i++)
+                            {
+                                var code = Native.FPDFText_GetUnicode(text, i);
+                                var c = code is > 0 and < 0x10000 ? (char)code : ' ';
+                                if (char.IsWhiteSpace(c) || char.IsControl(c) ||
+                                    Native.FPDFText_GetCharBox(text, i, out var left, out var right, out var bottom, out var top) == 0)
+                                {
+                                    chars.Add(new DisplayChar(' ', 0, 0, 0, 0));
+                                    continue;
+                                }
+
+                                Native.FPDF_PageToDevice(page, 0, 0, sx, sy, 0, left, top, out var x1, out var y1);
+                                Native.FPDF_PageToDevice(page, 0, 0, sx, sy, 0, right, bottom, out var x2, out var y2);
+                                chars.Add(new DisplayChar(c, Math.Min(x1, x2) / (double)k, Math.Min(y1, y2) / (double)k,
+                                    Math.Abs(x2 - x1) / (double)k, Math.Abs(y2 - y1) / (double)k));
+                            }
+                        }
+                        finally
+                        {
+                            Native.FPDFText_ClosePage(text);
+                        }
+                    }
+
+                    pages.Add(new DisplayPageText(width, height, chars));
+                }
+                finally
+                {
+                    Native.FPDF_ClosePage(page);
+                }
+            }
+
+            return pages;
+        });
+        if (result is null)
+            throw new PdfRenderException(error == 4
+                ? $"\"{Path.GetFileName(path)}\" está protegido por senha."
+                : $"\"{Path.GetFileName(path)}\" não pôde ser lido. O arquivo pode estar danificado.");
+        return result;
+    }
+
     private static RenderedPage? RenderLocked(IntPtr document, IntPtr form, int index, RenderSize size)
     {
         var page = Native.FPDF_LoadPage(document, index);
@@ -357,7 +574,44 @@ public sealed class PdfiumRenderer : IPdfRenderer
         public static extern void FPDF_InitLibrary();
 
         [DllImport(Library, CharSet = CharSet.Ansi, BestFitMapping = false)]
-        public static extern IntPtr FPDF_LoadCustomDocument(ref FileAccess access, [MarshalAs(UnmanagedType.LPStr)] string? password);
+        public static extern IntPtr FPDF_LoadCustomDocument(ref FileAccess access, [MarshalAs(UnmanagedType.LPUTF8Str)] string? password);
+
+        [DllImport(Library)]
+        public static extern uint FPDF_GetLastError();
+
+        [DllImport(Library)]
+        public static extern uint FPDF_GetDocPermissions(IntPtr document);
+
+        [DllImport(Library)]
+        public static extern int FPDF_GetSecurityHandlerRevision(IntPtr document);
+
+        [DllImport(Library)]
+        public static extern int FPDF_GetFileVersion(IntPtr document, out int version);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int WriteBlockCallback(IntPtr self, IntPtr data, uint size);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FileWrite
+        {
+            public int Version;
+            public IntPtr WriteBlock;
+        }
+
+        public const uint NoIncremental = 2;
+
+        [DllImport(Library)]
+        public static extern int FPDF_SaveAsCopy(IntPtr document, ref FileWrite writer, uint flags);
+
+        [DllImport(Library)]
+        public static extern void FPDFPage_Delete(IntPtr document, int pageIndex);
+
+        [DllImport(Library)]
+        public static extern int FPDF_SaveWithVersion(IntPtr document, ref FileWrite writer, uint flags, int fileVersion);
+
+        [DllImport(Library)]
+        public static extern int FPDF_PageToDevice(IntPtr page, int startX, int startY, int sizeX, int sizeY, int rotate,
+            double pageX, double pageY, out int deviceX, out int deviceY);
 
         [DllImport(Library)]
         public static extern void FPDF_CloseDocument(IntPtr document);
