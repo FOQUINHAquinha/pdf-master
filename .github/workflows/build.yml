@@ -109,6 +109,8 @@ jobs:
           PDFMASTER_REQUIRE_OCR: '1'
           PDFMASTER_REQUIRE_FFMPEG: '1'
         run: |
+          $env:PDFMASTER_PDFA_LOG = Join-Path (Resolve-Path ci-out) 'pdfa.log'
+          "veraPDF exigido nos testes: '$env:PDFMASTER_REQUIRE_VERAPDF'" | Out-File ci-out/status.txt -Append -Encoding utf8
           dotnet test PDFMaster.Tests/PDFMaster.Tests.csproj -c Release --no-build -nologo --logger "console;verbosity=normal" 2>&1 | Tee-Object ci-out/test.log
           "test exit=$LASTEXITCODE" | Out-File ci-out/status.txt -Append -Encoding utf8
           if ($LASTEXITCODE -ne 0) { exit 1 }

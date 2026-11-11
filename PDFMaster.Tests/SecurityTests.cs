@@ -188,7 +188,7 @@ public class ProtectionTests : IDisposable
         Assert.True(user.Opened);
         Assert.True(user.Encrypted);
         Assert.NotNull(user.Encryption);
-        Assert.Contains("AES", user.Encryption!, StringComparison.Ordinal);
+        Assert.Equal("AES de 256 bits", user.Encryption);
         Assert.False(user.Permissions!.Copy);
         Assert.False(user.Permissions.Modify);
         Assert.True(user.Permissions.Print);
@@ -533,6 +533,8 @@ public class PdfATests : IDisposable
 
     private OutputTarget Target => new(Path.Combine(_temp.Path, "saida"), OverwritePolicy.AutoRename, SubfolderMode.None);
 
+    private static readonly object LogGate = new();
+
     private static bool VeraPdfRequired => Environment.GetEnvironmentVariable("PDFMASTER_REQUIRE_VERAPDF") == "1";
 
     private async Task<PdfAConversion> Convert(string source, PdfALevel level)
@@ -542,6 +544,14 @@ public class PdfATests : IDisposable
             var result = await _converter.ConvertAsync(source, level, Target);
             foreach (var change in result.Changes) _output.WriteLine("Mudança: " + change);
             _output.WriteLine(result.Validation.Verdict);
+            if (Environment.GetEnvironmentVariable("PDFMASTER_PDFA_LOG") is { Length: > 0 } log)
+            {
+                var lines = new List<string> { $"{Path.GetFileName(source)} → {PdfA.Name(level)}: {result.Validation.Verdict}" };
+                if (result.Validation.External is { } external) lines.Add("  " + external.Summary);
+                lines.AddRange(result.Changes.Select(c => "  mudança: " + c));
+                lock (LogGate) File.AppendAllLines(log, lines);
+            }
+
             if (VeraPdfRequired) Assert.True(result.Validation.External?.Compliant, result.Validation.External?.Summary ?? "veraPDF não encontrado");
             return result;
         }

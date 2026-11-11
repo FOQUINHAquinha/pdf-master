@@ -155,7 +155,7 @@ internal static partial class DocumentInfoWriter
     }
 
     /// <summary>Acrescenta uma revisão (atualização incremental) com os objetos dados.</summary>
-    internal static byte[] Append(byte[] bytes, TrailerInfo trailer, IReadOnlyList<(int Number, int Generation, byte[] Body)> objects, int infoNumber, int infoGeneration)
+    internal static byte[] Append(byte[] bytes, TrailerInfo trailer, IReadOnlyList<(int Number, int Generation, byte[] Body)> objects, int? infoNumber, int infoGeneration)
     {
         using var update = new MemoryStream();
         void Write(string s) => update.Write(Encoding.Latin1.GetBytes(s));
@@ -175,7 +175,7 @@ internal static partial class DocumentInfoWriter
             Write(string.Create(CultureInfo.InvariantCulture, $"{number} 1\n{offset:D10} {generation:D5} n\r\n"));
         var size = Math.Max(trailer.Size, objects.Max(o => o.Number) + 1);
         Write(string.Create(CultureInfo.InvariantCulture,
-            $"trailer\n<< /Size {size} /Root {trailer.RootNumber} {trailer.RootGeneration} R /Info {infoNumber} {infoGeneration} R /Prev {trailer.Prev}{(trailer.Id is { } id ? " " + id : string.Empty)} >>\n"));
+            $"trailer\n<< /Size {size} /Root {trailer.RootNumber} {trailer.RootGeneration} R{(infoNumber is { } info ? $" /Info {info} {infoGeneration} R" : string.Empty)} /Prev {trailer.Prev}{(trailer.Id is { } id ? " " + id : string.Empty)} >>\n"));
         Write(string.Create(CultureInfo.InvariantCulture, $"startxref\n{xref}\n%%EOF\n"));
         return [.. bytes, .. update.ToArray()];
     }

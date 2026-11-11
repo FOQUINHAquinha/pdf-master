@@ -68,6 +68,30 @@ public sealed class PdfProtection
         _ => $"revisão {revision} do manipulador de segurança",
     };
 
+    /// <summary>
+    /// Algoritmo pelo filtro de criptografia declarado (/CFM do dicionário /Encrypt, que fica sem
+    /// criptografia no arquivo); sem ele, pela revisão do manipulador de segurança.
+    /// </summary>
+    private static string? Algorithm(string path, int revision)
+    {
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            var length = (int)Math.Min(stream.Length, 64L * 1024 * 1024);
+            var buffer = new byte[length];
+            stream.ReadExactly(buffer);
+            var text = System.Text.Encoding.Latin1.GetString(buffer);
+            if (text.Contains("/AESV3", StringComparison.Ordinal)) return "AES de 256 bits";
+            if (text.Contains("/AESV2", StringComparison.Ordinal)) return "AES de 128 bits";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Sem acesso ao arquivo: fica a descrição pela revisão.
+        }
+
+        return revision == 4 ? "RC4 de 128 bits" : EncryptionName(revision);
+    }
+
     public static SecurityReport Inspect(string path, string? password = null)
     {
         if (!File.Exists(path)) throw new PdfEngineException($"Arquivo não encontrado: \"{path}\".");
@@ -82,7 +106,7 @@ public sealed class PdfProtection
 
         var version = pdfium.FileVersion > 0 ? $"{pdfium.FileVersion / 10}.{pdfium.FileVersion % 10}" : null;
         var encrypted = pdfium.SecurityRevision >= 0;
-        return new SecurityReport(true, password is not null && encrypted, encrypted, EncryptionName(pdfium.SecurityRevision),
+        return new SecurityReport(true, password is not null && encrypted, encrypted, encrypted ? Algorithm(path, pdfium.SecurityRevision) : null,
             encrypted ? PdfPermissions.FromBits(pdfium.Permissions) : PdfPermissions.All, pdfium.PageCount, version, pdfium.BrokenPages, null);
     }
 

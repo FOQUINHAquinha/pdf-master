@@ -206,6 +206,7 @@ public sealed partial class PdfRepair
                 }
 
                 ct.ThrowIfCancellationRequested();
+                FillMissingObjects(temp, full, password, notes);
                 var check = PdfiumRenderer.Inspect(temp, password, checkPages: true);
                 if (!check.Opened || check.PageCount != recovered || check.BrokenPages.Count > 0)
                     throw new PdfEngineException("A cópia recuperada ainda apresenta problemas e não foi salva.");
@@ -229,6 +230,83 @@ public sealed partial class PdfRepair
             if (!before.Damaged) notes.Add("Nenhum dano foi encontrado; a cópia foi regravada com uma estrutura nova.");
             return new RepairResult(new ProducedFile(output, bytes, recovered), before, recovered, lost, objects, notes);
         }, ct);
+    }
+
+    /// <summary>
+    /// A reconstrução pode deixar referências a objetos que não foram gravados (por exemplo, o
+    /// dicionário de informações citado no trailer). Eles são recriados a partir do arquivo original,
+    /// quando o texto deles ainda está lá, ou como objetos vazios — senão leitores rigorosos recusam a cópia.
+    /// </summary>
+    private static void FillMissingObjects(string path, string original, string? password, List<string> notes)
+    {
+        var bytes = File.ReadAllBytes(path);
+        var skeleton = Skeleton(Encoding.Latin1.GetString(bytes));
+        if (skeleton.Contains("/ObjStm", StringComparison.Ordinal)) return;
+        var present = new HashSet<int>();
+        foreach (Match m in ObjectPattern().Matches(skeleton)) present.Add(int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+        var absent = new SortedSet<int>();
+        foreach (Match m in ReferencePattern().Matches(skeleton))
+        {
+            var number = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+            if (number != 0 && !present.Contains(number)) absent.Add(number);
+        }
+
+        if (absent.Count == 0) return;
+        if (password is not null)
+        {
+            notes.Add($"{absent.Count} objeto(s) citado(s) no documento não puderam ser recuperados.");
+            return;
+        }
+
+        DocumentInfoWriter.TrailerInfo trailer;
+        try
+        {
+            trailer = DocumentInfoWriter.ReadTrailer(bytes);
+        }
+        catch (PdfEngineException)
+        {
+            return;
+        }
+
+        var source = File.ReadAllBytes(original);
+        var objects = new List<(int Number, int Generation, byte[] Body)>();
+        var recovered = 0;
+        foreach (var number in absent)
+        {
+            var text = DocumentInfoWriter.ObjectText(source, number, 0);
+            string body;
+            if (text is not null && text.StartsWith("<<", StringComparison.Ordinal) && !text.Contains("stream", StringComparison.Ordinal))
+            {
+                body = text;
+                recovered++;
+            }
+            else
+            {
+                body = number == trailer.InfoNumber ? "<< >>" : "null";
+            }
+
+            objects.Add((number, 0, Encoding.Latin1.GetBytes(body)));
+        }
+
+        var patched = path + ".objetos";
+        try
+        {
+            File.WriteAllBytes(patched, DocumentInfoWriter.Append(bytes, trailer, objects, trailer.InfoNumber > 0 ? trailer.InfoNumber : null, trailer.InfoGeneration));
+            PdfiumRenderer.SaveCopy(patched, null, path);
+        }
+        catch (PdfRenderException)
+        {
+            File.WriteAllBytes(path, bytes);
+            return;
+        }
+        finally
+        {
+            DocumentInfoWriter.TryDelete(patched);
+        }
+
+        notes.Add(recovered == absent.Count
+            ? $"{absent.Count} objeto(s) que a reconstrução tinha deixado de fora foram recuperados do arquivo original."
+            : $"{recovered} de {absent.Count} objeto(s) ausente(s) recuperados do original; os demais foram substituídos por objetos vazios.");
     }
 
     /// <summary>Texto do arquivo sem o conteúdo dos fluxos (evita achar "objetos" dentro de dados binários).</summary>
