@@ -17,6 +17,7 @@ using PDFMaster.PdfEngine;
 using PDFMaster.Rendering;
 using PDFMaster.Scanner;
 using PDFMaster.Video;
+using PDFMaster.Editor;
 
 namespace PDFMaster.App.ViewModels;
 
@@ -35,7 +36,11 @@ public sealed record ToolContext(
     ILoggerFactory LoggerFactory,
     ConversionToolkit Conversion,
     OcrToolkit Ocr,
-    VideoToolkit Video);
+    VideoToolkit Video,
+    EditorToolkit Editor);
+
+/// <summary>Editor de PDF e as bibliotecas locais de carimbos e assinaturas (Fase 5).</summary>
+public sealed record EditorToolkit(PdfEditor Editor, StampLibrary Stamps, SignatureLibrary Signatures);
 
 /// <summary>Compressão de vídeo (FFmpeg).</summary>
 public sealed record VideoToolkit(FfmpegRuntime Runtime, VideoCompressor Compressor);

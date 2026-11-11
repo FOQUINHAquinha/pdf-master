@@ -9,6 +9,7 @@ using PDFMaster.App.ViewModels;
 using PDFMaster.Compression;
 using PDFMaster.Conversion;
 using PDFMaster.Video;
+using PDFMaster.Editor;
 using PDFMaster.Core;
 using PDFMaster.Core.Files;
 using PDFMaster.Core.Settings;
@@ -88,7 +89,13 @@ public partial class App : Application
                 provider.GetRequiredService<ILoggerFactory>(),
                 provider.GetRequiredService<ConversionToolkit>(),
                 provider.GetRequiredService<OcrToolkit>(),
-                provider.GetRequiredService<VideoToolkit>()));
+                provider.GetRequiredService<VideoToolkit>(),
+                provider.GetRequiredService<EditorToolkit>()));
+
+            services.AddSingleton<PdfEditor>();
+            services.AddSingleton(new StampLibrary(paths.DataDirectory));
+            services.AddSingleton(new SignatureLibrary(paths.DataDirectory));
+            services.AddSingleton<EditorToolkit>();
 
             services.AddSingleton(new FfmpegRuntime(paths.DataDirectory));
             services.AddSingleton<VideoCompressor>();

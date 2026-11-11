@@ -187,9 +187,14 @@ public sealed record ShapeItem(
 
     public override EditItem Moved(double dx, double dy) => this with { Rect = Shift(Rect, dx, dy), Points = Shift(Points, dx, dy) };
 
-    public override EditItem Resized(ViewRect rect) => Shape is ShapeKind.Line or ShapeKind.Arrow or ShapeKind.Ink
-        ? this with { Points = Scale(Points, Bounds, rect) }
-        : this with { Rect = rect };
+    public override EditItem Resized(ViewRect rect)
+    {
+        if (Shape is not (ShapeKind.Line or ShapeKind.Arrow or ShapeKind.Ink)) return this with { Rect = rect };
+        // Os pontos ocupam a área sem a margem do traço; assim os novos limites ficam iguais ao retângulo pedido.
+        var margin = StrokeWidth / 2 + 1;
+        var target = new ViewRect(rect.X + margin, rect.Y + margin, Math.Max(1, rect.Width - 2 * margin), Math.Max(1, rect.Height - 2 * margin));
+        return this with { Points = Scale(Points, BoundsOf(Points), target) };
+    }
 }
 
 /// <summary>Marca-texto, sublinhado ou tachado sobre trechos do texto (anotação do PDF).</summary>

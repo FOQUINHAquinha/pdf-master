@@ -89,6 +89,7 @@ public sealed partial class ViewerViewModel : ToolViewModelBase
         ActualSizeCommand.NotifyCanExecuteChanged();
         FitWidthCommand.NotifyCanExecuteChanged();
         OrganizeCommand.NotifyCanExecuteChanged();
+        EditCommand.NotifyCanExecuteChanged();
         SplitCommand.NotifyCanExecuteChanged();
     }
 
@@ -262,6 +263,12 @@ public sealed partial class ViewerViewModel : ToolViewModelBase
         var fitted = Math.Clamp(Math.Round(available / (widthPt * 96.0 / 72.0), 2), MinZoom, MaxZoom);
         if (Math.Abs(fitted - Zoom) < 0.001) RenderCurrent();
         else Zoom = fitted;
+    }
+
+    [RelayCommand(CanExecute = nameof(HasDoc))]
+    private void Edit()
+    {
+        if (_document is not null) OpenToolRequested?.Invoke("edit-text", _document.Path);
     }
 
     [RelayCommand(CanExecute = nameof(HasDoc))]

@@ -21,6 +21,18 @@
         <DataTemplate DataType="{x:Type vm:ScanViewModel}">
             <views:ScanView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:EditorViewModel}">
+            <views:EditorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WatermarkViewModel}">
+            <views:WatermarkView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:HeaderFooterViewModel}">
+            <views:HeaderFooterView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FormFillViewModel}">
+            <views:FormFillView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:VideoViewModel}">
             <views:VideoView />
         </DataTemplate>

@@ -60,6 +60,8 @@
             <Button Content="Ajustar à largura" Style="{StaticResource ToolbarButton}" Margin="0,0,14,6"
                     Command="{Binding FitWidthCommand}" />
 
+            <Button Content="Editar" Style="{StaticResource ToolbarButton}"
+                    ToolTip="Abre este documento no editor (texto, imagens, anotações, assinaturas)" Command="{Binding EditCommand}" />
             <Button Content="Organizar páginas" Style="{StaticResource ToolbarButton}"
                     ToolTip="Abre este documento no editor de páginas" Command="{Binding OrganizeCommand}" />
             <Button Content="Dividir" Style="{StaticResource ToolbarButton}"

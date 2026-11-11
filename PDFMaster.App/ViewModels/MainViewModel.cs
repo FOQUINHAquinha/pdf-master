@@ -243,6 +243,10 @@ public sealed partial class MainViewModel : ObservableObject
             "ocr" or "ocr-batch" => "ocr",
             "scan" => "scan",
             "video-compress" => "video",
+            "edit-text" or "edit-images" or "annotate" or "sign-visual" or "stamps" or "form-fields" => "editor",
+            "watermark" => "watermark",
+            "header-footer" => "header-footer",
+            "forms" => "forms",
             "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
             _ => "pages",
         };
@@ -257,6 +261,10 @@ public sealed partial class MainViewModel : ObservableObject
                 "ocr" => new OcrViewModel(_toolContext),
                 "scan" => new ScanViewModel(_toolContext),
                 "video" => new VideoViewModel(_toolContext),
+                "editor" => new EditorViewModel(_toolContext),
+                "watermark" => new WatermarkViewModel(_toolContext),
+                "header-footer" => new HeaderFooterViewModel(_toolContext),
+                "forms" => new FormFillViewModel(_toolContext) { OpenToolRequested = (id, path) => OpenTool(id, [path]) },
                 "pdf-to-image" => new ConvertViewModel(_toolContext, ConversionKind.PdfToImage),
                 "image-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.ImageToPdf),
                 "office-to-pdf" => new ConvertViewModel(_toolContext, ConversionKind.OfficeToPdf),
@@ -271,6 +279,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         if (viewModel is CombineViewModel combine) combine.SetMode(interleave: toolId == "interleave");
+        if (viewModel is EditorViewModel editor) editor.UseCatalogTool(toolId);
         return viewModel;
     }
 

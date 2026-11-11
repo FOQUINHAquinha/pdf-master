@@ -126,6 +126,14 @@ jobs:
             @{ name = 'run-compress';   wait = 20; args = @('--theme','light','--tool','compress','--output',"`"$out`"",'--run',"`"$s\Digitalizado.pdf`"") },
             @{ name = 'run-ocr';        wait = 60; args = @('--theme','light','--tool','ocr','--output',"`"$out`"",'--run',"`"$s\Escaneado.pdf`"") },
             @{ name = 'run-scan';       wait = 15; args = @('--theme','light','--tool','scan','--output',"`"$out`"",'--run',"`"$s\Foto.png`"","`"$s\Recibo.jpg`"") },
+            @{ name = 'run-watermark';  args = @('--theme','light','--tool','watermark','--output',"`"$out`"",'--run',"`"$a`"") },
+            @{ name = 'run-header';     args = @('--theme','light','--tool','header-footer','--output',"`"$out`"",'--run',"`"$b`"") },
+            @{ name = 'run-forms';      args = @('--theme','light','--tool','forms','--output',"`"$out`"",'--run',"`"$s\Formulario.pdf`"") },
+            @{ name = 'tool-editor';    wait = 12; args = @('--theme','light','--tool','edit-text',"`"$s\Formulario.pdf`"") },
+            @{ name = 'tool-annotate';  wait = 12; args = @('--theme','dark','--tool','annotate',"`"$a`"") },
+            @{ name = 'tool-forms';     args = @('--theme','light','--tool','forms',"`"$s\Formulario.pdf`"") },
+            @{ name = 'tool-watermark'; args = @('--theme','light','--tool','watermark',"`"$a`"") },
+            @{ name = 'light-edit';     args = @('--theme','light','--page','edit') },
             @{ name = 'run-video';      wait = 45; args = @('--theme','light','--tool','video-compress','--output',"`"$out`"",'--run',"`"$s\Video.avi`"") },
             @{ name = 'tool-video';     wait = 15; args = @('--theme','dark','--tool','video-compress',"`"$s\Video.avi`"") },
             @{ name = 'tool-ocr';       args = @('--theme','dark','--tool','ocr',"`"$s\Escaneado.pdf`"") },
@@ -164,7 +172,7 @@ jobs:
           # Resultado das execuções feitas pela interface (--run).
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
-          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4')
+          $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf')
           foreach ($name in $expected) {
             $file = Join-Path $out $name
             if ((Test-Path $file) -and ((Get-Item $file).Length -gt 200)) {

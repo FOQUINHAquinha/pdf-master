@@ -518,7 +518,7 @@ public class EditorLibraryTests : IDisposable
         var moved = (ShapeItem)ink.Moved(5, 5);
         Assert.Equal(new ViewPoint(15, 15), moved.Points[0]);
         var resized = (ShapeItem)ink.Resized(new ViewRect(0, 0, 100, 100));
-        Assert.Equal(new ViewRect(0, 0, 100, 100), EditItem.BoundsOf(resized.Points));
+        Assert.Equal(new ViewRect(0, 0, 100, 100), resized.Bounds);
 
         var text = new TextItem(Guid.NewGuid(), 0, new ViewRect(1, 2, 3, 4), "a", new TextStyle());
         Assert.Equal(new ViewRect(11, 22, 3, 4), text.Moved(10, 20).Bounds);
@@ -528,5 +528,27 @@ public class EditorLibraryTests : IDisposable
         Assert.Equal(("numero", "num"), ExistingText.Difference("Contrato numero 12345", "Contrato num 12345"));
         Assert.True(Rgb.TryParse("#008B50", out var green) && green == Rgb.Green);
         Assert.False(Rgb.TryParse("verde", out _));
+    }
+}
+
+/// <summary>Gera o formulário usado pela tela de preenchimento no CI (só com PDFMASTER_SMOKE_DIR).</summary>
+public class SmokeSamplesPhase5
+{
+    [Fact]
+    public async Task Writes_a_form_for_the_form_tool()
+    {
+        var folder = Environment.GetEnvironmentVariable("PDFMASTER_SMOKE_DIR");
+        if (string.IsNullOrWhiteSpace(folder)) return;
+        var work = Path.Combine(folder, "fase5");
+        var source = EditorSamples.TextPdf(Path.Combine(work, "Formulario.pdf"), 0, 1, "Cadastro de cliente", "Nome:", "Estado:");
+        var editor = new PdfEditor(new OutputPlanner(new OutputPathResolver()));
+        var result = await editor.SaveAsync(source,
+        [
+            new FieldItem(Guid.NewGuid(), 0, new ViewRect(140, 105, 260, 22), FieldKind.Text, "nome", [], "Maria"),
+            new FieldItem(Guid.NewGuid(), 0, new ViewRect(140, 145, 120, 22), FieldKind.Dropdown, "estado", ["SP", "RJ", "MG"], "SP"),
+            new FieldItem(Guid.NewGuid(), 0, new ViewRect(72, 200, 14, 14), FieldKind.CheckBox, "aceito", []),
+            new StampItem(Guid.NewGuid(), 0, new ViewRect(380, 40, 160, 50), StampLibrary.Defaults[0], DateTime.Now),
+        ], new OutputTarget(work, OverwritePolicy.Overwrite, SubfolderMode.None));
+        File.Copy(result.File.Path, Path.Combine(folder, "Formulario.pdf"), overwrite: true);
     }
 }

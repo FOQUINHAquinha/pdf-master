@@ -257,3 +257,92 @@ public partial class ViewerView : UserControl
         PageScroll.ScrollToTop();
     }
 }
+
+public partial class EditorView : UserControl
+{
+    public EditorView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+        Loaded += (_, _) => UpdateMetrics(rerender: true);
+        DataContextChanged += (_, e) =>
+        {
+            if (e.OldValue is EditorViewModel old) old.PropertyChanged -= OnViewModelChanged;
+            if (e.NewValue is EditorViewModel current) current.PropertyChanged += OnViewModelChanged;
+        };
+    }
+
+    private EditorViewModel? ViewModel => DataContext as EditorViewModel;
+
+    private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Item recém-criado com texto: o cursor vai direto para a caixa de texto das propriedades.
+        if (e.PropertyName == nameof(EditorViewModel.SelectedItem) && ViewModel is { HasItemText: true, SelectedItem: { } item } &&
+            item is PDFMaster.Editor.TextItem or PDFMaster.Editor.TextBoxItem or PDFMaster.Editor.NoteItem or PDFMaster.Editor.ReplaceTextItem)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                ItemTextBox.Focus();
+                ItemTextBox.SelectAll();
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        }
+    }
+
+    private void UpdateMetrics(bool rerender)
+    {
+        if (ViewModel is null) return;
+        var dpi = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        var changed = Math.Abs(ViewModel.DpiScale - dpi) > 0.001;
+        ViewModel.DpiScale = dpi;
+        if (PageScroll.ActualWidth > 0) ViewModel.ViewportWidth = PageScroll.ActualWidth;
+        if (rerender && changed) ViewModel.RenderCurrent();
+    }
+
+    private void OnViewportSizeChanged(object sender, SizeChangedEventArgs e) => UpdateMetrics(rerender: false);
+
+    private void OnPageMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (ViewModel is null || (Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+        var command = e.Delta > 0 ? ViewModel.ZoomInCommand : ViewModel.ZoomOutCommand;
+        if (command.CanExecute(null)) command.Execute(null);
+        e.Handled = true;
+    }
+
+    private void OnThumbSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ThumbList.SelectedItem is not null) ThumbList.ScrollIntoView(ThumbList.SelectedItem);
+        PageScroll.ScrollToTop();
+    }
+}
+
+public partial class WatermarkView : UserControl
+{
+    public WatermarkView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+
+    private void OnUseText(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is WatermarkViewModel vm) vm.UseImage = false;
+    }
+}
+
+public partial class HeaderFooterView : UserControl
+{
+    public HeaderFooterView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}
+
+public partial class FormFillView : UserControl
+{
+    public FormFillView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}

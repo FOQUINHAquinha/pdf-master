@@ -6,6 +6,7 @@
     <local:InverseBoolConverter x:Key="InverseBool" />
     <local:NullToVisibilityConverter x:Key="NullToVis" />
     <local:CountToVisibilityConverter x:Key="CountToVis" />
+    <local:HexToBrushConverter x:Key="HexToBrush" />
 
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 

@@ -101,13 +101,14 @@ public sealed class PdfEditor
             ct.ThrowIfCancellationRequested();
             using var document = Open(full);
             var (applied, inPlace, overlaid, notes) = edit(document);
+            var pageCount = document.PageCount;
             ct.ThrowIfCancellationRequested();
             var bytes = OutputPlanner.WriteAtomically(output, overwrite, temp =>
             {
                 ct.ThrowIfCancellationRequested();
                 document.Save(temp);
             });
-            return new EditResult(new ProducedFile(output, bytes, document.PageCount), applied, inPlace, overlaid, notes);
+            return new EditResult(new ProducedFile(output, bytes, pageCount), applied, inPlace, overlaid, notes);
         }, ct);
     }
 

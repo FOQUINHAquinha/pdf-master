@@ -45,6 +45,8 @@ public sealed class ToolCatalog
         "pdf-to-image", "image-to-pdf", "office-to-pdf", "text-html-to-pdf", "pdf-to-word", "pdf-to-text", "compress",
         // Fase 4
         "ocr", "ocr-batch", "scan",
+        // Fase 5
+        "edit-text", "edit-images", "annotate", "sign-visual", "watermark", "header-footer", "stamps", "forms", "form-fields",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -122,8 +124,10 @@ public sealed class ToolCatalog
             "numerar páginas", "numeração", "página x de y", "paginação");
         T("stamps", "Carimbos", "Biblioteca de carimbos prontos e personalizados.", ToolCategory.Edit, 5, Tag,
             "carimbar", "selo", "recebido", "cópia", "original");
-        T("forms", "Formulários", "Cria campos e preenche formulários PDF.", ToolCategory.Edit, 5, List,
-            "preencher formulário", "campos", "caixa de seleção", "acroform");
+        T("forms", "Preencher formulário", "Preenche os campos de um formulário PDF e grava uma cópia preenchida.", ToolCategory.Edit, 5, List,
+            "formulário", "preencher pdf", "campos", "acroform", "preencher campos");
+        T("form-fields", "Criar campos de formulário", "Cria campos de texto, caixas de seleção, opções, listas, datas e botões.", ToolCategory.Edit, 5, List,
+            "criar formulário", "campo de texto", "caixa de seleção", "botão de opção", "lista suspensa", "campo de data");
 
         // ----- Converter -----
         T("pdf-to-image", "PDF para imagem", "Converte páginas em JPG, PNG, BMP ou TIFF.", ToolCategory.Convert, 3, Picture,
