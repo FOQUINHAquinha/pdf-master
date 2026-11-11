@@ -194,10 +194,13 @@ desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
 | Conversion — texto para PDF e PDF para TXT/HTML/DOCX | 7 | Aprovado |
 | Conversion — LibreOffice (Word, Excel, HTML → PDF; PDF → DOCX com layout) | 2 | Aprovado |
 | Compression — compressão de PDF | 6 | Aprovado |
-| App — execução das ferramentas pela interface (`--run`) | 11 | Aprovado |
-| App — abertura das telas nos dois temas | 11 | Aprovado |
+| OCR — imagem, geometria e camada de texto | 9 | Aprovado |
+| OCR — reconhecimento real (PDF pesquisável, orientação, inclinação, TXT/DOCX, idiomas, erros) | 9 | Aprovado |
+| Scanner — erros sem aparelho (nenhuma digitalização real) | 2 | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 13 | Aprovado |
+| App — abertura das telas nos dois temas | 13 | Aprovado |
 
-Total de testes automatizados: 175.
+Total de testes automatizados: 196.
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
