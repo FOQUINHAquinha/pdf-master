@@ -65,7 +65,6 @@ public sealed class TextToPdfConverter
 {
     public const string OperationName = "Texto e HTML para PDF";
     private const double PointsPerMm = 72.0 / 25.4;
-    private static readonly object FontGate = new();
 
     private readonly OutputPlanner _planner;
 
@@ -228,43 +227,5 @@ public sealed class TextToPdfConverter
     }
 
     /// <summary>O PDFsharp (versão "Core") precisa que o programa informe onde estão as fontes.</summary>
-    private static void EnsureFontResolver()
-    {
-        lock (FontGate)
-        {
-            if (GlobalFontSettings.FontResolver is null) GlobalFontSettings.FontResolver = new WindowsFontResolver();
-        }
-    }
-
-    private sealed class WindowsFontResolver : IFontResolver
-    {
-        public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
-        {
-            var mono = familyName.Contains("Consolas", StringComparison.OrdinalIgnoreCase) ||
-                       familyName.Contains("Courier", StringComparison.OrdinalIgnoreCase);
-            var file = (mono, isBold, isItalic) switch
-            {
-                (true, false, false) => "consola.ttf",
-                (true, true, false) => "consolab.ttf",
-                (true, false, true) => "consolai.ttf",
-                (true, true, true) => "consolaz.ttf",
-                (false, false, false) => "segoeui.ttf",
-                (false, true, false) => "segoeuib.ttf",
-                (false, false, true) => "segoeuii.ttf",
-                (false, true, true) => "segoeuiz.ttf",
-            };
-
-            if (!File.Exists(FontPath(file))) file = "arial.ttf";
-            return File.Exists(FontPath(file)) ? new FontResolverInfo(file) : null;
-        }
-
-        public byte[]? GetFont(string faceName)
-        {
-            var path = FontPath(faceName);
-            return File.Exists(path) ? File.ReadAllBytes(path) : null;
-        }
-
-        private static string FontPath(string file) =>
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.GetFileName(file));
-    }
+    private static void EnsureFontResolver() => WindowsFonts.EnsureInstalled();
 }
