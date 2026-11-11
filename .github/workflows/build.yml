@@ -254,7 +254,12 @@ jobs:
           $expected = @('mesclado.pdf','intercalado.pdf','Relatorio_organizado.pdf') + (1..7 | ForEach-Object { 'Relatorio_{0:000}.pdf' -f $_ })
           $expected += (1..7 | ForEach-Object { 'Relatorio_p{0:000}.png' -f $_ })
           $expected += @('imagens.pdf','Notas.pdf','Texto.docx','Texto.txt','Carta.pdf','Digitalizado_comprimido.pdf','Escaneado_ocr.pdf','digitalizacao.pdf','Video_360p.mp4','Relatorio_marca-dagua.pdf','Anexos_cabecalho-rodape.pdf','Formulario_preenchido.pdf','Contrato v1_PDFA-2b.pdf','Contrato v1_metadados.pdf','Danificado_reparado.pdf')
-          $expected += @('Contrato v1_conteudo\metadados.txt','Relatorio_cinza.pdf')
+          $expected += @('Relatorio_cinza.pdf')
+          foreach ($name in @('metadados.txt','texto.txt')) {
+            $file = Join-Path $out "Contrato v1_conteudo\$name"
+            if (Test-Path $file) { "extraido ok: $name ($((Get-Item $file).Length) bytes)" | Out-File ci-out/smoke.log -Append }
+            else { "extraido AUSENTE: $name" | Out-File ci-out/smoke.log -Append; $failed = $true }
+          }
           $expected += @('Relatorio_arquivo.pdf','Escaneado_arquivo.pdf','Relatorio_invertido.pdf','Digitalizacao com brancas_sem-brancas.pdf','Relatorio_recortado.pdf','Anexos_2-por-folha.pdf')
           foreach ($name in @('Relatorio_comprimido.pdf','Anexos_comprimido.pdf')) {
             $file = Join-Path $watchOut $name
