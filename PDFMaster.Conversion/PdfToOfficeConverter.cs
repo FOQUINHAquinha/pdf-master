@@ -136,7 +136,8 @@ public sealed class PdfToOfficeConverter
             if (current.Count > 0)
             {
                 var previous = current[^1];
-                var sameLine = Math.Abs((previous.Y + previous.Height / 2) - (c.Y + c.Height / 2)) <= Math.Max(previous.Height, c.Height) * 0.5;
+                // Vírgulas e pontos têm caixas baixas e deslocadas: basta as caixas se tocarem na vertical.
+                var sameLine = c.Y <= previous.Y + previous.Height + 1 && previous.Y <= c.Y + c.Height + 1;
                 var forward = c.X >= previous.X - 0.5 && c.X - (previous.X + previous.Width) < Math.Max(previous.Height, c.Height) * 0.8;
                 if (!sameLine || !forward) Flush();
             }
