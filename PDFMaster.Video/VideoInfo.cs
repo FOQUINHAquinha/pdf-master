@@ -93,7 +93,9 @@ public static partial class VideoProbe
     [GeneratedRegex(@",\s*(?<w>\d{1,5})x(?<h>\d{1,5})(?=[\s,\[]|$)")]
     private static partial Regex SizePattern();
 
-    [GeneratedRegex(@"\[SAR (?<n>\d+):(?<d>\d+) DAR \d+:\d+\]")]
+    // "[SAR 1:1 DAR 16:9]" vem do codec; ", SAR 64:45 DAR 16:9" (sem colchetes) vem do contêiner
+    // quando ele diz outra coisa — e é esse que o FFmpeg usa na conversão. Vale a última ocorrência.
+    [GeneratedRegex(@"SAR (?<n>\d+):(?<d>\d+) DAR \d+:\d+")]
     private static partial Regex SarPattern();
 
     [GeneratedRegex(@",\s*(?<fps>\d+(?:\.\d+)?)(?<k>k)?\s+fps")]
@@ -178,8 +180,8 @@ public static partial class VideoProbe
         if (width <= 0 || height <= 0) throw new VideoException($"{fileName} informa um tamanho de imagem inválido ({width}×{height}).");
 
         var sampleAspect = 1.0;
-        var sar = SarPattern().Match(videoRest);
-        if (sar.Success)
+        var sar = SarPattern().Matches(videoRest).LastOrDefault();
+        if (sar is not null)
         {
             var n = double.Parse(sar.Groups["n"].Value, CultureInfo.InvariantCulture);
             var den = double.Parse(sar.Groups["d"].Value, CultureInfo.InvariantCulture);

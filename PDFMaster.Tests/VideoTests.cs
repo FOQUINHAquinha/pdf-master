@@ -130,6 +130,25 @@ public class VideoProbeTests
     }
 
     [Fact]
+    public void Container_pixel_aspect_wins_over_the_codec_one()
+    {
+        const string report = """
+            Input #0, matroska,webm, from 'file:dvd.mkv':
+              Duration: 00:00:02.00, start: 0.000000, bitrate: 9000 kb/s
+              Stream #0:0: Video: ffv1 (FFV1 / 0x31564646), yuv420p, 720x576, SAR 64:45 DAR 16:9, 25 fps, 25 tbr, 1k tbn
+              Stream #0:1: Video: h263, yuv420p, 352x288 [SAR 12:11 DAR 4:3], SAR 1:1 DAR 11:9, 30 fps
+            """;
+        var info = VideoProbe.Parse(report, "dvd.mkv")!;
+        Assert.Equal(64.0 / 45, info.SampleAspect, 6);
+        Assert.Equal((1024, 576), (info.DisplayWidth, info.DisplayHeight));
+        Assert.Equal((640, 360), info.TargetSize());
+
+        var h263 = VideoProbe.Parse(report.Replace("Stream #0:0: Video: ffv1", "Stream #0:0: Data: ffv1"), "a.3gp")!;
+        Assert.Equal(1.0, h263.SampleAspect);
+        Assert.Equal((352, 288), h263.TargetSize());
+    }
+
+    [Fact]
     public void Phone_rotation_turns_the_video_upright()
     {
         var info = VideoProbe.Parse(PhonePortrait, "celular.mp4")!;
@@ -225,7 +244,7 @@ public class VideoCompressionTests : IDisposable
     private string OutFolder => Path.Combine(_temp.Path, "saida");
     private OutputTarget Target => new(OutFolder, OverwritePolicy.AutoRename, SubfolderMode.None);
 
-    private string[] Outputs() => Directory.Exists(OutFolder) ? Directory.GetFiles(OutFolder).Select(Path.GetFileName).ToArray()! : [];
+    private string[] Outputs() => Directory.Exists(OutFolder) ? Directory.GetFiles(OutFolder).Select(p => Path.GetFileName(p)).ToArray() : [];
 
     private static (long Moov, long Mdat, string Brand) TopLevelBoxes(string path)
     {
