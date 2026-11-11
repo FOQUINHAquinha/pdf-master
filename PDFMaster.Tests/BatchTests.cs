@@ -384,6 +384,41 @@ public class BatchTests : IDisposable
         Assert.Equal(new[] { "a.pdf", "b.pdf", "c.pdf" }, (await first)!);
     }
 
+    [Fact]
+    public void Temp_cleanup_removes_only_old_leftovers()
+    {
+        var root = Path.Combine(_temp.Path, "temporarios");
+        var old = Directory.CreateDirectory(Path.Combine(root, "ocr-antigo")).FullName;
+        File.WriteAllBytes(Path.Combine(old, "pagina.png"), new byte[1000]);
+        var oldFile = Path.Combine(root, "solto.pdf");
+        File.WriteAllBytes(oldFile, new byte[500]);
+        foreach (var f in Directory.GetFileSystemEntries(root, "*", SearchOption.AllDirectories).Append(old))
+        {
+            if (File.Exists(f)) File.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddDays(-3));
+            else Directory.SetLastWriteTimeUtc(f, DateTime.UtcNow.AddDays(-3));
+        }
+
+        var recent = Directory.CreateDirectory(Path.Combine(root, "fluxo-em-andamento")).FullName;
+        File.WriteAllBytes(Path.Combine(recent, "etapa.pdf"), new byte[10]);
+
+        var result = PDFMaster.Infrastructure.TempFiles.Clean(TimeSpan.FromDays(1), root);
+        Assert.Equal(2, result.Removed);
+        Assert.Equal(1500, result.Bytes);
+        Assert.False(Directory.Exists(old));
+        Assert.False(File.Exists(oldFile));
+        Assert.True(File.Exists(Path.Combine(recent, "etapa.pdf")));
+        Assert.Equal(0, PDFMaster.Infrastructure.TempFiles.Clean(TimeSpan.FromDays(1), Path.Combine(_temp.Path, "nao-existe")).Removed);
+    }
+
+    [Fact]
+    public void Maintenance_commands_run_without_a_window()
+    {
+        Assert.True(CommandLine.IsHeadless(["--register-menu"]));
+        Assert.True(CommandLine.IsHeadless(["--unregister-all"]));
+        Assert.True(CommandLine.IsHeadless(["--clean-temp"]));
+        Assert.Equal("clean-temp", CommandLine.Parse(["--clean-temp"]).Verb);
+    }
+
     // ---------- Linha de comando ----------
 
     private async Task<(int Code, string Output)> Cli(params string[] args)

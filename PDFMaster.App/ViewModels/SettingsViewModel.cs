@@ -9,6 +9,7 @@ using PDFMaster.Compression;
 using PDFMaster.Core;
 using PDFMaster.Core.Settings;
 using PDFMaster.Domain;
+using PDFMaster.Core.Files;
 using PDFMaster.Infrastructure;
 
 namespace PDFMaster.App.ViewModels;
@@ -305,6 +306,19 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private void ClearDefaultFolder() => Save(s => s.DefaultOutputFolder = null);
+
+    [ObservableProperty] private string _tempStatus = string.Empty;
+
+    [RelayCommand]
+    private async Task CleanTempAsync()
+    {
+        // Só o que não muda há mais de uma hora: operações em andamento não são afetadas.
+        var result = await Task.Run(() => TempFiles.Clean(TimeSpan.FromHours(1)));
+        TempStatus = result.Removed == 0 && result.InUse == 0
+            ? "Nenhum arquivo temporário antigo."
+            : $"{result.Removed} item(ns) removido(s), {FileSizeFormatter.Format(result.Bytes)} liberados." +
+              (result.InUse > 0 ? $" {result.InUse} em uso foram mantidos." : string.Empty);
+    }
 
     [RelayCommand]
     private void OpenLogs()

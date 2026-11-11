@@ -1,0 +1,28 @@
+PDF Master
+==========
+
+Suíte de ferramentas PDF que funciona inteiramente no seu computador: sem conta, sem anúncios,
+sem envio de arquivos e sem telemetria.
+
+Já incluído no programa
+- Leitura e renderização de PDF (PDFium), OCR em português, inglês e espanhol (Tesseract),
+  compressão de vídeo (FFmpeg).
+
+Opcional (instale por conta própria, se quiser)
+- LibreOffice (https://www.libreoffice.org): Word, Excel, PowerPoint e HTML para PDF com layout
+  completo e PDF para Word com layout.
+- veraPDF (https://verapdf.org): confirma a conformidade PDF/A. Sem ele, o programa diz apenas
+  "aprovado na verificação interna".
+O PDF Master encontra os dois automaticamente depois de instalados.
+
+Onde ficam os dados
+- Configurações, histórico, fluxos e registros: %LOCALAPPDATA%\PDFMaster
+- Temporários: %TEMP%\PDFMaster (limpos automaticamente)
+- Versão portátil: pasta "Data" ao lado do PDFMaster.exe
+
+Desinstalação
+- Pelo Windows (Configurações > Aplicativos). Remove o programa, os atalhos, os itens do menu de
+  contexto, o registro em "Abrir com" e os temporários. Pergunta se deve remover também as
+  configurações e o histórico. Seus documentos nunca são apagados.
+
+Linha de comando: PDFMaster.exe --help

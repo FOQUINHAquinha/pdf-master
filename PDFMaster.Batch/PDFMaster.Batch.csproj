@@ -12,6 +12,7 @@
     <ProjectReference Include="..\PDFMaster.OCR\PDFMaster.OCR.csproj" />
     <ProjectReference Include="..\PDFMaster.Editor\PDFMaster.Editor.csproj" />
     <ProjectReference Include="..\PDFMaster.Security\PDFMaster.Security.csproj" />
+    <ProjectReference Include="..\PDFMaster.Infrastructure\PDFMaster.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="PDFsharp" />

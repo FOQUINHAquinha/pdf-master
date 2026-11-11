@@ -86,7 +86,7 @@ public sealed class ToolCatalog
             "abrir pdf", "ler pdf", "ver documento", "leitor", "visualizar");
 
         // ----- Organizar -----
-        T("merge", "Mesclar PDF", "Junta vários arquivos PDF em um único documento.", ToolCategory.Organize, 2, Copy,
+        T("merge", "Mesclar PDF", "Junta PDFs e fotos (JPG, PNG, TIFF…) em um único documento.", ToolCategory.Organize, 2, Copy,
             "juntar documentos", "unir pdf", "combinar pdf", "concatenar", "agrupar arquivos", "merge");
         T("split", "Dividir PDF", "Separa um PDF em vários arquivos por páginas, intervalos, tamanho ou marcadores.", ToolCategory.Organize, 2, Cut,
             "separar pdf", "cortar documento", "quebrar pdf", "partir", "split");

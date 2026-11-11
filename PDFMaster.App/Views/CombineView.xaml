@@ -56,9 +56,15 @@
         <!-- Opções do modo -->
         <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,12,0,0" Padding="16,10">
             <Grid>
-                <CheckBox Content="Criar um marcador para cada arquivo de origem"
-                          IsChecked="{Binding BookmarkPerFile, Mode=TwoWay}"
-                          Visibility="{Binding IsMerge, Converter={StaticResource BoolToVis}}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsMerge, Converter={StaticResource BoolToVis}}">
+                    <CheckBox Content="Criar um marcador para cada arquivo de origem" VerticalAlignment="Center"
+                              IsChecked="{Binding BookmarkPerFile, Mode=TwoWay}" />
+                    <StackPanel Orientation="Horizontal" Margin="24,0,0,0" Visibility="{Binding HasImages, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Páginas das imagens:" Style="{StaticResource Body}" VerticalAlignment="Center" />
+                        <ComboBox MinWidth="230" Margin="8,0,0,0" ItemsSource="{Binding ImagePageSizes}" DisplayMemberPath="Label"
+                                  SelectedItem="{Binding SelectedImagePageSize, Mode=TwoWay}" />
+                    </StackPanel>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal"
                             Visibility="{Binding IsInterleave, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Páginas de cada documento por vez:" Style="{StaticResource Body}"
@@ -79,7 +85,7 @@
                             Visibility="{Binding HasFiles, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
                     <TextBlock Text="&#xE8C8;" Style="{StaticResource Icon}" FontSize="28"
                                Foreground="{DynamicResource Brush.Accent}" />
-                    <TextBlock Text="Arraste os PDFs para cá ou use “Adicionar arquivos…”" Style="{StaticResource Body}"
+                    <TextBlock Text="Arraste PDFs e fotos para cá ou use “Adicionar arquivos…”" Style="{StaticResource Body}"
                                HorizontalAlignment="Center" Margin="0,8,0,0" />
                     <TextBlock Text="A ordem da lista é a ordem do documento final." Style="{StaticResource Secondary}"
                                HorizontalAlignment="Center" Margin="0,2,0,0" />

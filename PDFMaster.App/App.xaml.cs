@@ -250,6 +250,20 @@ public partial class App : Application
             var history = _services.GetRequiredService<IHistoryRepository>();
             _services.GetRequiredService<BatchQueue>().JobFinished += job => _ = RecordJobAsync(history, settings, job);
 
+            // Sobras de operações interrompidas (queda de energia, programa encerrado à força).
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    var cleaned = TempFiles.Clean(TimeSpan.FromDays(1));
+                    if (cleaned.Removed > 0) _logger?.LogInformation("Temporários antigos removidos: {Count} ({Bytes} bytes)", cleaned.Removed, cleaned.Bytes);
+                }
+                catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+                {
+                    _logger?.LogWarning(ex, "Falha ao limpar temporários antigos");
+                }
+            });
+
             // Pastas monitoradas: só funcionam com o programa aberto (ou com --watch).
             var watch = _services.GetRequiredService<WatchService>();
             if (watch.Folders.Any(f => f.Enabled)) watch.Start();

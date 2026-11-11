@@ -198,7 +198,7 @@ jobs:
             @{ name = 'tool-unlock';    args = @('--theme','light','--tool','unlock',"`"$s\Protegido.pdf`"") },
             @{ name = 'tool-metadata';  args = @('--theme','dark','--tool','metadata',"`"$s\Contrato v2.pdf`"") },
             @{ name = 'tool-pdfa';      args = @('--theme','light','--tool','pdfa',"`"$a`"") },
-            @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
+            @{ name = 'run-merge';      args = @('--theme','light','--tool','merge','--output',"`"$out`"",'--run',"`"$a`"","`"$s\Foto.png`"","`"$b`"","`"$s\Recibo.jpg`"") },
             @{ name = 'run-interleave'; args = @('--theme','light','--tool','interleave','--output',"`"$out`"",'--run',"`"$a`"","`"$b`"") },
             @{ name = 'run-split';      args = @('--theme','light','--tool','split','--output',"`"$out`"",'--run',"`"$a`"") },
             @{ name = 'run-pages';      args = @('--theme','light','--tool','reorder','--output',"`"$out`"",'--run',"`"$a`"") },
@@ -345,6 +345,79 @@ jobs:
           }
           "smoke failed=$failed" | Out-File ci-out/status.txt -Append -Encoding utf8
           if ($failed) { exit 1 }
+
+      - name: Instalador e versão portátil
+        shell: pwsh
+        run: |
+          $failed = $false
+          function Note($text) { $text | Out-File ci-out/installer.log -Append -Encoding utf8 }
+          [xml]$props = Get-Content Directory.Build.props
+          $ver = ($props.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          Note "Inno Setup: $iscc (existe=$(Test-Path $iscc)); versao=$ver"
+          & $iscc "/DAppVersion=$ver" "/DSourceExe=$PWD\publish\PDFMaster.exe" "/DOutputDir=$PWD\installer-out" installer\PDFMaster.iss 2>&1 | Out-File ci-out/installer-build.log -Encoding utf8
+          Note "iscc exit=$LASTEXITCODE"
+          $setup = Join-Path $PWD "installer-out\PDFMaster-Setup-$ver.exe"
+          if (-not (Test-Path $setup)) { Note 'instalador NAO gerado'; "installer failed=True" | Out-File ci-out/status.txt -Append -Encoding utf8; exit 1 }
+          Note "instalador: $((Get-Item $setup).Length) bytes"
+
+          Remove-Item Env:PDFMASTER_DATA_DIR -ErrorAction SilentlyContinue
+          $dir = Join-Path $env:RUNNER_TEMP 'PDF Master instalado'
+          $data = Join-Path $env:LOCALAPPDATA 'PDFMaster'
+          $lnk = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\PDF Master.lnk'
+          $menuKey = 'HKCU:\Software\Classes\SystemFileAssociations\.pdf\shell\PDFMaster.merge'
+          function Check($label, $ok) { Note "$label = $ok"; if (-not $ok) { $script:failed = $true } }
+
+          foreach ($round in 1, 2) {
+            $p = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/CURRENTUSER',"/DIR=`"$dir`"",'/TASKS="contextmenu,openwith"',"/LOG=`"$PWD\ci-out\setup-$round.log`"") -Wait -PassThru
+            Check "[$round] instalacao terminou com 0" ($p.ExitCode -eq 0)
+            Check "[$round] PDFMaster.exe instalado" (Test-Path (Join-Path $dir 'PDFMaster.exe'))
+            Check "[$round] atalho no menu Iniciar" (Test-Path $lnk)
+            Check "[$round] menu de contexto registrado" (Test-Path $menuKey)
+            Check "[$round] Abrir com registrado" ($null -ne (Get-ItemProperty 'HKCU:\Software\RegisteredApplications' -Name 'PDF Master' -ErrorAction SilentlyContinue))
+            $v = Start-Process (Join-Path $dir 'PDFMaster.exe') -ArgumentList '--version' -Wait -PassThru -RedirectStandardOutput (Join-Path $env:RUNNER_TEMP "ver-$round.txt")
+            $text = (Get-Content (Join-Path $env:RUNNER_TEMP "ver-$round.txt") -Raw).Trim()
+            Check "[$round] programa instalado responde '$text'" ($v.ExitCode -eq 0 -and $text -eq "PDF Master $ver")
+            New-Item -ItemType Directory -Force (Join-Path $env:TEMP 'PDFMaster\sobra-antiga') | Out-Null
+            Set-Content (Join-Path $data 'marcador-teste.txt') 'dados do usuario'
+
+            $uninstallArgs = @('/VERYSILENT','/SUPPRESSMSGBOXES')
+            if ($round -eq 2) { $uninstallArgs += '/REMOVEDATA=1' }
+            $u = Start-Process (Join-Path $dir 'unins000.exe') -ArgumentList $uninstallArgs -Wait -PassThru
+            # O desinstalador se copia para a pasta temporária e continua lá: espera ele terminar.
+            for ($i = 0; $i -lt 60 -and ((Test-Path (Join-Path $dir 'PDFMaster.exe')) -or (Get-Process -Name '_iu*' -ErrorAction SilentlyContinue)); $i++) { Start-Sleep -Seconds 1 }
+            Start-Sleep -Seconds 2
+            Check "[$round] desinstalacao terminou com 0" ($u.ExitCode -eq 0)
+            Check "[$round] programa removido" (-not (Test-Path (Join-Path $dir 'PDFMaster.exe')))
+            Check "[$round] atalho removido" (-not (Test-Path $lnk))
+            Check "[$round] menu de contexto removido" (-not (Test-Path $menuKey))
+            Check "[$round] Abrir com removido" ($null -eq (Get-ItemProperty 'HKCU:\Software\RegisteredApplications' -Name 'PDF Master' -ErrorAction SilentlyContinue))
+            Check "[$round] temporarios removidos" (-not (Test-Path (Join-Path $env:TEMP 'PDFMaster\sobra-antiga')))
+            if ($round -eq 1) { Check "[1] dados do usuario mantidos" (Test-Path (Join-Path $data 'marcador-teste.txt')) }
+            else { Check "[2] dados removidos quando pedido" (-not (Test-Path $data)) }
+          }
+
+          # Versão portátil: dados ao lado do executável, nada em %LOCALAPPDATA%.
+          Copy-Item LEIA-ME-INSTALACAO.txt portable/
+          $port = Join-Path $env:RUNNER_TEMP 'portatil-teste'
+          Copy-Item portable $port -Recurse -Force
+          Remove-Item $data -Recurse -Force -ErrorAction SilentlyContinue
+          $pp = Start-Process (Join-Path $port 'PDFMaster.exe') -ArgumentList @('--merge', "`"$env:RUNNER_TEMP\pdfm-smoke-pdfs\Relatorio.pdf`"", "`"$env:RUNNER_TEMP\pdfm-smoke-pdfs\Anexos.pdf`"", '--output', "`"$port\junto.pdf`"") -Wait -PassThru -RedirectStandardOutput (Join-Path $env:RUNNER_TEMP 'portatil.txt')
+          Note (Get-Content (Join-Path $env:RUNNER_TEMP 'portatil.txt') -Raw)
+          Check "portatil executou" ($pp.ExitCode -eq 0 -and (Test-Path (Join-Path $port 'junto.pdf')))
+          Check "portatil guarda dados ao lado do exe" (Test-Path (Join-Path $port 'Data\Logs'))
+          Check "portatil nao usa LOCALAPPDATA" (-not (Test-Path $data))
+
+          "installer failed=$failed" | Out-File ci-out/status.txt -Append -Encoding utf8
+          if ($failed) { exit 1 }
+
+      - name: Guardar instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDFMaster-instalador-win-x64
+          path: installer-out/*.exe
+          if-no-files-found: error
 
       - name: Guardar executável
         uses: actions/upload-artifact@v4

@@ -87,7 +87,8 @@ public static class CommandLine
 
     /// <summary>Verbos que rodam sem abrir a janela.</summary>
     public static readonly IReadOnlyList<string> Verbs =
-        ["merge", "compress", "ocr", "split", "pdfa", "rotate", "to-image", "flow", "watch", "list-flows", "help", "version"];
+        ["merge", "compress", "ocr", "split", "pdfa", "rotate", "to-image", "flow", "watch", "list-flows", "help", "version",
+            "register-menu", "register-openwith", "unregister-all", "clean-temp"];
 
     private static readonly HashSet<string> ValueOptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -107,6 +108,12 @@ public static class CommandLine
           PDFMaster.exe --flow "Nome do fluxo" arquivos-ou-pastas [--output pasta]
           PDFMaster.exe --watch [--duration segundos]
           PDFMaster.exe --list-flows | --help | --version
+
+        Manutenção (usada também pelo instalador; só afeta o seu usuário):
+          PDFMaster.exe --register-menu       itens do PDF Master no menu de contexto dos PDFs
+          PDFMaster.exe --register-openwith   PDF Master em "Abrir com"
+          PDFMaster.exe --unregister-all      remove as duas integrações acima
+          PDFMaster.exe --clean-temp          apaga os temporários do programa que não estão em uso
 
         Opções comuns:
           --output   arquivo (.pdf, com um só resultado) ou pasta. Sem --output, o resultado vai para a
@@ -206,6 +213,28 @@ public static class CommandLine
                     return Success;
                 case "watch":
                     return await WatchAsync(command, services, Say, ct).ConfigureAwait(false);
+                case "register-menu" or "register-openwith" or "unregister-all":
+                {
+                    var shell = new ShellIntegration(Environment.ProcessPath ?? throw new IOException("Caminho do programa desconhecido."));
+                    if (command.Verb == "register-menu") shell.InstallContextMenu();
+                    else if (command.Verb == "register-openwith") shell.RegisterOpenWith();
+                    else shell.RemoveAll();
+                    Say(command.Verb switch
+                    {
+                        "register-menu" => "Itens adicionados ao menu de contexto dos PDFs.",
+                        "register-openwith" => "PDF Master registrado em \"Abrir com\".",
+                        _ => "Integrações com o Windows removidas.",
+                    });
+                    return Success;
+                }
+
+                case "clean-temp":
+                {
+                    var cleaned = PDFMaster.Infrastructure.TempFiles.Clean(TimeSpan.Zero);
+                    Say($"Temporários removidos: {cleaned.Removed} item(ns), {FileSizeFormatter.Format(cleaned.Bytes)}." +
+                        (cleaned.InUse > 0 ? $" {cleaned.InUse} em uso foram mantidos." : string.Empty));
+                    return Success;
+                }
             }
 
             var inputs = ExpandInputs(command.Inputs, command.Verb == "flow");

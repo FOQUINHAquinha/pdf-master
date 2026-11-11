@@ -169,8 +169,15 @@
                     <TextBlock Style="{StaticResource Secondary}" Margin="0,2,0,0"
                                Text="Modo portátil ativo: os dados ficam ao lado do executável."
                                Visibility="{Binding IsPortable, Converter={StaticResource BoolToVis}}" />
-                    <Button Content="Abrir pasta de diagnósticos" Style="{StaticResource SecondaryButton}"
-                            HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding OpenLogsCommand}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Abrir pasta de diagnósticos" Style="{StaticResource SecondaryButton}" Command="{Binding OpenLogsCommand}" />
+                        <Button Content="Limpar arquivos temporários" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"
+                                Command="{Binding CleanTempCommand}"
+                                ToolTip="Apaga sobras de operações interrompidas (pasta PDFMaster dentro dos temporários do Windows). Seus documentos não são tocados." />
+                    </StackPanel>
+                    <TextBlock Text="{Binding TempStatus}" Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                    <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                               Text="Temporários com mais de um dia são apagados automaticamente ao abrir o programa." />
                 </StackPanel>
             </Border>
 

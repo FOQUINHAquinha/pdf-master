@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using PDFMaster.Conversion;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PDFMaster.App.Services;
@@ -17,9 +19,10 @@ public sealed partial class CombineFileViewModel : ObservableObject
     private readonly Action _changed;
 
     public CombineFileViewModel(PdfDocumentInfo info, Action changed,
-        Action<CombineFileViewModel, int> move, Action<CombineFileViewModel> remove)
+        Action<CombineFileViewModel, int> move, Action<CombineFileViewModel> remove, bool isImage = false)
     {
         Info = info;
+        IsImage = isImage;
         _changed = changed;
         MoveUpCommand = new RelayCommand(() => move(this, -1));
         MoveDownCommand = new RelayCommand(() => move(this, 1));
@@ -29,7 +32,11 @@ public sealed partial class CombineFileViewModel : ObservableObject
     public PdfDocumentInfo Info { get; }
     public string Path => Info.Path;
     public string Name => System.IO.Path.GetFileName(Info.Path);
-    public string Details => $"{Info.PageCount} página(s) · {FileSizeFormatter.Format(Info.SizeBytes)}";
+    /// <summary>Foto ou imagem (vira página(s) de PDF na hora de juntar).</summary>
+    public bool IsImage { get; }
+    public string Details => IsImage
+        ? $"Imagem{(Info.PageCount > 1 ? $" com {Info.PageCount} páginas" : string.Empty)} · {FileSizeFormatter.Format(Info.SizeBytes)}"
+        : $"{Info.PageCount} página(s) · {FileSizeFormatter.Format(Info.SizeBytes)}";
 
     [ObservableProperty]
     private ImageSource? _thumbnail;
@@ -83,9 +90,25 @@ public sealed partial class CombineFileViewModel : ObservableObject
 public sealed partial class CombineViewModel : ToolViewModelBase
 {
     public CombineViewModel(ToolContext context)
-        : base(context, "Mesclar PDF", "Junte vários arquivos PDF em um único documento, na ordem da lista.")
+        : base(context, "Mesclar PDF", MergeSubtitle)
     {
+        ImagePageSizes =
+        [
+            new(PdfPageSizeMode.FitImage, "Do tamanho da imagem"),
+            new(PdfPageSizeMode.A4, "A4 (imagem ajustada à página)"),
+            new(PdfPageSizeMode.Letter, "Carta (imagem ajustada à página)"),
+        ];
+        _selectedImagePageSize = ImagePageSizes[0];
     }
+
+    private const string MergeSubtitle = "Junte PDFs e fotos (JPG, PNG, TIFF…) em um único documento, na ordem da lista.";
+
+    public IReadOnlyList<Choice<PdfPageSizeMode>> ImagePageSizes { get; }
+
+    [ObservableProperty]
+    private Choice<PdfPageSizeMode> _selectedImagePageSize;
+
+    public bool HasImages => Files.Any(f => f.IsImage);
 
     public ObservableCollection<CombineFileViewModel> Files { get; } = [];
 
@@ -131,7 +154,7 @@ public sealed partial class CombineViewModel : ToolViewModelBase
         Title = value ? "Intercalar documentos" : "Mesclar PDF";
         Subtitle = value
             ? "Alterne as páginas de dois ou mais PDFs: A1, B1, A2, B2…"
-            : "Junte vários arquivos PDF em um único documento, na ordem da lista.";
+            : MergeSubtitle;
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(RunLabel));
@@ -164,36 +187,108 @@ public sealed partial class CombineViewModel : ToolViewModelBase
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private async Task PickFilesAsync()
     {
-        var picked = PickPdfs(multiple: true);
+        var picked = Context.Dialogs.PickFiles("Adicionar PDFs e imagens",
+            "PDFs e imagens|*.pdf;*.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.gif|PDF|*.pdf|Imagens|*.jpg;*.jpeg;*.png;*.bmp;*.tif;*.tiff;*.gif",
+            multiple: true, StartFolder());
         if (picked.Count > 0) await AddFilesAsync(picked);
     }
 
     public override async Task AddFilesAsync(IReadOnlyList<string> paths)
     {
-        var pdfs = OnlyPdfs(paths);
-        if (pdfs.Count == 0)
+        // PDFs e imagens, na ordem recebida; pastas trazem os arquivos de dentro (sem subpastas), por nome.
+        var files = new List<string>();
+        foreach (var path in paths)
+        {
+            if (Directory.Exists(path)) files.AddRange(Directory.EnumerateFiles(path).Order(StringComparer.OrdinalIgnoreCase).Where(IsSupported));
+            else if (File.Exists(path) && IsSupported(path)) files.Add(path);
+        }
+
+        if (files.Count == 0)
         {
             if (paths.Count > 0)
-                Context.Notifications.Show(NotificationKind.Warning, "Nenhum PDF na seleção", "Esta ferramenta trabalha apenas com arquivos PDF.");
+                Context.Notifications.Show(NotificationKind.Warning, "Nenhum PDF ou imagem na seleção",
+                    "Esta ferramenta junta arquivos PDF e imagens (JPG, PNG, BMP, TIFF e GIF).");
             return;
         }
 
         await WhileBusyAsync("Lendo documentos…", async () =>
         {
-            foreach (var path in pdfs)
+            foreach (var path in files)
             {
-                var info = await TryReadInfoAsync(path);
-                if (info is null) continue;
+                CombineFileViewModel item;
+                if (IsImage(path))
+                {
+                    var pages = await Task.Run(() => ImageFrames(path));
+                    if (pages == 0)
+                    {
+                        Context.Notifications.Show(NotificationKind.Warning, "Imagem não reconhecida",
+                            $"{System.IO.Path.GetFileName(path)} não pôde ser lida como imagem.");
+                        continue;
+                    }
 
-                var item = new CombineFileViewModel(info, Refresh, Move, Remove);
+                    var info = new PdfDocumentInfo(path, new FileInfo(path).Length,
+                        Enumerable.Repeat(new PdfPageInfo(0, 0, 0), pages).ToList(), [], null);
+                    item = new CombineFileViewModel(info, Refresh, Move, Remove, isImage: true);
+                    item.Thumbnail = ImageThumbnail(path);
+                }
+                else
+                {
+                    var info = await TryReadInfoAsync(path);
+                    if (info is null) continue;
+                    item = new CombineFileViewModel(info, Refresh, Move, Remove);
+                    LoadThumbnail(item);
+                }
+
                 item.Validate();
                 Files.Add(item);
-                SuggestOutputFolder(info.Path);
-                LoadThumbnail(item);
+                SuggestOutputFolder(path);
             }
         });
 
         Refresh();
+    }
+
+    private static bool IsImage(string path) =>
+        ImagesToPdfConverter.Extensions.Contains(System.IO.Path.GetExtension(path).ToLowerInvariant());
+
+    private static bool IsSupported(string path) => IsImage(path) || SupportedFiles.GetKind(path) == FileKind.Pdf;
+
+    /// <summary>Quantidade de quadros (páginas) da imagem; 0 quando o arquivo não é uma imagem válida.</summary>
+    private static int ImageFrames(string path)
+    {
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.IgnoreColorProfile | BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+            // GIF animado vira uma página só (o primeiro quadro), como na conversão de imagem para PDF.
+            return decoder is GifBitmapDecoder ? 1 : decoder.Frames.Count;
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or FileFormatException or ArgumentException or InvalidOperationException
+                                       or UnauthorizedAccessException or System.Runtime.InteropServices.COMException)
+        {
+            return 0;
+        }
+    }
+
+    private static ImageSource? ImageThumbnail(string path)
+    {
+        try
+        {
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.UriSource = new Uri(path);
+            image.DecodePixelWidth = 112;
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or FileFormatException or ArgumentException or InvalidOperationException
+                                       or UnauthorizedAccessException or System.Runtime.InteropServices.COMException)
+        {
+            return null;
+        }
     }
 
     private async void LoadThumbnail(CombineFileViewModel item)
@@ -239,6 +334,7 @@ public sealed partial class CombineViewModel : ToolViewModelBase
     private void Refresh()
     {
         OnPropertyChanged(nameof(HasFiles));
+        OnPropertyChanged(nameof(HasImages));
         OnPropertyChanged(nameof(IsEmpty));
 
         string? problem = null;
@@ -246,7 +342,7 @@ public sealed partial class CombineViewModel : ToolViewModelBase
 
         if (Files.Count == 0)
         {
-            summary = "Adicione arquivos PDF para começar.";
+            summary = "Adicione PDFs ou imagens para começar.";
         }
         else if (string.IsNullOrWhiteSpace(FileName))
         {
@@ -297,21 +393,68 @@ public sealed partial class CombineViewModel : ToolViewModelBase
         var inputName = files.Count == 1 ? files[0].Name : $"{files.Count} arquivos ({files[0].Name}…)";
         var name = FileName.Trim();
         var target = CreateTarget();
+        var imageOptions = new ImagesToPdfOptions(SelectedImagePageSize.Value, PdfPageOrientation.Auto, SelectedImagePageSize.Value == PdfPageSizeMode.FitImage ? 0 : 10);
+        var work = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "PDFMaster", "mesclar-" + Guid.NewGuid().ToString("N"));
 
-        if (IsInterleave)
+        // Cada imagem vira um PDF temporário (com o nome dela, para o marcador) antes de juntar.
+        async Task<IReadOnlyList<string>> PdfPathsAsync(IProgress<double> progress, CancellationToken ct)
         {
-            if (!TryGetPagesPerTurn(out var perTurn)) return;
-            var inputs = files.Select(f => new InterleaveInput(f.Path, f.Reverse)).ToList();
-            var remainder = StopAtShortest ? InterleaveRemainder.StopAtShortest : InterleaveRemainder.AppendRemaining;
-            await RunAsync("Intercalar documentos", inputName, "Intercalando páginas…", async (progress, ct) =>
-                [await Context.Organizer.InterleaveAsync(inputs, perTurn, remainder, name, target, progress, ct)]);
+            var paths = new List<string>();
+            var images = files.Count(f => f.IsImage);
+            var done = 0;
+            foreach (var file in files)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (!file.IsImage)
+                {
+                    paths.Add(file.Path);
+                    continue;
+                }
+
+                var folder = System.IO.Path.Combine(work, paths.Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                var pdf = await Context.ImagesToPdf.ConvertAsync([file.Path], System.IO.Path.GetFileNameWithoutExtension(file.Path) + ".pdf", imageOptions,
+                    new OutputTarget(folder, OverwritePolicy.AutoRename, SubfolderMode.None), null, ct);
+                paths.Add(pdf.Path);
+                progress.Report(0.3 * ++done / images);
+            }
+
+            return paths;
         }
-        else
+
+        try
         {
-            var inputs = files.Select(f => new MergeInput(f.Path, f.RangeText)).ToList();
-            var bookmarks = BookmarkPerFile;
-            await RunAsync("Mesclar PDF", inputName, "Mesclando documentos…", async (progress, ct) =>
-                [await Context.Organizer.MergeAsync(inputs, name, target, bookmarks, progress, ct)]);
+            if (IsInterleave)
+            {
+                if (!TryGetPagesPerTurn(out var perTurn)) return;
+                var remainder = StopAtShortest ? InterleaveRemainder.StopAtShortest : InterleaveRemainder.AppendRemaining;
+                await RunAsync("Intercalar documentos", inputName, "Intercalando páginas…", async (progress, ct) =>
+                {
+                    var paths = await PdfPathsAsync(progress, ct);
+                    var inputs = files.Select((f, i) => new InterleaveInput(paths[i], f.Reverse)).ToList();
+                    return [await Context.Organizer.InterleaveAsync(inputs, perTurn, remainder, name, target, progress, ct)];
+                });
+            }
+            else
+            {
+                var bookmarks = BookmarkPerFile;
+                await RunAsync("Mesclar PDF", inputName, HasImages ? "Convertendo imagens e mesclando…" : "Mesclando documentos…", async (progress, ct) =>
+                {
+                    var paths = await PdfPathsAsync(progress, ct);
+                    var inputs = files.Select((f, i) => new MergeInput(paths[i], f.RangeText)).ToList();
+                    return [await Context.Organizer.MergeAsync(inputs, name, target, bookmarks, progress, ct)];
+                });
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(work)) Directory.Delete(work, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Pasta temporária: o sistema limpa depois.
+            }
         }
     }
 }
