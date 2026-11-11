@@ -98,6 +98,17 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<Choice<SubfolderMode>> SubfolderModes { get; }
     public IReadOnlyList<Choice<int>> ParallelChoices { get; }
     public IReadOnlyList<Choice<CompressionProfile>> CompressionProfiles { get; }
+    public IReadOnlyList<Choice<string>> ImageFormats { get; } =
+        [new("Png", "PNG"), new("Jpeg", "JPG"), new("Tiff", "TIFF"), new("Bmp", "BMP")];
+    public IReadOnlyList<Choice<string>> ImagePageSizes { get; } =
+        [new("FitImage", "Do tamanho de cada imagem"), new("A4", "A4"), new("Letter", "Carta")];
+
+    [ObservableProperty] private Choice<string> _selectedImageFormat = null!;
+    [ObservableProperty] private Choice<string> _selectedImagePageSize = null!;
+    [ObservableProperty] private string _imageDpiText = "150";
+    [ObservableProperty] private string _imageQualityText = "90";
+    [ObservableProperty] private string _imageMarginText = "0";
+    [ObservableProperty] private string _conversionStatus = string.Empty;
 
     [ObservableProperty] private Choice<int> _selectedParallel;
     [ObservableProperty] private Choice<CompressionProfile> _selectedCompressionProfile;
@@ -162,6 +173,11 @@ public sealed partial class SettingsViewModel : ObservableObject
             SelectedCompressionProfile = CompressionProfiles.FirstOrDefault(c => c.Value.ToString() == s.DefaultCompressionProfile)
                                          ?? CompressionProfiles.First(c => c.Value == CompressionProfile.Balanced);
             OcrLanguagesText = s.OcrLanguages;
+            SelectedImageFormat = ImageFormats.FirstOrDefault(c => c.Value == s.ImageFormat) ?? ImageFormats[0];
+            SelectedImagePageSize = ImagePageSizes.FirstOrDefault(c => c.Value == s.ImagePdfPageSize) ?? ImagePageSizes[0];
+            ImageDpiText = s.ImageDpi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ImageQualityText = s.ImageJpegQuality.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ImageMarginText = s.ImagePdfMarginMm.ToString(System.Globalization.CultureInfo.InvariantCulture);
             OcrDpiText = s.OcrDpi.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ContextMenuInstalled = _windows.IsContextMenuInstalled;
             OpenWithRegistered = _windows.IsOpenWithRegistered;
@@ -206,6 +222,42 @@ public sealed partial class SettingsViewModel : ObservableObject
     partial void OnSelectedCompressionProfileChanged(Choice<CompressionProfile> value)
     {
         if (value is not null) Save(s => s.DefaultCompressionProfile = value.Value.ToString());
+    }
+
+    [RelayCommand]
+    private void ApplyConversionDefaults()
+    {
+        static bool Number(string text, int min, int max, out int value) =>
+            int.TryParse(text.Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out value) && value >= min && value <= max;
+        if (!Number(ImageDpiText, 36, 1200, out var dpi))
+        {
+            ConversionStatus = "A resolução deve ficar entre 36 e 1200 DPI.";
+            return;
+        }
+
+        if (!Number(ImageQualityText, 1, 100, out var quality))
+        {
+            ConversionStatus = "A qualidade JPG deve ficar entre 1 e 100.";
+            return;
+        }
+
+        if (!Number(ImageMarginText, 0, 100, out var margin))
+        {
+            ConversionStatus = "A margem deve ficar entre 0 e 100 mm.";
+            return;
+        }
+
+        var format = SelectedImageFormat.Value;
+        var size = SelectedImagePageSize.Value;
+        Save(s =>
+        {
+            s.ImageFormat = format;
+            s.ImageDpi = dpi;
+            s.ImageJpegQuality = quality;
+            s.ImagePdfPageSize = size;
+            s.ImagePdfMarginMm = margin;
+        });
+        ConversionStatus = "Padrões de conversão salvos. Valem para as próximas vezes que as telas de conversão forem abertas.";
     }
 
     [RelayCommand]

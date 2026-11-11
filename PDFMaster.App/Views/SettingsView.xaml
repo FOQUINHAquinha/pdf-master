@@ -106,6 +106,24 @@
                     <ComboBox HorizontalAlignment="Left" MinWidth="420" ItemsSource="{Binding CompressionProfiles}"
                               DisplayMemberPath="Label" SelectedItem="{Binding SelectedCompressionProfile, Mode=TwoWay}" />
 
+                    <TextBlock Text="PDF para imagem: formato, resolução e qualidade JPG" Style="{StaticResource Body}" Margin="0,16,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox MinWidth="110" ItemsSource="{Binding ImageFormats}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedImageFormat, Mode=TwoWay}" />
+                        <TextBox Width="70" Margin="8,0,0,0" Text="{Binding ImageDpiText, UpdateSourceTrigger=PropertyChanged}" ToolTip="DPI (36 a 1200)" />
+                        <TextBlock Text="DPI" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="6,0,12,0" />
+                        <TextBox Width="60" Text="{Binding ImageQualityText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Qualidade JPG (1 a 100)" />
+                        <TextBlock Text="qualidade JPG" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                    </StackPanel>
+                    <TextBlock Text="Imagem para PDF: tamanho da página e margem" Style="{StaticResource Body}" Margin="0,12,0,4" />
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox MinWidth="220" ItemsSource="{Binding ImagePageSizes}" DisplayMemberPath="Label" SelectedItem="{Binding SelectedImagePageSize, Mode=TwoWay}" />
+                        <TextBox Width="60" Margin="8,0,0,0" Text="{Binding ImageMarginText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Margem em mm (0 a 100)" />
+                        <TextBlock Text="mm de margem" Style="{StaticResource Secondary}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                        <Button Content="Salvar padrões de conversão" Style="{StaticResource SecondaryButton}" Margin="12,0,0,0"
+                                Command="{Binding ApplyConversionDefaultsCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding ConversionStatus}" Style="{StaticResource Secondary}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
                     <TextBlock Text="OCR: idiomas marcados e resolução ao abrir a ferramenta" Style="{StaticResource Body}" Margin="0,16,0,4" />
                     <StackPanel Orientation="Horizontal">
                         <TextBox Width="160" Text="{Binding OcrLanguagesText, UpdateSourceTrigger=PropertyChanged}"

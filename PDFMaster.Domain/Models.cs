@@ -152,6 +152,15 @@ public sealed class AppSettings
     /// <summary>Resolução padrão do OCR.</summary>
     public int OcrDpi { get; set; } = 300;
 
+    /// <summary>PDF para imagem: formato (Png, Jpeg, Tiff, Bmp), resolução e qualidade JPEG padrão.</summary>
+    public string ImageFormat { get; set; } = "Png";
+    public int ImageDpi { get; set; } = 150;
+    public int ImageJpegQuality { get; set; } = 90;
+
+    /// <summary>Imagem para PDF: tamanho da página (FitImage, A4, Letter) e margem padrão em mm.</summary>
+    public string ImagePdfPageSize { get; set; } = "FitImage";
+    public int ImagePdfMarginMm { get; set; }
+
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }
 

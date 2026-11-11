@@ -85,8 +85,13 @@ public sealed partial class ConvertViewModel : ToolViewModelBase
             new(TextExportFormat.Txt, "TXT — texto simples"),
             new(TextExportFormat.Html, "HTML — página da web simples"),
         ];
-        _selectedImageFormat = ImageFormats[0];
-        _selectedPageSize = PageSizes[0];
+        // Padrões escolhidos em Configurações › Padrões e desempenho.
+        var defaults = context.Settings.Current;
+        _selectedImageFormat = ImageFormats.FirstOrDefault(f => f.Value.ToString() == defaults.ImageFormat) ?? ImageFormats[0];
+        _dpiText = defaults.ImageDpi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _qualityText = defaults.ImageJpegQuality.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _marginText = defaults.ImagePdfMarginMm.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _selectedPageSize = PageSizes.FirstOrDefault(p => p.Value.ToString() == defaults.ImagePdfPageSize) ?? PageSizes[0];
         _selectedOrientation = Orientations[0];
         _selectedTextFormat = TextFormats[0];
         Refresh();

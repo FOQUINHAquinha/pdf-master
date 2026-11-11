@@ -2,6 +2,7 @@ using System.Text;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PDFMaster.Core.Files;
+using PDFMaster.Core.Pdf;
 using PDFMaster.Domain;
 using PDFMaster.Editor;
 using PDFMaster.PdfEngine;
@@ -118,5 +119,55 @@ public class NavigationTests : IDisposable
         Assert.Contains("Requisitos", text);
 
         await Assert.ThrowsAsync<PdfEngineException>(() => _navigation.SaveAsync(source, Nothing with { TableOfContents = true }, Target));
+    }
+}
+
+/// <summary>Fase 8: documento grande (sem limite artificial de páginas) dentro de tempos razoáveis.</summary>
+public class LargeDocumentTests : IDisposable
+{
+    private readonly TempFolder _temp = new();
+
+    public void Dispose() => _temp.Dispose();
+
+    [Fact]
+    public async Task A_600_page_document_opens_renders_on_demand_and_splits()
+    {
+        var path = Path.Combine(_temp.Path, "grande.pdf");
+        using (var document = new PdfDocument())
+        {
+            var font = new XFont("Arial", 10);
+            for (var i = 0; i < 600; i++)
+            {
+                var page = document.AddPage();
+                using var g = XGraphics.FromPdfPage(page);
+                for (var line = 0; line < 40; line++) g.DrawString($"Página {i + 1}, linha {line + 1}: texto de preenchimento do documento grande.", font, XBrushes.Black, 50, 60 + line * 18);
+            }
+
+            document.Save(path);
+        }
+
+        var engine = new PdfSharpEngine();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var info = await engine.ReadInfoAsync(path);
+        var open = watch.Elapsed;
+        Assert.Equal(600, info.PageCount);
+
+        watch.Restart();
+        var last = await new PDFMaster.Rendering.PdfiumRenderer().RenderPageAsync(path, 599, PDFMaster.Rendering.RenderSize.Fit(600, 850));
+        var render = watch.Elapsed;
+        Assert.True(last.Width > 0);
+
+        watch.Restart();
+        var organizer = new PdfOrganizer(engine, new OutputPathResolver());
+        var parts = await organizer.SplitAsync(path, SplitPlanner.EveryN(600, 100), null,
+            new OutputTarget(Path.Combine(_temp.Path, "partes"), OverwritePolicy.AutoRename, SubfolderMode.None));
+        var split = watch.Elapsed;
+        Assert.Equal(6, parts.Count);
+
+        // Limites folgados para a máquina do CI; os tempos medidos ficam no registro do teste.
+        Console.WriteLine($"600 páginas: abrir {open.TotalSeconds:0.00} s, renderizar a última {render.TotalSeconds:0.00} s, dividir em 6 {split.TotalSeconds:0.00} s");
+        Assert.True(open < TimeSpan.FromSeconds(10), $"abrir levou {open}");
+        Assert.True(render < TimeSpan.FromSeconds(5), $"renderizar levou {render}");
+        Assert.True(split < TimeSpan.FromSeconds(60), $"dividir levou {split}");
     }
 }

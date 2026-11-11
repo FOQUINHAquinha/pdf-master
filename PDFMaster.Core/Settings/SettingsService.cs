@@ -61,6 +61,14 @@ public sealed class SettingsService
         if (v.TryGetValue("compressionProfile", out var cp) && cp.Length is > 0 and < 32 && cp.All(char.IsAsciiLetter)) s.DefaultCompressionProfile = cp;
         if (v.TryGetValue("ocrLanguages", out var ol) && ol.Length is > 0 and < 120 && ol.All(c => char.IsAsciiLetterOrDigit(c) || c is '+' or '_' or '-'))
             s.OcrLanguages = ol;
+        if (v.TryGetValue("imageFormat", out var imf) && imf is "Png" or "Jpeg" or "Tiff" or "Bmp") s.ImageFormat = imf;
+        if (v.TryGetValue("imageDpi", out var idp) && int.TryParse(idp, NumberStyles.None, CultureInfo.InvariantCulture, out var idpv) && idpv is >= 36 and <= 1200)
+            s.ImageDpi = idpv;
+        if (v.TryGetValue("imageJpegQuality", out var ijq) && int.TryParse(ijq, NumberStyles.None, CultureInfo.InvariantCulture, out var ijqv) && ijqv is >= 1 and <= 100)
+            s.ImageJpegQuality = ijqv;
+        if (v.TryGetValue("imagePdfPageSize", out var ips) && ips is "FitImage" or "A4" or "Letter") s.ImagePdfPageSize = ips;
+        if (v.TryGetValue("imagePdfMarginMm", out var imm) && int.TryParse(imm, NumberStyles.None, CultureInfo.InvariantCulture, out var immv) && immv is >= 0 and <= 100)
+            s.ImagePdfMarginMm = immv;
         if (v.TryGetValue("ocrDpi", out var od) && int.TryParse(od, NumberStyles.None, CultureInfo.InvariantCulture, out var odv) && odv is >= 100 and <= 600)
             s.OcrDpi = odv;
         return s;
@@ -81,5 +89,10 @@ public sealed class SettingsService
         ["compressionProfile"] = s.DefaultCompressionProfile,
         ["ocrLanguages"] = s.OcrLanguages,
         ["ocrDpi"] = s.OcrDpi.ToString(CultureInfo.InvariantCulture),
+        ["imageFormat"] = s.ImageFormat,
+        ["imageDpi"] = s.ImageDpi.ToString(CultureInfo.InvariantCulture),
+        ["imageJpegQuality"] = s.ImageJpegQuality.ToString(CultureInfo.InvariantCulture),
+        ["imagePdfPageSize"] = s.ImagePdfPageSize,
+        ["imagePdfMarginMm"] = s.ImagePdfMarginMm.ToString(CultureInfo.InvariantCulture),
     };
 }
