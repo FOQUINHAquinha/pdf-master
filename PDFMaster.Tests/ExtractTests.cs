@@ -129,7 +129,7 @@ public class GrayscaleTests : IDisposable
 {
     private readonly TempFolder _temp = new();
     private readonly PDFMaster.Compression.GrayscaleConverter _converter =
-        new(new PDFMaster.Core.Files.OutputPlanner(new PDFMaster.Core.Files.OutputPathResolver()), new PDFMaster.Rendering.PdfiumRenderer());
+        new(new OutputPlanner(new PDFMaster.Core.Files.OutputPathResolver()), new PDFMaster.Rendering.PdfiumRenderer());
 
     public void Dispose() => _temp.Dispose();
 
