@@ -218,6 +218,7 @@ public sealed partial class DocumentNavigation
     private static int InsertTableOfContents(PdfDocument document, IReadOnlyList<PdfBookmark> bookmarks)
     {
         const double margin = 56, lineHeight = 18;
+        WindowsFonts.EnsureInstalled();
         var size = (Width: document.Pages[0].Width.Point, Height: document.Pages[0].Height.Point);
         var perPage = (int)((size.Height - 2 * margin - 40) / lineHeight);
         var pagesNeeded = (bookmarks.Count + perPage - 1) / perPage;

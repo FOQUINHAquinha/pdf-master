@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 11/11/2026 · Versão 0.7.1 (Fase 8 em andamento)
+Atualizado em 11/11/2026 · Versão 0.8.0 — as 8 fases concluídas
 
 ## Fases
 
@@ -14,7 +14,7 @@ Atualizado em 11/11/2026 · Versão 0.7.1 (Fase 8 em andamento)
 | Extra — Compressão de vídeo | Qualquer formato → MP4 (H.264 + AAC) em 360p, com FFmpeg LGPL embutido | **Concluída** |
 | 6 — Segurança e ferramentas avançadas | Senhas, permissões, propriedades de segurança, metadados, PDF/A (conversão e validação), comparação, reparo, verificação de assinaturas | **Concluída** |
 | 7 — Automação | Lote, filas, fluxos, pasta monitorada, menu de contexto, linha de comando; inverter, páginas em branco, recorte, livreto | **Concluída** |
-| 8 — Finalização | Testes gerais, otimização, instalador, versão portátil, documentação; quatro ferramentas extras do catálogo | **Em andamento** (ver abaixo) |
+| 8 — Finalização | Testes gerais, otimização, instalador, versão portátil, documentação; marcadores/links/anexos, PDF → Excel/PowerPoint, extrair conteúdo, preto e branco | **Concluída** |
 
 ## Como cada item foi verificado
 
@@ -27,7 +27,7 @@ Atualizado em 11/11/2026 · Versão 0.7.1 (Fase 8 em andamento)
 
 ## Funcionalidades
 
-### Fase 8 — Finalização (em andamento)
+### Fase 8 — Finalização
 
 | Item | Estado | Testes |
 |---|---|---|
@@ -37,14 +37,22 @@ Atualizado em 11/11/2026 · Versão 0.7.1 (Fase 8 em andamento)
 | Limpeza de temporários (automática ao abrir, para sobras com mais de um dia; botão em Configurações › Privacidade; comando `--clean-temp`) | Concluído | Automático |
 | **Extrair conteúdo**: imagens (JPEG original; demais em PNG), texto por página, anexos (nomes saneados, nada fora da pasta), fontes incorporadas, metadados e XMP | Concluído | Automático (imagens conferidas por pixel, anexo com nome malicioso, fontes, metadados, pasta nova a cada extração) + execução pela interface |
 | **Converter para preto e branco** sem rasterizar (texto continua texto): cores RGB/CMYK do conteúdo, imagens RGB/CMYK/indexadas, degradês simples; conferência visual de cada página no fim | Concluído | Automático (cores e imagens conferidas por pixel; página com cor especial apontada) + execução pela interface |
-| Marcadores, links e anexos (editor) | Pendente | — |
-| PDF para Excel e PowerPoint | Pendente | — |
-| Padrões de conversão nas Configurações, cache de miniaturas em disco, revisão geral e documentação final | Pendente | — |
+| **Marcadores, links e anexos**: marcadores com subníveis (adicionar, renomear, página, subir/descer, recuar/avançar nível), página de sumário com links, links automáticos para endereços escritos no texto, remoção de links, anexar/remover/salvar anexos | Concluído | Automático (marcadores em 3 níveis relidos; validação; links criados uma vez e removidos; anexos com nomes repetidos e acentos; sumário com destinos conferidos) + execução pela interface |
+| **PDF para Excel** (uma aba por página, texto em linhas e colunas, números brasileiros viram números) e **PowerPoint** (um slide por página com a imagem da página, no tamanho da página) | Concluído | Automático, com o **validador oficial do Open XML** (zero erros de esquema) e conferência das células + execução pela interface |
+| Padrões de conversão nas Configurações (formato, DPI e qualidade de PDF → imagem; página e margem de imagem → PDF) | Concluído | Captura de tela; efeito ao abrir a tela: manual pendente |
+| Documento grande: 600 páginas abertas, renderizadas sob demanda e divididas | Concluído | Automático, com limites de tempo |
 
-Limitações conhecidas desta etapa: o instalador e o executável não são assinados digitalmente
-(o SmartScreen pode avisar); no preto e branco, cores especiais de gráfica (separação/DeviceN),
-degradês complexos, JPEG CMYK, JPEG 2000 e imagens embutidas no conteúdo ficam como estão e as
-páginas afetadas são informadas; na extração, transparências das imagens não vão para o PNG.
+### Limitações conhecidas da Fase 8
+
+| Item | Situação |
+|---|---|
+| Assinatura digital do instalador e do executável | Não há (exige certificado pago); o Windows SmartScreen pode avisar na primeira execução. |
+| Preto e branco | Cores especiais de gráfica (separação/DeviceN), degradês complexos, JPEG em CMYK, JPEG 2000 e imagens embutidas no conteúdo ficam como estão; as páginas que ainda têm cor são informadas. |
+| Extrair conteúdo | Transparências (máscaras) das imagens não vão para o PNG. Tabelas não são extraídas separadamente (use "PDF para Excel"). |
+| PDF para Excel | Monta linhas e colunas pela posição do texto; bordas, cores, células mescladas e tabelas com texto quebrado em várias linhas dentro da célula não são reproduzidas fielmente. PDFs digitalizados precisam de OCR antes. |
+| PDF para PowerPoint | Cada slide é a imagem da página: o texto não fica editável. |
+| Links | Links novos só para endereços escritos no texto; não há desenho manual de áreas de link. Destinos nomeados de links antigos aparecem como "ação não reconhecida". |
+| Cache de miniaturas | Fica em memória (descartado ao fechar). Não foi feito cache em disco de propósito, para não deixar imagens de documentos gravadas no perfil do usuário. |
 
 ### Fase 7 — Automação
 
@@ -78,13 +86,6 @@ páginas afetadas são informadas; na extração, transparências das imagens n�
 | Repetir operação | Reabre a ferramenta com os mesmos arquivos; as opções escolhidas na época não são guardadas. Operações registradas antes da 0.7 não têm os arquivos e não podem ser repetidas. |
 | Páginas em branco | Página com pouquíssimo conteúdo (até 0,1% de pixels escuros e sem texto) conta como branca: confira o resultado. Repetidas = idênticas na imagem renderizada e no texto. |
 | Recortar | Só reduz a área visível (CropBox); não altera o tamanho do papel nem apaga o conteúdo de fora. |
-
-### Ferramentas do catálogo replanejadas para a Fase 8
-
-Marcadores/links/anexos, PDF para Excel e PowerPoint, extrair conteúdo e converter para preto e
-branco **não foram implementadas** nesta fase e aparecem como "Prevista para a Fase 8", sem botão
-ativo. As demais ferramentas extras que estavam na Fase 7 (inverter, páginas em branco, recortar,
-livreto) foram entregues.
 
 ### Fase 6 — Segurança e ferramentas avançadas
 
@@ -331,19 +332,16 @@ fora do que foi testado podem ser recusados pela verificação — e então o ar
 | Log local e tratamento central de exceções | Concluído | Execução no CI |
 | Modo portátil (`portable.flag`) | Concluído | Manual pendente |
 
-### Pendentes das fases concluídas (adiados de propósito)
+### Itens fora do escopo entregue
 
 | Item | Motivo |
 |---|---|
-| Padrões de conversão (formato de imagem, DPI etc.) nas Configurações | Compressão, OCR e desempenho entraram na Fase 7; os de conversão continuam fixos em cada tela. |
 | Idioma da interface | Somente português por enquanto. |
 | Ícone próprio do aplicativo e logotipo definitivo | O ícone do `.exe` ainda é o padrão. |
-| Cache de miniaturas em disco | O cache atual é em memória; em disco será avaliado na Fase 8 (otimização). |
+| Cache de miniaturas em disco | Decidido não fazer (privacidade); ver limitações da Fase 8. |
 
-### Fase 8
-
-Quatro ferramentas do catálogo estão **pendentes** e aparecem na interface como "Prevista para a
-Fase 8", desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCatalog.cs`.
+Todas as ferramentas do catálogo (`PDFMaster.Core/Tools/ToolCatalog.cs`) estão implementadas;
+nenhuma aparece mais como "Prevista".
 
 ## Testes realizados
 
@@ -380,11 +378,13 @@ Fase 8", desabilitadas. A lista completa está em `PDFMaster.Core/Tools/ToolCata
 | Amostras para o teste de inicialização (Fase 6) | 1 | Aprovado |
 | Batch — fluxos, ferramentas de página, fila, pastas monitoradas, menu de contexto, linha de comando | 17 | Aprovado |
 | Amostras para o teste de inicialização (Fase 7) | 1 | Aprovado |
-| App — execução das ferramentas pela interface (`--run`) | 26 | Aprovado |
+| Fase 8 — extrair conteúdo, preto e branco, PDF → Excel/PowerPoint (validador Open XML), marcadores/links/anexos/sumário, temporários, documento de 600 páginas | 15 | Aprovado |
+| Instalador e versão portátil (instalar, conferir, desinstalar duas vezes; portátil sem gravar no perfil) | 1 etapa do CI, 31 conferências | Aprovado |
+| App — execução das ferramentas pela interface (`--run`) | 30 | Aprovado |
 | App — linha de comando sem janela (códigos de saída e arquivos gerados), `--watch`, menu de contexto | 17 | Aprovado |
 | App — abertura das telas nos dois temas | 28 | Aprovado |
 
-Total de testes automatizados: 313 (mais 54 execuções da interface do programa publicado no CI, 15 comandos da linha de comando, uma execução de `--watch`, a pasta monitorada com o programa aberto e o menu de contexto com dois processos).
+Total de testes automatizados: TOTAL_TESTES (mais 58 execuções da interface do programa publicado no CI, 15 comandos da linha de comando, uma execução de `--watch`, a pasta monitorada com o programa aberto e o menu de contexto com dois processos).
 
 Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke.log` e capturas de tela).
 
@@ -413,6 +413,8 @@ Os números da última execução ficam no ramo `ci-results` (`test.log`, `smoke
 | System.Security.Cryptography.Pkcs (também usado na verificação de assinaturas) | 10.0.13 | MIT |
 | Microsoft.Extensions.DependencyInjection, .Logging | 10.0.0 | MIT |
 | Serilog, Serilog.Sinks.File, Serilog.Extensions.Logging | 4.2.0 / 6.0.0 / 9.0.0 | Apache-2.0 |
+| DocumentFormat.OpenXml (somente testes: valida os XLSX/PPTX gerados) | 3.2.0 | MIT |
+| Inno Setup (somente para gerar o instalador no CI; não é distribuído dentro do programa) | 6.x | Licença do Inno Setup (permite uso comercial) |
 | xunit, xunit.runner.visualstudio, Microsoft.NET.Test.Sdk (somente testes) | 2.9.2 / 2.8.2 / 17.12.0 | Apache-2.0 / MIT |
 
 ## Problemas de licença
@@ -428,4 +430,4 @@ Nenhum nas dependências em uso. Decisões sobre iText, Ghostscript, QuestPDF e 
 
 ## Última versão compilada
 
-0.7.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.
+0.8.0 — .NET 10, `win-x64`, executável único autossuficiente, gerado pelo workflow `build`.

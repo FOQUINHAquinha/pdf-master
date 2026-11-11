@@ -1,5 +1,18 @@
 # Histórico de alterações
 
+## 0.8.0 — 11/11/2026 — Fase 8: Finalização (as 8 fases concluídas)
+
+### Adicionado
+- Marcadores, links e anexos: marcadores com subníveis, página de sumário com links, links
+  automáticos para endereços escritos no texto, remoção de links, anexar/remover/salvar anexos.
+- PDF para Excel (uma aba por página, texto em linhas e colunas, números reconhecidos) e para
+  PowerPoint (um slide por página com a imagem da página).
+- Padrões de conversão nas Configurações (PDF → imagem e imagem → PDF).
+- Teste com documento de 600 páginas (abrir, renderizar sob demanda, dividir).
+
+### Alterado
+- Todas as ferramentas do catálogo estão disponíveis; nenhuma aparece mais como "Prevista".
+
 ## 0.7.1 — 11/11/2026 — Fase 8 (primeira parte)
 
 ### Adicionado

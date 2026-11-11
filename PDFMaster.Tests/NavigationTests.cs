@@ -27,6 +27,7 @@ public class NavigationTests : IDisposable
 
     private string WithText(string name, params string[] pages)
     {
+        WindowsFonts.EnsureInstalled();
         var path = Path.Combine(_temp.Path, name);
         using var document = new PdfDocument();
         foreach (var text in pages)
@@ -132,6 +133,7 @@ public class LargeDocumentTests : IDisposable
     [Fact]
     public async Task A_600_page_document_opens_renders_on_demand_and_splits()
     {
+        WindowsFonts.EnsureInstalled();
         var path = Path.Combine(_temp.Path, "grande.pdf");
         using (var document = new PdfDocument())
         {

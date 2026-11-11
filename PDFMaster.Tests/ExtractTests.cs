@@ -19,6 +19,7 @@ public class ExtractTests : IDisposable
     /// <summary>PDF com uma foto JPEG, uma imagem PNG (gravada sem perda), texto, um anexo e título.</summary>
     private string Sample()
     {
+        WindowsFonts.EnsureInstalled();
         var jpg = ImageSamples.Write(Path.Combine(_temp.Path, "foto.jpg"), 64, 48, (x, y) => ((byte)(x * 4), (byte)(y * 5), 120));
         var png = ImageSamples.Write(Path.Combine(_temp.Path, "grafico.png"), 30, 20, (x, y) => (x < 15 ? (byte)255 : (byte)0, 0, 0));
         var pdf = Path.Combine(_temp.Path, "relatorio.pdf");
@@ -138,6 +139,7 @@ public class GrayscaleTests : IDisposable
     /// <summary>Texto vermelho, retângulo azul (RGB), retângulo CMYK, imagem PNG verde e foto JPEG colorida.</summary>
     private string Colorful()
     {
+        WindowsFonts.EnsureInstalled();
         var jpg = ImageSamples.Write(Path.Combine(_temp.Path, "foto.jpg"), 80, 60, (x, y) => (220, (byte)(x * 3), 30));
         var png = ImageSamples.Write(Path.Combine(_temp.Path, "verde.png"), 40, 40, (_, _) => (0, 200, 0));
         var pdf = Path.Combine(_temp.Path, "colorido.pdf");

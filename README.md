@@ -5,7 +5,7 @@ processamento 100% local. Em desenvolvimento por fases — veja [PROJECT_STATUS.
 
 Criado por **Gustavo Farias Medeiros**.
 
-**Estado atual: Fases 1 a 7 concluídas; Fase 8 em andamento.** Já funcionam:
+**Estado atual: as 8 fases estão concluídas (versão 0.8.0).** Funcionam:
 
 - visualizador e organização: mesclar, dividir, extrair, reorganizar, girar, excluir, inserir e intercalar páginas;
 - conversão: PDF → imagem, imagem → PDF, texto → PDF, PDF → Word, PDF → TXT/HTML e, com o
@@ -30,9 +30,10 @@ Criado por **Gustavo Farias Medeiros**.
 
 - mesclar PDFs e fotos num só documento; extrair conteúdo (imagens, texto, anexos, fontes,
   metadados); converter para preto e branco mantendo o texto;
+- marcadores com subníveis, página de sumário, links e anexos; PDF para Excel e PowerPoint;
 - instalador e versão portátil.
 
-Marcadores/links/anexos e PDF → Excel/PowerPoint aparecem no programa como "Prevista para a Fase 8".
+O que cada ferramenta faz e não faz (limitações) está em `PROJECT_STATUS.md`.
 
 ### Instalação
 

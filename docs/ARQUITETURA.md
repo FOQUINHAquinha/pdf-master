@@ -158,11 +158,22 @@ Nenhuma biblioteca nova. `PDFMaster.Batch` reúne:
 O histórico (esquema SQLite versão 2) guarda também a ferramenta e os arquivos de entrada de cada
 operação, para o botão **Repetir**.
 
+### Finalização (Fase 8)
+
+| Peça | Como funciona |
+|---|---|
+| Instalador (`installer/PDFMaster.iss`) | Inno Setup, por usuário (sem administrador) ou para todos. As integrações com o Windows são feitas pelo próprio programa (`--register-menu`, `--register-openwith`) e desfeitas na desinstalação (`--unregister-all`, `--clean-temp`). |
+| Versão portátil | `portable.flag` ao lado do executável faz os dados irem para a pasta `Data`. |
+| Extrair conteúdo | Imagens pelo PDFium (JPEG com os bytes originais; demais decodificadas e gravadas em PNG); anexos, fontes e metadados pelo PDFsharp; nomes de arquivo saneados. |
+| Preto e branco | Leitor próprio de streams de conteúdo que troca só os operadores de cor (rg/RG/k/K e sc/scn em espaços RGB/CMYK) e copia o resto byte a byte; imagens e degradês simples convertidos; conferência por renderização. |
+| PDF → Excel/PowerPoint | Texto posicionado do PDFium agrupado em palavras, linhas e colunas; XLSX e PPTX escritos à mão e validados nos testes com o `OpenXmlValidator`. |
+| Marcadores, links e anexos | PDFsharp (árvore de marcadores, anotações de link, árvore de nomes `EmbeddedFiles`); posições dos endereços no texto vêm do PDFium. |
+
 ### Planejadas
 
 | Finalidade | Escolha prevista | Licença | Observação |
 |---|---|---|---|
-| PDF → XLSX/PPTX | Open XML SDK | MIT | Fase 8, junto com a extração de tabelas. |
+| PDF → XLSX/PPTX | Gravação própria (pacote ZIP + XML); Open XML SDK só nos testes, como validador | MIT | Entregue na Fase 8. |
 | OCR | Tesseract 5.2.0 (binding .NET de charlesw) + modelos `tessdata_fast` | Apache-2.0 | por/eng/spa incorporados na compilação (`tools/obter-modelos-ocr.ps1`) e extraídos para a pasta de dados; outros idiomas instalados pelo usuário. |
 | Scanner | WIA (COM do Windows) e NTwain | — / MIT | |
 | Instalador | Inno Setup | Licença própria, gratuita inclusive para uso comercial | |
@@ -191,7 +202,7 @@ Segue as oito fases da especificação. Cada fase termina com build verde, teste
 | 5 | Editor | Entregue |
 | 6 | Segurança, PDF/A, comparação, reparo, assinaturas | Entregue |
 | 7 | Lote, fluxos, pasta monitorada, menu de contexto, linha de comando; inverter, páginas em branco, recorte, livreto | Entregue |
-| 8 | Testes gerais, otimização, instalador, documentação; extras do catálogo (marcadores/links/anexos, PDF → Excel/PowerPoint, extrair conteúdo, preto e branco) | Próxima |
+| 8 | Testes gerais, otimização, instalador, versão portátil, documentação; marcadores/links/anexos, PDF → Excel/PowerPoint, extrair conteúdo, preto e branco | Entregue |
 
 ## 5. Dificuldades técnicas previstas
 

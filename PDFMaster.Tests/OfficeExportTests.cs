@@ -24,6 +24,7 @@ public class OfficeExportTests : IDisposable
 
     private string Table()
     {
+        WindowsFonts.EnsureInstalled();
         var path = Path.Combine(_temp.Path, "tabela.pdf");
         using var document = new PdfDocument();
         for (var p = 0; p < 2; p++)
