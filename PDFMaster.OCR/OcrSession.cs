@@ -20,7 +20,7 @@ public sealed record OcrWord(
 /// <param name="Text">Texto da página: linhas separadas por quebra, parágrafos por linha em branco.</param>
 public sealed record OcrPageText(IReadOnlyList<OcrWord> Words, string Text)
 {
-    /// <summary>Palavras com pelo menos duas letras ou dígitos e confiança de 60% ou mais.</summary>
+    /// <summary>Palavras na horizontal, com pelo menos duas letras ou dígitos e confiança de 60% ou mais.</summary>
     public int GoodWords => Words.Count(IsGood);
 
     /// <summary>Soma das confianças das palavras boas; usada para comparar orientações.</summary>
@@ -28,8 +28,14 @@ public sealed record OcrPageText(IReadOnlyList<OcrWord> Words, string Text)
 
     public double MeanConfidence => Words.Count == 0 ? 0 : Words.Average(w => w.Confidence) / 100.0;
 
-    private static bool IsGood(OcrWord word) =>
-        word.Confidence >= 60 && word.Text.Count(char.IsLetterOrDigit) >= 2;
+    // O Tesseract consegue ler texto deitado; essas palavras (mais altas que largas) não contam,
+    // senão uma página virada de lado passaria por bem orientada.
+    private static bool IsGood(OcrWord word)
+    {
+        var characters = word.Text.Count(char.IsLetterOrDigit);
+        if (word.Confidence < 60 || characters < 2) return false;
+        return characters < 3 || word.X2 - word.X1 > word.Y2 - word.Y1;
+    }
 }
 
 /// <summary>
