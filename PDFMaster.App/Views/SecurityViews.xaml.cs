@@ -127,3 +127,12 @@ public partial class ExtractContentView : UserControl
         ToolDrop.Attach(this);
     }
 }
+
+public partial class GrayscaleView : UserControl
+{
+    public GrayscaleView()
+    {
+        InitializeComponent();
+        ToolDrop.Attach(this);
+    }
+}

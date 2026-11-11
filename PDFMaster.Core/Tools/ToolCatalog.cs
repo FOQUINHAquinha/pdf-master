@@ -52,7 +52,7 @@ public sealed class ToolCatalog
         // Fase 7
         "batch", "watch-folder", "reverse", "blank-duplicates", "crop", "booklet",
         // Fase 8
-        "extract-content",
+        "extract-content", "grayscale",
         // Extra (fora das 8 fases, pedido do autor)
         "video-compress",
     };
@@ -158,7 +158,7 @@ public sealed class ToolCatalog
         // ----- Comprimir -----
         T("compress", "Comprimir PDF", "Reduz o tamanho do arquivo com perfis de compressão e comparação antes/depois.", ToolCategory.Compress, 3, Shrink,
             "reduzir tamanho", "diminuir pdf", "compactar", "otimizar", "pdf menor", "deixar mais leve");
-        T("grayscale", "Converter para preto e branco", "Converte as páginas para escala de cinza.", ToolCategory.Compress, 8, Shrink,
+        T("grayscale", "Converter para preto e branco", "Converte textos, desenhos e imagens para tons de cinza; o texto continua texto.", ToolCategory.Compress, 8, Shrink,
             "escala de cinza", "tons de cinza", "monocromático", "sem cor");
 
         // ----- Segurança -----

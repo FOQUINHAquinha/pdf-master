@@ -63,7 +63,7 @@ public class ToolSearchTests
             new[]
             {
                 "annotate", "batch", "blank-duplicates", "booklet", "compare", "compress", "crop", "delete-pages", "edit-images", "edit-text", "extract-content", "extract-pages",
-                "form-fields", "forms", "header-footer", "image-to-pdf", "insert-pages", "interleave", "merge", "metadata",
+                "form-fields", "forms", "grayscale", "header-footer", "image-to-pdf", "insert-pages", "interleave", "merge", "metadata",
                 "ocr", "ocr-batch", "office-to-pdf", "pdf-to-image", "pdf-to-text", "pdf-to-word", "pdfa", "protect", "reorder", "repair", "reverse", "rotate",
                 "scan", "security-info", "sign-visual", "split", "stamps", "text-html-to-pdf", "unlock", "verify-signature", "video-compress", "view",
                 "watch-folder", "watermark",

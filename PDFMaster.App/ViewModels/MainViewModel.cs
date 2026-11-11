@@ -251,7 +251,7 @@ public sealed partial class MainViewModel : ObservableObject
             "protect" or "unlock" or "security-info" or "metadata" or "verify-signature" or "repair" or "pdfa" or "compare" => toolId,
             "pdf-to-image" or "image-to-pdf" or "office-to-pdf" or "text-html-to-pdf" or "pdf-to-word" or "pdf-to-text" => toolId,
             "batch" or "watch-folder" or "reverse" or "blank-duplicates" or "crop" or "booklet" => toolId,
-            "extract-content" => toolId,
+            "extract-content" or "grayscale" => toolId,
             _ => "pages",
         };
 
@@ -285,6 +285,7 @@ public sealed partial class MainViewModel : ObservableObject
                 "pdf-to-text" => new ConvertViewModel(_toolContext, ConversionKind.PdfToText),
                 "batch" => new BatchViewModel(_toolContext),
                 "extract-content" => new ExtractContentViewModel(_toolContext),
+                "grayscale" => new GrayscaleViewModel(_toolContext),
                 "watch-folder" => new WatchFolderViewModel(_toolContext),
                 "reverse" => new PageToolViewModel(_toolContext, PageToolKind.Reverse),
                 "blank-duplicates" => new PageToolViewModel(_toolContext, PageToolKind.BlankPages),
