@@ -1,0 +1,36 @@
+padrao.pdf → PDF/A-3b: Conforme com PDF/A-3b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-3b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+padrao.pdf → PDF/A-1b: Conforme com PDF/A-1b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-1b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: 2 grupo(s) de transparência sem efeito removido(s) (o documento não usa transparência).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+padrao.pdf → PDF/A-2b: Conforme com PDF/A-2b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-2b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+proprio.pdf → PDF/A-1b: Conforme com PDF/A-1b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-1b validation profile).
+  mudança: 1 grupo(s) de transparência sem efeito removido(s) (o documento não usa transparência).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+proprio.pdf → PDF/A-2b: Conforme com PDF/A-2b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-2b validation profile).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+anexos.pdf → PDF/A-2b: Conforme com PDF/A-2b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-2b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: 1 ação(ões) proibida(s) removida(s) (JavaScript, abrir arquivos, sons etc.).
+  mudança: Arquivos anexados ao documento removidos (PDF/A-2b não permite anexos; o PDF/A-3b permite).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+anexos.pdf → PDF/A-3b: Conforme com PDF/A-3b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-3b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: 1 ação(ões) proibida(s) removida(s) (JavaScript, abrir arquivos, sons etc.).
+  mudança: 1 anexo(s) identificado(s) com tipo de arquivo e relação com o documento (exigência do PDF/A-3).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.
+transparente.pdf → PDF/A-2b: Conforme com PDF/A-2b, segundo o veraPDF e a verificação interna.
+  O veraPDF confirmou a conformidade (PDF/A-2b validation profile).
+  mudança: Fonte "Helvetica" incorporada usando "Arial" Normal do Windows (mesmas medidas da original).
+  mudança: Perfil de cor de saída sRGB (do Windows) acrescentado.

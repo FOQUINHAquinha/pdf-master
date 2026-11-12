@@ -1,0 +1,6 @@
+build exit=0
+veraPDF exigido nos testes: '1'
+test exit=0
+publish exit=0
+smoke failed=False
+installer failed=False

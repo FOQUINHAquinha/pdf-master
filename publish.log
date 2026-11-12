@@ -1,0 +1,36 @@
+  Determining projects to restore...
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Editor\PDFMaster.Editor.csproj (in 14.96 sec).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Compression\PDFMaster.Compression.csproj (in 14.96 sec).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Rendering\PDFMaster.Rendering.csproj (in 14.96 sec).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Domain\PDFMaster.Domain.csproj (in 14.96 sec).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Core\PDFMaster.Core.csproj (in 7 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Conversion\PDFMaster.Conversion.csproj (in 22 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.PdfEngine\PDFMaster.PdfEngine.csproj (in 25 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.OCR\PDFMaster.OCR.csproj (in 22 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Infrastructure\PDFMaster.Infrastructure.csproj (in 24 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Comparison\PDFMaster.Comparison.csproj (in 17 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Video.Ffmpeg\PDFMaster.Video.Ffmpeg.csproj (in 5 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Video\PDFMaster.Video.csproj (in 19 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Storage\PDFMaster.Storage.csproj (in 15 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Batch\PDFMaster.Batch.csproj (in 45 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Security\PDFMaster.Security.csproj (in 15 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.Scanner\PDFMaster.Scanner.csproj (in 7 ms).
+  Restored D:\a\pdf-master\pdf-master\PDFMaster.App\PDFMaster.App.csproj (in 55 ms).
+  PDFMaster.Domain -> D:\a\pdf-master\pdf-master\PDFMaster.Domain\bin\Release\net10.0\PDFMaster.Domain.dll
+  PDFMaster.Video.Ffmpeg -> D:\a\pdf-master\pdf-master\PDFMaster.Video.Ffmpeg\bin\Release\net10.0\PDFMaster.Video.Ffmpeg.dll
+  PDFMaster.Core -> D:\a\pdf-master\pdf-master\PDFMaster.Core\bin\Release\net10.0\PDFMaster.Core.dll
+  PDFMaster.PdfEngine -> D:\a\pdf-master\pdf-master\PDFMaster.PdfEngine\bin\Release\net10.0\PDFMaster.PdfEngine.dll
+  PDFMaster.Video -> D:\a\pdf-master\pdf-master\PDFMaster.Video\bin\Release\net10.0-windows\PDFMaster.Video.dll
+  PDFMaster.Scanner -> D:\a\pdf-master\pdf-master\PDFMaster.Scanner\bin\Release\net10.0-windows\PDFMaster.Scanner.dll
+  PDFMaster.Storage -> D:\a\pdf-master\pdf-master\PDFMaster.Storage\bin\Release\net10.0\PDFMaster.Storage.dll
+  PDFMaster.Infrastructure -> D:\a\pdf-master\pdf-master\PDFMaster.Infrastructure\bin\Release\net10.0\PDFMaster.Infrastructure.dll
+  PDFMaster.Rendering -> D:\a\pdf-master\pdf-master\PDFMaster.Rendering\bin\Release\net10.0\PDFMaster.Rendering.dll
+  PDFMaster.Compression -> D:\a\pdf-master\pdf-master\PDFMaster.Compression\bin\Release\net10.0-windows\PDFMaster.Compression.dll
+  PDFMaster.Comparison -> D:\a\pdf-master\pdf-master\PDFMaster.Comparison\bin\Release\net10.0-windows\PDFMaster.Comparison.dll
+  PDFMaster.Editor -> D:\a\pdf-master\pdf-master\PDFMaster.Editor\bin\Release\net10.0-windows\PDFMaster.Editor.dll
+  PDFMaster.Security -> D:\a\pdf-master\pdf-master\PDFMaster.Security\bin\Release\net10.0-windows\PDFMaster.Security.dll
+  PDFMaster.Conversion -> D:\a\pdf-master\pdf-master\PDFMaster.Conversion\bin\Release\net10.0-windows\PDFMaster.Conversion.dll
+  PDFMaster.OCR -> D:\a\pdf-master\pdf-master\PDFMaster.OCR\bin\Release\net10.0-windows\PDFMaster.OCR.dll
+  PDFMaster.Batch -> D:\a\pdf-master\pdf-master\PDFMaster.Batch\bin\Release\net10.0-windows\PDFMaster.Batch.dll
+  PDFMaster.App -> D:\a\pdf-master\pdf-master\PDFMaster.App\bin\Release\net10.0-windows\win-x64\PDFMaster.dll
+  PDFMaster.App -> D:\a\pdf-master\pdf-master\publish\

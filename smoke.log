@@ -1,0 +1,113 @@
+amostras: True True
+run-to-image: em execucao apos 10 s, janela='PDF Master'
+run-from-image: em execucao apos 10 s, janela='PDF Master'
+run-from-text: em execucao apos 10 s, janela='PDF Master'
+run-to-word: em execucao apos 10 s, janela='PDF Master'
+run-to-text: em execucao apos 10 s, janela='PDF Master'
+run-office: em execucao apos 75 s, janela='PDF Master'
+run-compress: em execucao apos 20 s, janela='PDF Master'
+run-ocr: em execucao apos 60 s, janela='PDF Master'
+run-scan: em execucao apos 15 s, janela='PDF Master'
+run-watermark: em execucao apos 10 s, janela='PDF Master'
+run-header: em execucao apos 10 s, janela='PDF Master'
+run-forms: em execucao apos 10 s, janela='PDF Master'
+tool-editor: em execucao apos 12 s, janela='PDF Master'
+tool-annotate: em execucao apos 12 s, janela='PDF Master'
+tool-forms: em execucao apos 10 s, janela='PDF Master'
+tool-watermark: em execucao apos 10 s, janela='PDF Master'
+light-edit: em execucao apos 10 s, janela='PDF Master'
+run-video: em execucao apos 45 s, janela='PDF Master'
+tool-video: em execucao apos 15 s, janela='PDF Master'
+tool-ocr: em execucao apos 10 s, janela='PDF Master'
+light-ocr: em execucao apos 10 s, janela='PDF Master'
+run-pdfa: em execucao apos 40 s, janela='PDF Master'
+run-metadata: em execucao apos 10 s, janela='PDF Master'
+run-repair: em execucao apos 10 s, janela='PDF Master'
+run-compare: em execucao apos 15 s, janela='PDF Master'
+tool-signature: em execucao apos 10 s, janela='PDF Master'
+tool-security: em execucao apos 15 s, janela='PDF Master'
+tool-protect: em execucao apos 10 s, janela='PDF Master'
+tool-unlock: em execucao apos 10 s, janela='PDF Master'
+tool-metadata: em execucao apos 10 s, janela='PDF Master'
+tool-pdfa: em execucao apos 10 s, janela='PDF Master'
+run-merge: em execucao apos 10 s, janela='PDF Master'
+run-interleave: em execucao apos 10 s, janela='PDF Master'
+run-split: em execucao apos 10 s, janela='PDF Master'
+run-pages: em execucao apos 10 s, janela='PDF Master'
+tool-viewer: em execucao apos 10 s, janela='PDF Master'
+tool-pages: em execucao apos 10 s, janela='PDF Master'
+tool-merge: em execucao apos 10 s, janela='PDF Master'
+tool-interleave: em execucao apos 10 s, janela='PDF Master'
+tool-split: em execucao apos 10 s, janela='PDF Master'
+light-files: em execucao apos 10 s, janela='PDF Master'
+light-home: em execucao apos 10 s, janela='PDF Master'
+dark-home: em execucao apos 10 s, janela='PDF Master'
+light-organize: em execucao apos 10 s, janela='PDF Master'
+dark-settings: em execucao apos 10 s, janela='PDF Master'
+light-history: em execucao apos 10 s, janela='PDF Master'
+run-batch: em execucao apos 90 s, janela='PDF Master'
+run-reverse: em execucao apos 10 s, janela='PDF Master'
+run-blank: em execucao apos 12 s, janela='PDF Master'
+run-crop: em execucao apos 10 s, janela='PDF Master'
+run-extract: em execucao apos 10 s, janela='PDF Master'
+run-grayscale: em execucao apos 10 s, janela='PDF Master'
+run-office: em execucao apos 10 s, janela='PDF Master'
+run-bookmarks: em execucao apos 10 s, janela='PDF Master'
+run-booklet: em execucao apos 10 s, janela='PDF Master'
+tool-watch: em execucao apos 25 s, janela='PDF Master'
+dark-batch-page: em execucao apos 10 s, janela='PDF Master'
+light-settings-automation: em execucao apos 10 s, janela='PDF Master'
+extraido ok: metadados.txt (162 bytes)
+extraido ok: texto.txt (270 bytes)
+pasta monitorada ok: Relatorio_comprimido.pdf (6635 bytes)
+pasta monitorada ok: Anexos_comprimido.pdf (4770 bytes)
+saida ok: mesclado.pdf (363361 bytes)
+saida ok: intercalado.pdf (8429 bytes)
+saida ok: Relatorio_organizado.pdf (6052 bytes)
+saida ok: Relatorio_001.pdf (2643 bytes)
+saida ok: Relatorio_002.pdf (2646 bytes)
+saida ok: Relatorio_003.pdf (2647 bytes)
+saida ok: Relatorio_004.pdf (2653 bytes)
+saida ok: Relatorio_005.pdf (2657 bytes)
+saida ok: Relatorio_006.pdf (2656 bytes)
+saida ok: Relatorio_007.pdf (2660 bytes)
+saida ok: Relatorio_p001.png (11575 bytes)
+saida ok: Relatorio_p002.png (11578 bytes)
+saida ok: Relatorio_p003.png (10277 bytes)
+saida ok: Relatorio_p004.png (11583 bytes)
+saida ok: Relatorio_p005.png (11587 bytes)
+saida ok: Relatorio_p006.png (10285 bytes)
+saida ok: Relatorio_p007.png (11592 bytes)
+saida ok: imagens.pdf (356147 bytes)
+saida ok: Notas.pdf (23316 bytes)
+saida ok: Texto.docx (1354 bytes)
+saida ok: Texto.txt (3536 bytes)
+saida ok: Carta.pdf (25405 bytes)
+saida ok: Digitalizado_comprimido.pdf (204856 bytes)
+saida ok: Escaneado_ocr.pdf (27827 bytes)
+saida ok: digitalizacao.pdf (82402 bytes)
+saida ok: Video_360p.mp4 (505465 bytes)
+saida ok: Relatorio_marca-dagua.pdf (34506 bytes)
+saida ok: Anexos_cabecalho-rodape.pdf (33184 bytes)
+saida ok: Formulario_preenchido.pdf (29557 bytes)
+saida ok: Contrato v1_PDFA-2b.pdf (560230 bytes)
+saida ok: Contrato v1_metadados.pdf (4435 bytes)
+saida ok: Danificado_reparado.pdf (2770 bytes)
+saida ok: Relatorio_cinza.pdf (8047 bytes)
+saida ok: Contrato v1.xlsx (2589 bytes)
+saida ok: Anexos_navegacao.pdf (6286 bytes)
+saida ok: Relatorio_arquivo.pdf (41062 bytes)
+saida ok: Escaneado_arquivo.pdf (550103 bytes)
+saida ok: Relatorio_invertido.pdf (6052 bytes)
+saida ok: Digitalizacao com brancas_sem-brancas.pdf (3359 bytes)
+saida ok: Relatorio_recortado.pdf (8433 bytes)
+saida ok: Anexos_2-por-folha.pdf (5129 bytes)
+cli saida ok: resultado.pdf
+cli saida ok: comprimido.pdf
+cli saida ok: Escaneado_ocr.pdf
+cli saida ok: Contrato v1_PDFA-2b.pdf
+cli saida ok: girado.pdf
+cli saida ok: Digitalizacao com brancas_limpo.pdf
+cli partes=3 imagens=4
+cli watch ok
+contexto: processos vivos=1 (esperado 1); c2 encerrou=True codigo=0

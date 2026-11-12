@@ -1,0 +1,34 @@
+Inno Setup: C:\Program Files (x86)\Inno Setup 6\ISCC.exe (existe=True); versao=0.8.1
+iscc exit=0
+instalador: 134204543 bytes
+[1] instalacao terminou com 0 = True
+[1] PDFMaster.exe instalado = True
+[1] atalho no menu Iniciar = True
+[1] menu de contexto registrado = True
+[1] Abrir com registrado = True
+[1] programa instalado responde 'PDF Master 0.8.1' = True
+[1] desinstalacao terminou com 0 = True
+[1] programa removido = True
+[1] atalho removido = True
+[1] menu de contexto removido = True
+[1] Abrir com removido = True
+[1] temporarios removidos = True
+[1] dados do usuario mantidos = True
+[2] instalacao terminou com 0 = True
+[2] PDFMaster.exe instalado = True
+[2] atalho no menu Iniciar = True
+[2] menu de contexto registrado = True
+[2] Abrir com registrado = True
+[2] programa instalado responde 'PDF Master 0.8.1' = True
+[2] desinstalacao terminou com 0 = True
+[2] programa removido = True
+[2] atalho removido = True
+[2] menu de contexto removido = True
+[2] Abrir com removido = True
+[2] temporarios removidos = True
+[2] dados removidos quando pedido = True
+Gerado: D:\a\_temp\portatil-teste\junto.pdf (8,62 KB)
+
+portatil executou = True
+portatil guarda dados ao lado do exe = True
+portatil nao usa LOCALAPPDATA = True

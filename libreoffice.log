@@ -1,0 +1,17 @@
+tentativa 1 (Chocolatey)
+
+Download of LibreOffice_26.2.6.3_Win_x86-64.msi (355.96 MB) completed.
+Hashes match.
+Installing libreoffice-fresh...
+libreoffice-fresh has been installed.
+  libreoffice-fresh may be able to be automatically uninstalled.
+ The install of libreoffice-fresh was successful.
+  Deployed to 'C:\Program Files\LibreOffice\'
+
+Chocolatey installed 1/1 packages. 
+ See the log for details (C:\ProgramData\chocolatey\logs\chocolatey.log).
+
+Enjoy using Chocolatey? Explore more amazing features to take your
+experience to the next level at
+ https://chocolatey.org/compare
+soffice: True

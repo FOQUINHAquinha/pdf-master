@@ -1,0 +1,90 @@
+cli help -> codigo 0 (esperado 0)
+PDF Master — linha de comando (sem janela)
+
+  PDFMaster.exe --merge a.pdf b.pdf [mais arquivos] --output resultado.pdf
+  PDFMaster.exe --compress documento.pdf [--profile sem-perda|leve|equilibrada|forte|maxima] [--output comprimido.pdf|pasta]
+  PDFMaster.exe --ocr documento.pdf [--language por|por+eng] [--dpi 300] [--output pdf|pasta]
+  PDFMaster.exe --split documento.pdf --output pasta [--every N | --ranges "1-3,4-6"]
+  PDFMaster.exe --pdfa documento.pdf [--level 1b|2b|3b] [--output pdf|pasta]
+  PDFMaster.exe --rotate documento.pdf --degrees 90|180|270 [--pages "1,3-5"] [--output pdf|pasta]
+  PDFMaster.exe --to-image documento.pdf [--format png|jpg] [--dpi 150] [--output pasta]
+  PDFMaster.exe --flow "Nome do fluxo" arquivos-ou-pastas [--output pasta]
+  PDFMaster.exe --watch [--duration segundos]
+  PDFMaster.exe --list-flows | --help | --version
+
+Manutenção (usada também pelo instalador; só afeta o seu usuário):
+  PDFMaster.exe --register-menu       itens do PDF Master no menu de contexto dos PDFs
+  PDFMaster.exe --register-openwith   PDF Master em "Abrir com"
+  PDFMaster.exe --unregister-all      remove as duas integrações acima
+  PDFMaster.exe --clean-temp          apaga os temporários do programa que não estão em uso
+
+Opções comuns:
+  --output   arquivo (.pdf, com um só resultado) ou pasta. Sem --output, o resultado vai para a
+             pasta do primeiro arquivo.
+  --overwrite  permite substituir um arquivo de saída que já existe (sem ela, nada é
+               substituído: um nome novo é gerado na pasta ou a operação é recusada).
+  --log arquivo  grava também as mensagens neste arquivo.
+Pastas informadas como entrada são lidas (sem subpastas). Os originais nunca são alterados.
+Códigos de saída: 0 sucesso, 1 parâmetros inválidos, 2 falha, 3 sucesso parcial.
+
+cli version -> codigo 0 (esperado 0)
+PDF Master 0.8.1
+
+cli list-flows -> codigo 0 (esperado 0)
+Digitalizados: OCR, comprimir, numerar e PDF/A: OCR (PDF pesquisável) → Comprimir → Numerar páginas → Converter para PDF/A
+Comprimir (equilibrada): Comprimir
+Arquivar em PDF/A-2b: Converter para PDF/A
+Limpar: remover páginas em branco e metadados: Remover páginas em branco → Remover metadados
+
+cli merge -> codigo 0 (esperado 0)
+Gerado: D:\a\_temp\pdfm-cli\resultado.pdf (8,62 KB)
+
+cli merge-again -> codigo 2 (esperado 2)
+Falhou: "D:\a\_temp\pdfm-cli\resultado.pdf" já existe. Use --overwrite para substituí-lo.
+
+cli merge-one -> codigo 1 (esperado 1)
+Erro nos parâmetros: Informe ao menos dois PDFs para mesclar.
+
+cli compress -> codigo 0 (esperado 0)
+Digitalizado.pdf: 2,3 MB → 28,37 KB (99% menor).
+Gerado: D:\a\_temp\pdfm-cli\comprimido.pdf (28,37 KB)
+
+cli split -> codigo 0 (esperado 0)
+Gerado: D:\a\_temp\pdfm-cli\partes\Relatorio_001.pdf (3,68 KB)
+Gerado: D:\a\_temp\pdfm-cli\partes\Relatorio_002.pdf (3,71 KB)
+Gerado: D:\a\_temp\pdfm-cli\partes\Relatorio_003.pdf (2,6 KB)
+
+cli ocr -> codigo 0 (esperado 0)
+Escaneado.pdf: 1 página(s) reconhecida(s), 19 palavra(s).
+Gerado: D:\a\_temp\pdfm-cli\Escaneado_ocr.pdf (27,17 KB)
+
+cli pdfa -> codigo 0 (esperado 0)
+Contrato v1.pdf: Conforme com PDF/A-2b, segundo o veraPDF e a verificação interna.
+Gerado: D:\a\_temp\pdfm-cli\Contrato v1_PDFA-2b.pdf (547,1 KB)
+
+cli rotate -> codigo 0 (esperado 0)
+Gerado: D:\a\_temp\pdfm-cli\girado.pdf (5,93 KB)
+
+cli to-image -> codigo 0 (esperado 0)
+Gerado: D:\a\_temp\pdfm-cli\imagens\Anexos_p001.jpg (31,96 KB)
+Gerado: D:\a\_temp\pdfm-cli\imagens\Anexos_p002.jpg (32,28 KB)
+Gerado: D:\a\_temp\pdfm-cli\imagens\Anexos_p003.jpg (32,87 KB)
+Gerado: D:\a\_temp\pdfm-cli\imagens\Anexos_p004.jpg (33,2 KB)
+
+cli flow -> codigo 0 (esperado 0)
+Digitalizacao com brancas.pdf: Remover páginas em branco → Remover metadados — Removidas 2 em branco: página(s) 2, 5.
+Gerado: D:\a\_temp\pdfm-cli\Digitalizacao com brancas_limpo.pdf (1,77 KB)
+
+cli bad-option -> codigo 1 (esperado 1)
+Erro nos parâmetros: Opção desconhecida: --qualidade. Use --help.
+
+cli missing-file -> codigo 1 (esperado 1)
+Erro nos parâmetros: Arquivo ou pasta não encontrado: D:\a\_temp\pdfm-cli\nao-existe.pdf
+
+cli watch -> codigo 0
+Monitorando "D:\a\_temp\pdfm-watch-cli-in" → "D:\a\_temp\pdfm-watch-cli-out" (Comprimir (equilibrada)).
+Monitorando por 25 s.
+CLI: "chegou.pdf" entrou na fila (Comprimir (equilibrada)).
+"chegou.pdf" processado → chegou_comprimido.pdf.
+Monitoramento encerrado.
+

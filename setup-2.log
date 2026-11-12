@@ -1,0 +1,62 @@
+﻿2026-11-12 19:24:56.620   Log opened. (Time zone: UTC+00:00)
+2026-11-12 19:24:56.620   Setup version: Inno Setup version 6.7.1
+2026-11-12 19:24:56.622   Original Setup EXE: D:\a\pdf-master\pdf-master\installer-out\PDFMaster-Setup-0.8.1.exe
+2026-11-12 19:24:56.622   Setup command line: /SL5="$33002C,132976019,872448,D:\a\pdf-master\pdf-master\installer-out\PDFMaster-Setup-0.8.1.exe" /VERYSILENT /SUPPRESSMSGBOXES /CURRENTUSER /DIR="D:\a\_temp\PDF Master instalado" /TASKS="contextmenu,openwith" /LOG="D:\a\pdf-master\pdf-master\ci-out\setup-2.log"
+2026-11-12 19:24:56.622   Windows version: 10.0.26100
+2026-11-12 19:24:56.622   Windows architecture: x64 (64-bit)
+2026-11-12 19:24:56.622   Machine types supported by system: x86 x64
+2026-11-12 19:24:56.622   User privileges: Administrative
+2026-11-12 19:24:56.625   Administrative install mode: No
+2026-11-12 19:24:56.625   Install mode root key: HKEY_CURRENT_USER
+2026-11-12 19:24:56.625   64-bit install mode: Yes
+2026-11-12 19:24:56.625   RedirectionGuard status for current process: Enabled in enforcing mode
+2026-11-12 19:24:56.627   Created protected temporary directory: C:\Users\RUNNER~1\AppData\Local\Temp\is-3RB4VMOY6V.tmp
+2026-11-12 19:24:56.712   Found 1 files to register with RestartManager.
+2026-11-12 19:24:56.712   Calling RestartManager's RmGetList.
+2026-11-12 19:24:56.714   RmGetList finished successfully.
+2026-11-12 19:24:56.714   RestartManager found no applications using one of our files.
+2026-11-12 19:24:56.717   Starting the installation process.
+2026-11-12 19:24:56.719   Creating directory: D:\a\_temp\PDF Master instalado
+2026-11-12 19:24:56.719   Directory for uninstall files: D:\a\_temp\PDF Master instalado
+2026-11-12 19:24:56.719   Creating new uninstall log: D:\a\_temp\PDF Master instalado\unins000.dat
+2026-11-12 19:24:56.721   -- File entry --
+2026-11-12 19:24:56.721   Dest filename: D:\a\_temp\PDF Master instalado\unins000.exe
+2026-11-12 19:24:56.721   Non-default bitness: 32-bit
+2026-11-12 19:24:56.723   Time stamp of our file: 2026-11-12 19:24:56.534
+2026-11-12 19:24:56.723   Installing the file.
+2026-11-12 19:24:56.733   Successfully installed the file.
+2026-11-12 19:24:56.733   -- File entry --
+2026-11-12 19:24:56.733   Dest filename: D:\a\_temp\PDF Master instalado\PDFMaster.exe
+2026-11-12 19:24:56.733   Time stamp of our file: 2026-11-12 19:07:34.000
+2026-11-12 19:24:56.733   Installing the file.
+2026-11-12 19:24:59.942   Successfully installed the file.
+2026-11-12 19:24:59.942   -- File entry --
+2026-11-12 19:24:59.942   Dest filename: D:\a\_temp\PDF Master instalado\LEIA-ME-INSTALACAO.txt
+2026-11-12 19:24:59.942   Time stamp of our file: 2026-11-12 19:01:54.000
+2026-11-12 19:24:59.942   Installing the file.
+2026-11-12 19:24:59.942   Successfully installed the file.
+2026-11-12 19:24:59.942   -- Icon entry --
+2026-11-12 19:24:59.942   Dest filename: C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\PDF Master.lnk
+2026-11-12 19:24:59.943   Creating the icon.
+2026-11-12 19:25:00.066   Successfully created the icon.
+2026-11-12 19:25:00.072   Saving uninstall information.
+2026-11-12 19:25:00.072   Creating new uninstall key: HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Uninstall\{6D3A1F52-8C4B-4E7A-9B1D-2F5C7A9E3B41}_is1
+2026-11-12 19:25:00.072   Writing uninstall key values.
+2026-11-12 19:25:00.072   Detected previous administrative 64-bit install? No
+2026-11-12 19:25:00.072   Detected previous administrative 32-bit install? No
+2026-11-12 19:25:00.074   Installation process succeeded.
+2026-11-12 19:25:00.076   -- Run entry --
+2026-11-12 19:25:00.076   Run as: Current user
+2026-11-12 19:25:00.076   Type: Exec
+2026-11-12 19:25:00.076   Filename: D:\a\_temp\PDF Master instalado\PDFMaster.exe
+2026-11-12 19:25:00.076   Parameters: --register-menu
+2026-11-12 19:25:00.626   Process exit code: 0
+2026-11-12 19:25:00.626   -- Run entry --
+2026-11-12 19:25:00.626   Run as: Current user
+2026-11-12 19:25:00.626   Type: Exec
+2026-11-12 19:25:00.626   Filename: D:\a\_temp\PDF Master instalado\PDFMaster.exe
+2026-11-12 19:25:00.626   Parameters: --register-openwith
+2026-11-12 19:25:01.194   Process exit code: 0
+2026-11-12 19:25:01.196   Need to restart Windows? No
+2026-11-12 19:25:01.198   Deinitializing Setup.
+2026-11-12 19:25:01.203   Log closed.

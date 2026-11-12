@@ -1,0 +1,26 @@
+baixado: https://software.verapdf.org/rel/verapdf-installer.zip
+jar: D:\a\_temp\verapdf-inst\verapdf-greenfield-1.30.4\verapdf-izpack-installer-1.30.4.jar
+java: C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\17.0.21-9\x64\bin\java.exe True
+Command line arguments: D:\a\_temp\auto-install.xml 
+[ Starting automated installation ]
+====================
+Installation started
+Framework: 5.2.4-992ec (IzPack)
+Platform: windows,version=10.0,arch=x64,symbolicName=WINDOWS_10,javaVersion=17.0.21
+[ Starting to unpack ]
+[ Processing package: veraPDF GUI (1/2) ]
+Cleaning up the target folder ...
+[ Processing package: veraPDF CLI (2/2) ]
+Cleaning up the target folder ...
+Installation finished
+[ Unpacking finished ]
+[ Writing the uninstaller data ... ]
+[ Automated installation done ]
+instalado: True
+veraPDF 1.30.4
+Built: Mon Nov 09 13:40:00 UTC 2026
+Developed and released by the veraPDF Consortium.
+Funded by the PREFORMA project.
+Released under the GNU General Public License v3
+and the Mozilla Public License v2 or later.
+
