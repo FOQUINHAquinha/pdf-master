@@ -53,8 +53,19 @@ jobs:
       - name: Instalar LibreOffice (dependência opcional das conversões)
         shell: pwsh
         run: |
-          choco install libreoffice-fresh -y --no-progress 2>&1 | Select-Object -Last 15 | Tee-Object ci-out/libreoffice.log
-          "soffice: $(Test-Path 'C:\Program Files\LibreOffice\program\soffice.com')" | Out-File ci-out/libreoffice.log -Append -Encoding utf8
+          # O repositório do Chocolatey às vezes falha por instantes: tenta de novo e, por fim, usa o winget.
+          $soffice = 'C:\Program Files\LibreOffice\program\soffice.com'
+          for ($try = 1; $try -le 3 -and -not (Test-Path $soffice); $try++) {
+            "tentativa $try (Chocolatey)" | Out-File ci-out/libreoffice.log -Append -Encoding utf8
+            choco install libreoffice-fresh -y --no-progress 2>&1 | Select-Object -Last 15 | Out-File ci-out/libreoffice.log -Append -Encoding utf8
+            if (-not (Test-Path $soffice)) { Start-Sleep -Seconds 30 }
+          }
+          if (-not (Test-Path $soffice)) {
+            "tentativa com winget" | Out-File ci-out/libreoffice.log -Append -Encoding utf8
+            winget install --id TheDocumentFoundation.LibreOffice -e --silent --accept-package-agreements --accept-source-agreements 2>&1 |
+              Select-Object -Last 15 | Out-File ci-out/libreoffice.log -Append -Encoding utf8
+          }
+          "soffice: $(Test-Path $soffice)" | Out-File ci-out/libreoffice.log -Append -Encoding utf8
 
       # veraPDF (validador PDF/A de referência; GPLv3+/MPLv2+): usado só aqui, para confirmar as conversões
       # PDF/A nos testes. Não é distribuído com o programa. Se a instalação falhar, os testes seguem sem ele.
