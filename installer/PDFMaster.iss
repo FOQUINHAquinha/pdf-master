@@ -38,6 +38,7 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName=PDF Master
 UninstallDisplayIcon={app}\PDFMaster.exe
+SetupIconFile=..\PDFMaster.App\Assets\PDFMaster.ico
 CloseApplications=yes
 RestartApplications=no
 SetupLogging=yes

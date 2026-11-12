@@ -1,6 +1,6 @@
 # PDF Master — estado do projeto
 
-Atualizado em 11/11/2026 · Versão 0.8.0 — as 8 fases concluídas
+Atualizado em 12/11/2026 · Versão 0.8.1 — as 8 fases concluídas
 
 ## Fases
 

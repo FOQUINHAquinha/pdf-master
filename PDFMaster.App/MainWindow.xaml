@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:PDFMaster.App.ViewModels"
         xmlns:views="clr-namespace:PDFMaster.App.Views"
         Title="PDF Master" Width="1280" Height="800" MinWidth="960" MinHeight="600"
+        Icon="/Assets/PDFMaster.ico"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <DataTemplate DataType="{x:Type vm:HomeViewModel}">
@@ -160,10 +161,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="32" Height="32" CornerRadius="8" Background="{DynamicResource Brush.Accent}">
-                        <TextBlock Text="PDF" FontSize="10.5" FontWeight="Bold" HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" Foreground="{DynamicResource Brush.OnAccent}" />
-                    </Border>
+                    <Image Source="/Assets/PDFMaster-256.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality" />
                     <TextBlock Text="PDF Master" FontSize="17" FontWeight="SemiBold" Margin="10,0,0,0"
                                VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text}" />
                 </StackPanel>

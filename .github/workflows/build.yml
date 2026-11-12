@@ -373,6 +373,12 @@ jobs:
           $setup = Join-Path $PWD "installer-out\PDFMaster-Setup-$ver.exe"
           if (-not (Test-Path $setup)) { Note 'instalador NAO gerado'; "installer failed=True" | Out-File ci-out/status.txt -Append -Encoding utf8; exit 1 }
           Note "instalador: $((Get-Item $setup).Length) bytes"
+          # Ícone embutido no executável publicado (o mesmo que o Explorador mostra).
+          Add-Type -AssemblyName System.Drawing
+          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon("$PWD\publish\PDFMaster.exe")
+          $icon.ToBitmap().Save("$PWD\ci-out\icone-do-exe.png")
+          $setupIcon = [System.Drawing.Icon]::ExtractAssociatedIcon($setup)
+          $setupIcon.ToBitmap().Save("$PWD\ci-out\icone-do-instalador.png")
 
           Remove-Item Env:PDFMASTER_DATA_DIR -ErrorAction SilentlyContinue
           $dir = Join-Path $env:RUNNER_TEMP 'PDF Master instalado'

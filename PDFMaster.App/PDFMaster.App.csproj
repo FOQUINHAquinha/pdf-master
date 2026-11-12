@@ -3,6 +3,8 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
+    <!-- Ícone do executável (Explorador, barra de tarefas, atalhos). Gerado por assets/gerar-icone.py. -->
+    <ApplicationIcon>Assets\PDFMaster.ico</ApplicationIcon>
     <AssemblyName>PDFMaster</AssemblyName>
     <RootNamespace>PDFMaster.App</RootNamespace>
     <NoWarn>$(NoWarn);WPF0001</NoWarn>
@@ -28,5 +30,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\PDFMaster.ico" />
+    <Resource Include="Assets\PDFMaster-256.png" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,13 @@
 # Histórico de alterações
 
+## 0.8.1 — 12/11/2026
+
+### Adicionado
+- Ícone próprio do programa (folha com "PDF" sobre o verde do programa), em todos os tamanhos do
+  Windows (16 a 256 px; nos tamanhos pequenos, versão simplificada). Aparece no executável, na
+  janela, na barra de tarefas, nos atalhos, no instalador, no menu de contexto e no cabeçalho do
+  programa. Gerado por `assets/gerar-icone.py`.
+
 ## 0.8.0 — 11/11/2026 — Fase 8: Finalização (as 8 fases concluídas)
 
 ### Adicionado
